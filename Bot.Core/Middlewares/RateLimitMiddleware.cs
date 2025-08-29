@@ -8,28 +8,29 @@ namespace Bot.Core.Middlewares;
 /// <summary>
 ///     Рейт-лиметер
 /// </summary>
-public sealed class RateLimitMiddleware(RateLimitOptions options) : IUpdateMiddleware
+public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClient tx) : IUpdateMiddleware
 {
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _chat = new();
 
     /// <inheritdoc />
-    public Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var now = DateTimeOffset.UtcNow;
-        if (!Check(_user, ctx.User.Id, options.PerUserPerMinute, now))
+        if (!Check(_user, ctx.User.Id, options.PerUserPerMinute, now) ||
+            !Check(_chat, ctx.Chat.Id, options.PerChatPerMinute, now))
         {
-            return Task.CompletedTask;
+            if (options.Mode == RateLimitMode.Soft)
+            {
+                await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);
+            }
+
+            return;
         }
 
-        if (!Check(_chat, ctx.Chat.Id, options.PerChatPerMinute, now))
-        {
-            return Task.CompletedTask;
-        }
-
-        return next(ctx);
+        await next(ctx);
     }
-    
+
     private static bool Check(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit, DateTimeOffset now)
     {
         var q = dict.GetOrAdd(key, _ => new Queue<DateTimeOffset>(limit + 1));
