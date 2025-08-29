@@ -10,9 +10,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
     <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
+    <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
   </ItemGroup>
 </Project>
