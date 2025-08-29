@@ -8,25 +8,34 @@ namespace Bot.Core.Pipeline;
 /// </summary>
 public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
 {
-    private readonly IList<Func<UpdateDelegate, UpdateDelegate>> _components = new List<Func<UpdateDelegate, UpdateDelegate>>();
+    private readonly List<Func<UpdateDelegate, UpdateDelegate>> _components = new();
 
     /// <inheritdoc />
     public IUpdatePipeline Use<T>() where T : IUpdateMiddleware
     {
         _components.Add(next => async ctx =>
         {
+            ctx.CancellationToken.ThrowIfCancellationRequested();
             using var scope = sp.CreateScope();
             var mw = (IUpdateMiddleware)scope.ServiceProvider.GetRequiredService(typeof(T));
             await mw.InvokeAsync(ctx, next);
         });
-        
+
         return this;
     }
 
     /// <inheritdoc />
     public IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component)
     {
-        _components.Add(component);
+        _components.Add(next =>
+        {
+            var del = component(next);
+            return ctx =>
+            {
+                ctx.CancellationToken.ThrowIfCancellationRequested();
+                return del(ctx);
+            };
+        });
         return this;
     }
 
