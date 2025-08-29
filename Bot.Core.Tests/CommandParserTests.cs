@@ -23,6 +23,11 @@ public class CommandParserTests
         new object?[]{"/cmd \"arg 1\" arg2", "/cmd", "\"arg 1\" arg2", new[]{"arg 1","arg2"}},
         new object?[]{"/cmd 'arg 1'", "/cmd", "'arg 1'", new[]{"arg 1"}},
         new object?[]{"/cmd \"arg with \\\"quotes\\\"\"", "/cmd", "\"arg with \\\"quotes\\\"\"", new[]{"arg with \"quotes\""}},
+        new object?[]{"/cmd@Bot arg", "/cmd", "arg", new[]{"arg"}},
+        new object?[]{"/cmd   ", "/cmd", "", Array.Empty<string>()},
+        new object?[]{"/cmd arg1 \"arg 2\" 'arg 3'", "/cmd", "arg1 \"arg 2\" 'arg 3'", new[]{"arg1","arg 2","arg 3"}},
+        new object?[]{"/cmd \"\" arg", "/cmd", "\"\" arg", new[]{"arg"}},
+        new object?[]{"/cmd \"arg with \\\"quotes\\\"\" arg2", "/cmd", "\"arg with \\\"quotes\\\"\" arg2", new[]{"arg with \"quotes\"","arg2"}},
         new object?[]{"text", null, null, null},
     };
 
