@@ -1,0 +1,24 @@
+# Bot
+
+A minimal framework for building Telegram bots.
+
+## Quickstart
+
+These steps will run the sample **HelloBot** in a couple of minutes.
+
+1. **Install .NET 8 SDK** if you don't have it.
+2. **Clone** this repository and enter the folder:
+   ```bash
+   git clone <repo-url>
+   cd bot
+   ```
+3. **Create a Telegram bot** with [@BotFather](https://t.me/BotFather) and copy the token.
+4. **Run the example** with your token:
+   ```bash
+   cd Bot.Examples.HelloBot
+   export BOT_TOKEN="<your-token>"
+   dotnet run
+   ```
+5. Send `/start` to your bot in Telegram and it will reply with "Hello".
+
+For development or deployment you can adjust settings in `appsettings.json` or via environment variables.
