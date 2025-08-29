@@ -5,8 +5,10 @@ using Bot.Hosting.Options;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 using Bot.Telegram;
+using Bot.Examples.HelloBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -25,6 +27,7 @@ builder.Services
         o.RateLimits = new RateLimitOptions { PerUserPerMinute = 20, PerChatPerMinute = 60 };
     })
     .AddTelegramTransport()
+    .AddScoped<RequestIdProvider>()
     .AddHandlersFromAssembly(typeof(Program).Assembly)
     .UsePipeline(p => p
         .Use<ExceptionHandlingMiddleware>()
