@@ -66,6 +66,11 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
             var chat = new ChatAddress(m.Chat.Id, m.Chat.Type.ToString());
             var user = m.From is null ? new UserAddress(0) : new UserAddress(m.From.Id, m.From.Username, m.From.LanguageCode);
             var text = m.Type == MessageType.Text ? m.Text : null;
+            var items = new Dictionary<string, object>
+            {
+                ["UpdateType"] = u.Type.ToString(),
+                ["MessageId"] = m.MessageId
+            };
             return new UpdateContext(
                 Transport: "telegram",
                 UpdateId: u.Id.ToString(),
@@ -75,7 +80,7 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
                 Command: null,
                 Args: null,
                 Payload: null,
-                Items: new Dictionary<string, object>(),
+                Items: items,
                 Services: null!,
                 CancellationToken: default);
         }
@@ -84,13 +89,18 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
         {
             var chat = new ChatAddress(cq.Message!.Chat.Id, cq.Message.Chat.Type.ToString());
             var user = new UserAddress(cq.From.Id, cq.From.Username, cq.From.LanguageCode);
+            var items = new Dictionary<string, object>
+            {
+                ["UpdateType"] = u.Type.ToString(),
+                ["MessageId"] = cq.Message!.MessageId
+            };
             return new UpdateContext(
                 "telegram", u.Id.ToString(), chat, user,
                 Text: null,
                 Command: null,
                 Args: null,
                 Payload: cq.Data,
-                Items: new Dictionary<string, object>(),
+                Items: items,
                 Services: null!,
                 CancellationToken: default);
         }
