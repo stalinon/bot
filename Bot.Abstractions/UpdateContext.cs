@@ -12,6 +12,7 @@ public sealed record UpdateContext(
     UserAddress User,
     string? Text,
     string? Command,
+    string[]? Args,
     string? Payload,
     IDictionary<string, object> Items,
     IServiceProvider Services,
