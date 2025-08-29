@@ -19,4 +19,14 @@ public sealed class FileStoreOptions
     ///     Период сброса буфера
     /// </summary>
     public TimeSpan FlushPeriod { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     Префикс пути (например, идентификатор арендатора)
+    /// </summary>
+    public string? Prefix { get; set; }
+
+    /// <summary>
+    ///     Период очистки просроченных ключей
+    /// </summary>
+    public TimeSpan CleanUpPeriod { get; set; } = TimeSpan.FromMinutes(5);
 }

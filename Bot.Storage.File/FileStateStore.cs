@@ -11,9 +11,11 @@ namespace Bot.Storage.File;
 public sealed class FileStateStore : IStateStore, IAsyncDisposable
 {
     private readonly string _basePath;
+    private readonly string[] _prefix;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly ConcurrentDictionary<string, byte[]>? _buffer;
     private readonly Timer? _flushTimer;
+    private readonly Timer _cleaner;
 
     /// <summary>
     ///     Создаёт файловое хранилище
@@ -22,12 +24,15 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     public FileStateStore(FileStoreOptions options)
     {
         _basePath = options.Path;
-        Directory.CreateDirectory(_basePath);
+        _prefix = string.IsNullOrWhiteSpace(options.Prefix) ? Array.Empty<string>() : Norm(options.Prefix);
+        Directory.CreateDirectory(Path.Combine(new[] { _basePath }.Concat(_prefix).ToArray()));
         if (options.BufferHotKeys)
         {
             _buffer = new();
             _flushTimer = new Timer(Flush, null, options.FlushPeriod, options.FlushPeriod);
         }
+        var period = options.CleanUpPeriod;
+        _cleaner = new Timer(_ => CleanUpExpired(), null, period, period);
     }
 
     /// <summary>
@@ -38,6 +43,7 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     {
         ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
+        var meta = MetaPathFor(scope, key);
         if (_buffer is not null && _buffer.TryGetValue(file, out var data))
         {
             return JsonSerializer.Deserialize<T>(data, Json);
@@ -45,7 +51,18 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
 
         if (!System.IO.File.Exists(file))
         {
-            return default(T?);
+            return default;
+        }
+
+        if (System.IO.File.Exists(meta))
+        {
+            var txt = await System.IO.File.ReadAllTextAsync(meta, ct);
+            if (long.TryParse(txt, out var ms) && DateTimeOffset.FromUnixTimeMilliseconds(ms) <= DateTimeOffset.UtcNow)
+            {
+                System.IO.File.Delete(meta);
+                System.IO.File.Delete(file);
+                return default;
+            }
         }
 
         await using var fs = System.IO.File.OpenRead(file);
@@ -60,21 +77,36 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     {
         ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
+        var meta = MetaPathFor(scope, key);
         if (_buffer is null)
         {
-            var dir = DirFor(scope);
+            var dir = DirFor(scope, key);
             Directory.CreateDirectory(dir);
-            var tmp = Path.Combine(dir, $"{San(key)}.tmp");
+            var tmp = Path.Combine(dir, $"{SanLast(key)}.tmp");
             await using (var fs = System.IO.File.Create(tmp))
             {
                 await JsonSerializer.SerializeAsync(fs, value, Json, ct);
             }
+
             if (System.IO.File.Exists(file))
             {
                 System.IO.File.Delete(file);
             }
 
             System.IO.File.Move(tmp, file);
+            if (ttl is null)
+            {
+                if (System.IO.File.Exists(meta))
+                {
+                    System.IO.File.Delete(meta);
+                }
+            }
+            else
+            {
+                var expires = DateTimeOffset.UtcNow.Add(ttl.Value).ToUnixTimeMilliseconds();
+                await System.IO.File.WriteAllTextAsync(meta, expires.ToString(), ct);
+            }
+
             return;
         }
 
@@ -85,19 +117,44 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     /// <summary>
     ///     Удалить значение
     /// </summary>
-    /// <inheritdoc />
     public Task<bool> RemoveAsync(string scope, string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
+        var meta = MetaPathFor(scope, key);
+
         var removed = _buffer?.TryRemove(file, out _) ?? false;
         if (System.IO.File.Exists(file))
         {
             System.IO.File.Delete(file);
+            System.IO.File.Delete(meta);
             return Task.FromResult(true);
         }
 
         return Task.FromResult(removed);
+    }
+
+    private string DirFor(string scope, string key = "")
+    {
+        var parts = new List<string> { _basePath };
+        parts.AddRange(_prefix);
+        parts.AddRange(Norm(scope));
+        if (!string.IsNullOrEmpty(key))
+        {
+            var kp = Norm(key);
+            if (kp.Length > 1)
+            {
+                parts.AddRange(kp[..^1]);
+            }
+        }
+
+        return Path.Combine(parts.ToArray());
+    }
+
+    private string PathFor(string scope, string key)
+    {
+        var dir = DirFor(scope, key);
+        return Path.Combine(dir, $"{SanLast(key)}.json");
     }
 
     private void Flush(object? _)
@@ -129,16 +186,56 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     }
 
     /// <summary>
+    ///     Очистка просроченных ключей.
+    /// </summary>
+    private void CleanUpExpired()
+    {
+        foreach (var dir in Directory.EnumerateDirectories(_basePath))
+        {
+            foreach (var meta in Directory.EnumerateFiles(dir, "*.meta"))
+            {
+                try
+                {
+                    var txt = System.IO.File.ReadAllText(meta);
+                    if (!long.TryParse(txt, out var ms))
+                    {
+                        continue;
+                    }
+
+                    if (DateTimeOffset.FromUnixTimeMilliseconds(ms) > DateTimeOffset.UtcNow)
+                    {
+                        continue;
+                    }
+
+                    var json = Path.ChangeExtension(meta, ".json");
+                    if (System.IO.File.Exists(json))
+                    {
+                        System.IO.File.Delete(json);
+                    }
+
+                    System.IO.File.Delete(meta);
+                }
+                catch
+                {
+                    // проигнорировать ошибки
+                }
+            }
+        }
+    }
+
+    /// <summary>
     ///     Освободить ресурсы и сбросить буфер
     /// </summary>
     public ValueTask DisposeAsync()
     {
         Flush(null);
+        _cleaner.Dispose();
         _flushTimer?.Dispose();
         return ValueTask.CompletedTask;
     }
 
-    private string DirFor(string scope) => Path.Combine(_basePath, San(scope));
-    private string PathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.json");
-    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
+    private static string SanLast(string s) => Norm(s).Last();
+    private static string[] Norm(string s) => s.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(San).ToArray();
+    private string MetaPathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.meta");
+    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_'));
 }

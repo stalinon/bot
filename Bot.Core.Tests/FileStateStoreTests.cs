@@ -20,7 +20,7 @@ public sealed class FileStateStoreTests
     public async Task PrefixAndNormalization()
     {
         var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var store = new FileStateStore(new FileStoreOptions { Path = temp });
+        var store = new FileStateStore(new FileStoreOptions { Path = temp, Prefix = "tenant" });
         var ct = CancellationToken.None;
         await store.SetAsync("user", "ping:42", 1, null, ct);
         var expected = Path.Combine(temp, "tenant", "user", "ping", "42.json");
@@ -36,7 +36,7 @@ public sealed class FileStateStoreTests
     public async Task Remove_after_ttl()
     {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        var options = new FileStoreOptions { Path = path };
+        var options = new FileStoreOptions { Path = path, CleanUpPeriod = TimeSpan.FromMilliseconds(50) };
         await using var store = new FileStateStore(options);
 
         await store.SetAsync<int?>("s", "k", 1, TimeSpan.FromMilliseconds(100), CancellationToken.None);
