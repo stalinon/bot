@@ -15,6 +15,8 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
     {
         _components.Add(next => async ctx =>
         {
+            ctx.CancellationToken.ThrowIfCancellationRequested();
+            using var scope = sp.CreateScope();
             var mw = ctx.Services.GetRequiredService<T>();
             await mw.InvokeAsync(ctx, next);
         });
@@ -25,7 +27,15 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
     /// <inheritdoc />
     public IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component)
     {
-        _components.Add(component);
+        _components.Add(next =>
+        {
+            var del = component(next);
+            return ctx =>
+            {
+                ctx.CancellationToken.ThrowIfCancellationRequested();
+                return del(ctx);
+            };
+        });
         return this;
     }
 
