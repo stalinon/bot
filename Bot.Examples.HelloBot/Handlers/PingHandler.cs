@@ -1,6 +1,7 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
+using Bot.Examples.HelloBot.Services;
 
 namespace Bot.Examples.HelloBot.Handlers;
 
@@ -8,7 +9,7 @@ namespace Bot.Examples.HelloBot.Handlers;
 ///     Пинг
 /// </summary>
 [Command("/ping")]
-public sealed class PingHandler(IStateStore store, ITransportClient tx) : IUpdateHandler
+public sealed class PingHandler(IStateStore store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
 {
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)
@@ -17,6 +18,6 @@ public sealed class PingHandler(IStateStore store, ITransportClient tx) : IUpdat
         var n = await store.GetAsync<int>("user", key, ctx.CancellationToken);
         n++;
         await store.SetAsync("user", key, n, TimeSpan.FromDays(30), ctx.CancellationToken);
-        await tx.SendTextAsync(ctx.Chat, $"pong #{n}", ctx.CancellationToken);
+        await tx.SendTextAsync(ctx.Chat, $"pong #{n} (req: {requestId.Id})", ctx.CancellationToken);
     }
 }

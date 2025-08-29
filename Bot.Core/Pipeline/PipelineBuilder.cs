@@ -20,9 +20,10 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
             EnsureNotBuilt();
             _components.Add(next => async ctx =>
             {
-                using var scope = sp.CreateScope();
-                var mw = (IUpdateMiddleware)scope.ServiceProvider.GetRequiredService(typeof(T));
-                await mw.InvokeAsync(ctx, next);
+                ctx.CancellationToken.ThrowIfCancellationRequested();
+              using var scope = sp.CreateScope();
+              var mw = ctx.Services.GetRequiredService<T>();
+              await mw.InvokeAsync(ctx, next);
             });
 
             return this;
@@ -35,7 +36,15 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
         lock (_lock)
         {
             EnsureNotBuilt();
-            _components.Add(component);
+            _components.Add(next =>
+            {
+                var del = component(next);
+                return ctx =>
+                {
+                    ctx.CancellationToken.ThrowIfCancellationRequested();
+                    return del(ctx);
+                };
+            });
             return this;
         }
     }
@@ -52,7 +61,12 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
                 app = _components[i](app);
             }
 
-            return app;
+            return async ctx =>
+            {
+                using var scope = sp.CreateScope();
+                var scopedCtx = ctx with { Services = scope.ServiceProvider };
+                await app(scopedCtx);
+            };
         }
     }
 

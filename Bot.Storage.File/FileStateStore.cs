@@ -22,6 +22,7 @@ public sealed class FileStateStore : IStateStore
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
         if (!System.IO.File.Exists(file))
         {
@@ -35,6 +36,7 @@ public sealed class FileStateStore : IStateStore
     /// <inheritdoc />
     public async Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         var dir = DirFor(scope);
         Directory.CreateDirectory(dir);
         var tmp = Path.Combine(dir, $"{San(key)}.tmp");
@@ -52,6 +54,7 @@ public sealed class FileStateStore : IStateStore
     /// <inheritdoc />
     public Task<bool> RemoveAsync(string scope, string key, CancellationToken ct)
     {
+        ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
         if (!System.IO.File.Exists(file))
         {
