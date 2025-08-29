@@ -48,7 +48,18 @@ public static class ServiceCollectionExtensions
         registryConfigured.RegisterFrom(assembly);
         foreach (var t in assembly.GetTypes())
         {
-            if (typeof(IUpdateHandler).IsAssignableFrom(t) && t is { IsAbstract: false, IsInterface: false })
+            if (t is not { IsAbstract: false, IsInterface: false })
+            {
+                continue;
+            }
+
+            if (typeof(IFallbackHandler).IsAssignableFrom(t))
+            {
+                services.TryAddTransient(typeof(IFallbackHandler), t);
+                continue;
+            }
+
+            if (typeof(IUpdateHandler).IsAssignableFrom(t))
             {
                 services.TryAddTransient(t);
             }

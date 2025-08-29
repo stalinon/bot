@@ -8,7 +8,7 @@ namespace Bot.Core.Middlewares;
 /// <summary>
 ///     Роутер для команд
 /// </summary>
-public sealed class RouterMiddleware(IServiceProvider sp, HandlerRegistry registry) : IUpdateMiddleware
+public sealed class RouterMiddleware(IServiceProvider sp, HandlerRegistry registry, IFallbackHandler? fallbackHandler = null) : IUpdateMiddleware
 {
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
@@ -16,10 +16,18 @@ public sealed class RouterMiddleware(IServiceProvider sp, HandlerRegistry regist
         var t = registry.FindFor(ctx);
         if (t is null)
         {
-            await next(ctx); // no handler matched
+            if (fallbackHandler is not null)
+            {
+                await fallbackHandler.HandleAsync(ctx);
+            }
+            else
+            {
+                await next(ctx); // no handler matched
+            }
+
             return;
         }
-        
+
         var handler = (IUpdateHandler)sp.GetRequiredService(t);
         await handler.HandleAsync(ctx);
     }
