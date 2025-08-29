@@ -98,23 +98,6 @@ public class RateLimitMiddlewareTests
         Assert.Equal("помедленнее", tx.SentTexts[0].text);
     }
 
-    private sealed class DummyTransportClient : ITransportClient
-    {
-        public List<(ChatAddress chat, string text)> SentTexts { get; } = new();
-
-        public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct)
-        {
-            SentTexts.Add((chat, text));
-            return Task.CompletedTask;
-        }
-
-        public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.CompletedTask;
-        public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.CompletedTask;
-        public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.CompletedTask;
-        public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
-        public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
-    }
-
     private sealed class DummyServiceProvider : IServiceProvider
     {
         public object? GetService(Type serviceType) => null;

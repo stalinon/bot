@@ -1,11 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Threading;
-
 using Bot.Abstractions.Contracts;
 using Bot.Storage.File.Options;
-using System;
-using System.Threading;
 
 namespace Bot.Storage.File;
 
@@ -15,7 +11,6 @@ namespace Bot.Storage.File;
 public sealed class FileStateStore : IStateStore, IAsyncDisposable
 {
     private readonly string _basePath;
-    private readonly string[] _prefix;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly ConcurrentDictionary<string, byte[]>? _buffer;
     private readonly Timer? _flushTimer;
@@ -51,17 +46,6 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
         if (!System.IO.File.Exists(file))
         {
             return default(T?);
-        }
-
-        if (System.IO.File.Exists(meta))
-        {
-            var txt = await System.IO.File.ReadAllTextAsync(meta, ct);
-            if (long.TryParse(txt, out var ms) && DateTimeOffset.FromUnixTimeMilliseconds(ms) <= DateTimeOffset.UtcNow)
-            {
-                System.IO.File.Delete(meta);
-                System.IO.File.Delete(file);
-                return default(T?);
-            }
         }
 
         await using var fs = System.IO.File.OpenRead(file);
