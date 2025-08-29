@@ -24,6 +24,7 @@ public sealed class BotHostedService(
 
         pipeline
             .Use<ExceptionHandlingMiddleware>()
+            .Use<MetricsMiddleware>()
             .Use<LoggingMiddleware>()
             .Use<DedupMiddleware>()
             .Use<RateLimitMiddleware>()

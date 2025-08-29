@@ -23,9 +23,11 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions<BotOptions>().Configure(configure);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
-        services.AddSingleton<RateLimitOptions>(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>().Value.RateLimits);
+        services.AddSingleton<RateLimitOptions>(sp => sp
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>().Value.RateLimits);
         services.AddSingleton<BotHostedService>();
         services.AddHostedService<BotHostedService>();
+        services.AddMetrics();
         return services;
     }
     
@@ -68,6 +70,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(registryConfigured);
         
         services.AddScoped<ExceptionHandlingMiddleware>()
+            .AddScoped<MetricsMiddleware>()
             .AddScoped<LoggingMiddleware>()
             .AddScoped<DedupMiddleware>()
             .AddScoped<RateLimitMiddleware>()
