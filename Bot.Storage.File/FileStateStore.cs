@@ -1,4 +1,7 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Threading;
+
 using Bot.Abstractions.Contracts;
 using Bot.Storage.File.Options;
 using System;
@@ -9,29 +12,42 @@ namespace Bot.Storage.File;
 /// <summary>
 ///     Файловое хранилище
 /// </summary>
-public sealed class FileStateStore : IStateStore, IDisposable
+public sealed class FileStateStore : IStateStore, IAsyncDisposable
 {
     private readonly string _basePath;
     private readonly string[] _prefix;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
-    private readonly Timer _cleaner;
-    
-    ///  <inheritdoc cref="FileStateStore"/>
+    private readonly ConcurrentDictionary<string, byte[]>? _buffer;
+    private readonly Timer? _flushTimer;
+
+    /// <summary>
+    ///     Создаёт файловое хранилище
+    /// </summary>
+    /// <param name="options">Настройки</param>
     public FileStateStore(FileStoreOptions options)
     {
         _basePath = options.Path;
-        _prefix = string.IsNullOrWhiteSpace(options.Prefix) ? Array.Empty<string>() : Norm(options.Prefix);
-        Directory.CreateDirectory(Path.Combine(new[] { _basePath }.Concat(_prefix).ToArray()));
-        var period = options.CleanUpPeriod;
-        _cleaner = new Timer(_ => CleanUpExpired(), null, period, period);
+        Directory.CreateDirectory(_basePath);
+        if (options.BufferHotKeys)
+        {
+            _buffer = new();
+            _flushTimer = new Timer(Flush, null, options.FlushPeriod, options.FlushPeriod);
+        }
     }
 
+    /// <summary>
+    ///     Получить значение
+    /// </summary>
     /// <inheritdoc />
     public async Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
-        var meta = MetaPathFor(scope, key);
+        if (_buffer is not null && _buffer.TryGetValue(file, out var data))
+        {
+            return JsonSerializer.Deserialize<T>(data, Json);
+        }
+
         if (!System.IO.File.Exists(file))
         {
             return default(T?);
@@ -51,126 +67,94 @@ public sealed class FileStateStore : IStateStore, IDisposable
         await using var fs = System.IO.File.OpenRead(file);
         return await JsonSerializer.DeserializeAsync<T>(fs, Json, ct);
     }
-    
+
+    /// <summary>
+    ///     Установить значение
+    /// </summary>
     /// <inheritdoc />
     public async Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var dir = DirFor(scope, key);
-        Directory.CreateDirectory(dir);
-        var tmp = Path.Combine(dir, $"{SanLast(key)}.tmp");
         var file = PathFor(scope, key);
-        var meta = MetaPathFor(scope, key);
-        await using (var fs = System.IO.File.Create(tmp))
-            await JsonSerializer.SerializeAsync(fs, value, Json, ct);
-        if (System.IO.File.Exists(file))
+        if (_buffer is null)
         {
-            System.IO.File.Delete(file);
-        }
-
-        System.IO.File.Move(tmp, file);
-
-        if (ttl is null)
-        {
-            if (System.IO.File.Exists(meta))
+            var dir = DirFor(scope);
+            Directory.CreateDirectory(dir);
+            var tmp = Path.Combine(dir, $"{San(key)}.tmp");
+            await using (var fs = System.IO.File.Create(tmp))
             {
-                System.IO.File.Delete(meta);
+                await JsonSerializer.SerializeAsync(fs, value, Json, ct);
             }
+            if (System.IO.File.Exists(file))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            System.IO.File.Move(tmp, file);
+            return;
         }
-        else
-        {
-            var expires = DateTimeOffset.UtcNow.Add(ttl.Value).ToUnixTimeMilliseconds();
-            await System.IO.File.WriteAllTextAsync(meta, expires.ToString(), ct);
-        }
+
+        var data = JsonSerializer.SerializeToUtf8Bytes(value, Json);
+        _buffer[file] = data;
     }
-    
+
+    /// <summary>
+    ///     Удалить значение
+    /// </summary>
     /// <inheritdoc />
     public Task<bool> RemoveAsync(string scope, string key, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var file = PathFor(scope, key);
-        var meta = MetaPathFor(scope, key);
-        if (!System.IO.File.Exists(file))
+        var removed = _buffer?.TryRemove(file, out _) ?? false;
+        if (System.IO.File.Exists(file))
         {
-            return Task.FromResult(false);
+            System.IO.File.Delete(file);
+            return Task.FromResult(true);
         }
 
-        System.IO.File.Delete(file);
-        if (System.IO.File.Exists(meta))
-        {
-            System.IO.File.Delete(meta);
-        }
-        return Task.FromResult(true);
+        return Task.FromResult(removed);
     }
-    
-    private string DirFor(string scope, string key = "")
+
+    private void Flush(object? _)
     {
-        var parts = new List<string> { _basePath };
-        parts.AddRange(_prefix);
-        parts.AddRange(Norm(scope));
-        if (!string.IsNullOrEmpty(key))
+        if (_buffer is null)
         {
-            var kp = Norm(key);
-            if (kp.Length > 1)
+            return;
+        }
+
+        foreach (var (file, _) in _buffer.ToArray())
+        {
+            if (!_buffer.TryGetValue(file, out var payload))
             {
-                parts.AddRange(kp[..^1]);
+                continue;
             }
-        }
 
-        return Path.Combine(parts.ToArray());
-    }
-
-    private string PathFor(string scope, string key)
-    {
-        var dir = DirFor(scope, key);
-        return Path.Combine(dir, $"{SanLast(key)}.json");
-    }
-
-    private static string[] Norm(string s) => s.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(San).ToArray();
-    private static string SanLast(string s) => Norm(s).Last();
-    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_'));
-    private string MetaPathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.meta");
-
-    /// <summary>
-    ///     Очистка просроченных ключей.
-    /// </summary>
-    private void CleanUpExpired()
-    {
-        foreach (var dir in Directory.EnumerateDirectories(_basePath))
-        {
-            foreach (var meta in Directory.EnumerateFiles(dir, "*.meta"))
+            var dir = Path.GetDirectoryName(file)!;
+            Directory.CreateDirectory(dir);
+            var tmp = $"{file}.tmp";
+            System.IO.File.WriteAllBytes(tmp, payload);
+            if (System.IO.File.Exists(file))
             {
-                try
-                {
-                    var txt = System.IO.File.ReadAllText(meta);
-                    if (!long.TryParse(txt, out var ms))
-                    {
-                        continue;
-                    }
-
-                    if (DateTimeOffset.FromUnixTimeMilliseconds(ms) > DateTimeOffset.UtcNow)
-                    {
-                        continue;
-                    }
-
-                    var json = Path.ChangeExtension(meta, ".json");
-                    if (System.IO.File.Exists(json))
-                    {
-                        System.IO.File.Delete(json);
-                    }
-
-                    System.IO.File.Delete(meta);
-                }
-                catch
-                {
-                    // проигнорировать ошибки
-                }
+                System.IO.File.Delete(file);
             }
+
+            System.IO.File.Move(tmp, file);
+            _buffer.TryRemove(new KeyValuePair<string, byte[]>(file, payload));
         }
     }
 
     /// <summary>
-    ///     Освобождение ресурсов таймера.
+    ///     Освободить ресурсы и сбросить буфер
     /// </summary>
-    public void Dispose() => _cleaner.Dispose();
+    public ValueTask DisposeAsync()
+    {
+        Flush(null);
+        _flushTimer?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    private string DirFor(string scope) => Path.Combine(_basePath, San(scope));
+    private string PathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.json");
+    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
 }
