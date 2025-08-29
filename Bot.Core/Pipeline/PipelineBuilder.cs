@@ -8,7 +8,7 @@ namespace Bot.Core.Pipeline;
 /// </summary>
 public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
 {
-    private readonly IList<Func<UpdateDelegate, UpdateDelegate>> _components = new List<Func<UpdateDelegate, UpdateDelegate>>();
+    private readonly List<Func<UpdateDelegate, UpdateDelegate>> _components = new();
 
     /// <inheritdoc />
     public IUpdatePipeline Use<T>() where T : IUpdateMiddleware
