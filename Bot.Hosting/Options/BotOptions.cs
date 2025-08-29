@@ -1,4 +1,5 @@
 using Bot.Core.Options;
+using System;
 
 namespace Bot.Hosting.Options;
 
@@ -26,4 +27,9 @@ public sealed class BotOptions
     ///     Ограничения
     /// </summary>
     public RateLimitOptions RateLimits { get; set; } = new();
+
+    /// <summary>
+    ///     Время жизни записей для дедупликации
+    /// </summary>
+    public TimeSpan DeduplicationTtl { get; set; } = TimeSpan.FromMinutes(5);
 }
