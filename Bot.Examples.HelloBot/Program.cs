@@ -31,6 +31,7 @@ builder.Services
     .AddHandlersFromAssembly(typeof(Program).Assembly)
     .UsePipeline(p => p
         .Use<ExceptionHandlingMiddleware>()
+        .Use<MetricsMiddleware>()
         .Use<LoggingMiddleware>()
         .Use<DedupMiddleware>()
         .Use<RateLimitMiddleware>()
