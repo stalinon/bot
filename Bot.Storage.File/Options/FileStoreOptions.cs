@@ -9,4 +9,9 @@ public sealed class FileStoreOptions
     ///     Путь к директории
     /// </summary>
     public string Path { get; set; } = "data";
+
+    /// <summary>
+    ///     Период очистки просроченных ключей
+    /// </summary>
+    public TimeSpan CleanUpPeriod { get; set; } = TimeSpan.FromMinutes(5);
 }
