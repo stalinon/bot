@@ -30,14 +30,14 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
             ]
         };
 
-        client.StartReceiving(async (_, update, _) =>
+        client.StartReceiving(async (_, update, token) =>
             {
                 try
                 {
                     var ctx = Map(update);
                     if (ctx is not null)
                     {
-                        await onUpdate(ctx with { Services = default! /* will be set by hosted pipeline */ });
+                        await onUpdate(ctx with { Services = default!, CancellationToken = token });
                     }
                 }
                 catch (Exception ex)
@@ -45,7 +45,7 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
                     logger.LogError(ex, "error in update handler");
                 }
             },
-            (bot, ex, token) =>
+            (bot, ex, _) =>
             {
                 logger.LogError(ex, "telegram receiver error");
                 return Task.CompletedTask;
