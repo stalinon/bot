@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
             .Value.DeduplicationTtl));
         services.AddSingleton<BotHostedService>();
         services.AddHostedService<BotHostedService>();
+        services.AddMetrics();
         return services;
     }
     
@@ -74,6 +75,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(registryConfigured);
         
         services.AddScoped<ExceptionHandlingMiddleware>()
+            .AddScoped<MetricsMiddleware>()
             .AddScoped<LoggingMiddleware>()
             .AddScoped<DedupMiddleware>()
             .AddScoped<RateLimitMiddleware>()
