@@ -130,7 +130,6 @@ public sealed class FileStateStore : IStateStore, IDisposable
     private static string SanLast(string s) => Norm(s).Last();
     private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_'));
     private string MetaPathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.meta");
-    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_'));
 
     /// <summary>
     ///     Очистка просроченных ключей.
