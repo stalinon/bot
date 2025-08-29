@@ -14,9 +14,9 @@ public sealed class BotOptions
     public string Token { get; set; } = string.Empty;
     
     /// <summary>
-    ///     Тип получения данных
+    ///     Настройки транспорта
     /// </summary>
-    public TransportMode Transport { get; set; } = TransportMode.Polling;
+    public TransportOptions Transport { get; set; } = new();
     
     /// <summary>
     ///     Параллелизм

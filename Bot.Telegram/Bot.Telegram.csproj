@@ -12,6 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
       <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
     </ItemGroup>

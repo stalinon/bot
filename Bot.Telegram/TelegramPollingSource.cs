@@ -1,5 +1,4 @@
 using Bot.Abstractions;
-using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -15,9 +14,12 @@ namespace Bot.Telegram;
 public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<TelegramPollingSource> logger)
     : IUpdateSource
 {
-    /// <inheritdoc />
+    /// <summary>
+    ///     Получает обновления через полинг и передает их в обработчик
+    /// </summary>
     public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
     {
+        await client.DeleteWebhook(cancellationToken: ct);
         var me = await client.GetMe(ct);
         logger.LogInformation("telegram polling started as @{username}", me.Username);
         
@@ -34,7 +36,7 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
             {
                 try
                 {
-                    var ctx = Map(update);
+                    var ctx = TelegramUpdateMapper.Map(update);
                     if (ctx is not null)
                     {
                         await onUpdate(ctx with { Services = default!, CancellationToken = token });
@@ -59,52 +61,4 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
         } catch (OperationCanceledException) { }
     }
     
-    private static UpdateContext? Map(Update u)
-    {
-        if (u.Message is { } m)
-        {
-            var chat = new ChatAddress(m.Chat.Id, m.Chat.Type.ToString());
-            var user = m.From is null ? new UserAddress(0) : new UserAddress(m.From.Id, m.From.Username, m.From.LanguageCode);
-            var text = m.Type == MessageType.Text ? m.Text : null;
-            var items = new Dictionary<string, object>
-            {
-                ["UpdateType"] = u.Type.ToString(),
-                ["MessageId"] = m.MessageId
-            };
-            return new UpdateContext(
-                Transport: "telegram",
-                UpdateId: u.Id.ToString(),
-                Chat: chat,
-                User: user,
-                Text: text,
-                Command: null,
-                Args: null,
-                Payload: null,
-                Items: items,
-                Services: null!,
-                CancellationToken: default);
-        }
-        
-        if (u.CallbackQuery is { } cq)
-        {
-            var chat = new ChatAddress(cq.Message!.Chat.Id, cq.Message.Chat.Type.ToString());
-            var user = new UserAddress(cq.From.Id, cq.From.Username, cq.From.LanguageCode);
-            var items = new Dictionary<string, object>
-            {
-                ["UpdateType"] = u.Type.ToString(),
-                ["MessageId"] = cq.Message!.MessageId
-            };
-            return new UpdateContext(
-                "telegram", u.Id.ToString(), chat, user,
-                Text: null,
-                Command: null,
-                Args: null,
-                Payload: cq.Data,
-                Items: items,
-                Services: null!,
-                CancellationToken: default);
-        }
-        
-        return null;
-    }
 }
