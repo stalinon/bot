@@ -14,4 +14,9 @@ public sealed class FileStoreOptions
     ///     Префикс пути (например, идентификатор арендатора)
     /// </summary>
     public string? Prefix { get; set; }
+
+    /// <summary>
+    ///     Период очистки просроченных ключей
+    /// </summary>
+    public TimeSpan CleanUpPeriod { get; set; } = TimeSpan.FromMinutes(5);
 }
