@@ -32,6 +32,7 @@ public class DedupMiddlewareTests
             User: new UserAddress(1),
             Text: null,
             Command: null,
+            Args: null,
             Payload: null,
             Items: new Dictionary<string, object>(),
             Services: new DummyServiceProvider(),
