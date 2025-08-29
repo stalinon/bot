@@ -69,6 +69,7 @@ public class PipelineBuilderTests
             null,
             null,
             null,
+            null,
             new Dictionary<string, object>(),
             services,
             CancellationToken.None);
