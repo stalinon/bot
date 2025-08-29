@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Bot.Abstractions;
@@ -92,42 +91,6 @@ public class BotHostedServiceTests
             }
             catch (OperationCanceledException) { }
         }
-    }
-
-    /// <summary>
-    ///     Тестовая реализация транспортного клиента.
-    /// </summary>
-    private sealed class DummyTransportClient : ITransportClient
-    {
-        /// <summary>
-        ///     Заглушка отправки текста.
-        /// </summary>
-        public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Заглушка отправки фото.
-        /// </summary>
-        public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Заглушка редактирования текста сообщения.
-        /// </summary>
-        public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Заглушка редактирования подписи сообщения.
-        /// </summary>
-        public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Заглушка отправки действия чата.
-        /// </summary>
-        public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
-
-        /// <summary>
-        ///     Заглушка удаления сообщения.
-        /// </summary>
-        public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
     }
 
     private sealed class DummyMeterFactory : IMeterFactory
