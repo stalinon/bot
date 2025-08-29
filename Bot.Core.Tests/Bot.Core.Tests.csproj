@@ -18,5 +18,11 @@
     <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
     <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
     <ProjectReference Include="..\Bot.Storage.File\Bot.Storage.File.csproj" />
+    <ProjectReference Include="..\Bot.TestKit\Bot.TestKit.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Updates/*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
