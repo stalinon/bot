@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Linq;
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
@@ -19,22 +20,30 @@ public sealed class HandlerRegistry
     /// </summary>
     public void RegisterFrom(Assembly assembly)
     {
-        foreach (var t in assembly.GetTypes())
+        foreach (var t in assembly.GetTypes().OrderBy(t => t.MetadataToken))
         {
-            if (!typeof(IUpdateHandler).IsAssignableFrom(t) || t.IsAbstract || t.IsInterface)
-            {
-                continue;
-            }
+            Register(t);
+        }
+    }
 
-            foreach (var ca in t.GetCustomAttributes<CommandAttribute>())
-            {
-                _commands[ca.Name] = t;
-            }
+    /// <summary>
+    ///     Зарегистрировать обработчик
+    /// </summary>
+    public void Register(Type t)
+    {
+        if (!typeof(IUpdateHandler).IsAssignableFrom(t) || t.IsAbstract || t.IsInterface)
+        {
+            return;
+        }
 
-            foreach (var ta in t.GetCustomAttributes<TextMatchAttribute>())
-            {
-                _regexHandlers.Add((ta.Pattern, t));
-            }
+        foreach (var ca in t.GetCustomAttributes<CommandAttribute>())
+        {
+            _commands[ca.Name] = t;
+        }
+
+        foreach (var ta in t.GetCustomAttributes<TextMatchAttribute>())
+        {
+            _regexHandlers.Add((ta.Pattern, t));
         }
     }
     
