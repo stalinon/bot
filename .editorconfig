@@ -1,0 +1,43 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{csproj,sln,props,targets}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+indent_style = space
+indent_size = 4
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+dotnet_style_qualification_for_field = false:silent
+dotnet_style_qualification_for_property = false:silent
+dotnet_style_qualification_for_method = false:silent
+dotnet_style_qualification_for_event = false:silent
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
+
+# keep useful warnings, silence noisy analyzer hints
+# style analyzers
+dotnet_analyzer_diagnostic.severity = silent
+
+# disable common noisy warnings
+# unused members/parameters
+dotnet_diagnostic.IDE0051.severity = none
+dotnet_diagnostic.IDE0060.severity = none
+# naming and formatting noise
+dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.IDE0055.severity = none
+# using simplifications
+dotnet_diagnostic.IDE0063.severity = none
+# missing xml comments
+dotnet_diagnostic.CS1591.severity = none
+# nullability warnings
+dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.CS8602.severity = none
