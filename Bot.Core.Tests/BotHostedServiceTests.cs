@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Bot.Abstractions;
@@ -92,13 +91,6 @@ public class BotHostedServiceTests
             }
             catch (OperationCanceledException) { }
         }
-    }
-
-    private sealed class DummyTransportClient : ITransportClient
-    {
-        public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct) => Task.CompletedTask;
-        public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.CompletedTask;
-        public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.CompletedTask;
     }
 
     private sealed class DummyMeterFactory : IMeterFactory
