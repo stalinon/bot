@@ -53,6 +53,40 @@ public class DedupMiddlewareTests
         Assert.Equal(2, calls);
     }
 
+    /// <summary>
+    ///     Уникальные обновления обрабатываются независимо.
+    /// </summary>
+    [Fact(DisplayName = "Тест 2. Уникальные обновления обрабатываются независимо")]
+    public async Task Different_update_ids_are_processed_independently()
+    {
+        var loggerFactory = LoggerFactory.Create(b => { });
+        using var cache = new TtlCache<string>(TimeSpan.FromMilliseconds(100));
+        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache);
+        var ctx1 = new UpdateContext(
+            Transport: "test",
+            UpdateId: "1",
+            Chat: new ChatAddress(1),
+            User: new UserAddress(1),
+            Text: null,
+            Command: null,
+            Args: null,
+            Payload: null,
+            Items: new Dictionary<string, object>(),
+            Services: new DummyServiceProvider(),
+            CancellationToken: CancellationToken.None);
+        var ctx2 = ctx1 with { UpdateId = "2" };
+        var calls = 0;
+        UpdateDelegate next = _ =>
+        {
+            calls++;
+            return Task.CompletedTask;
+        };
+
+        await mw.InvokeAsync(ctx1, next);
+        await mw.InvokeAsync(ctx2, next);
+        Assert.Equal(2, calls);
+    }
+
     private sealed class DummyServiceProvider : IServiceProvider
     {
         public object? GetService(Type serviceType) => null;
