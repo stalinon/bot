@@ -9,4 +9,14 @@ public sealed class FileStoreOptions
     ///     Путь к директории
     /// </summary>
     public string Path { get; set; } = "data";
+
+    /// <summary>
+    ///     Включить буферизацию горячих ключей
+    /// </summary>
+    public bool BufferHotKeys { get; set; }
+
+    /// <summary>
+    ///     Период сброса буфера
+    /// </summary>
+    public TimeSpan FlushPeriod { get; set; } = TimeSpan.FromSeconds(1);
 }
