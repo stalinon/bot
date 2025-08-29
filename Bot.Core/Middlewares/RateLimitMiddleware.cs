@@ -33,7 +33,7 @@ public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClie
 
     private static bool Check(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit, DateTimeOffset now)
     {
-        var q = dict.GetOrAdd(key, _ => new Queue<DateTimeOffset>(limit + 1));
+        var q = dict.GetOrAdd(key, _ => new Queue<DateTimeOffset>());
         lock (q)
         {
             while (q.Count > 0 && now - q.Peek() > TimeSpan.FromMinutes(1))
