@@ -10,19 +10,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Moq" Version="4.20.70" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
-    <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
-    <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
-    <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
     <ProjectReference Include="..\Bot.Storage.File\Bot.Storage.File.csproj" />
-    <ProjectReference Include="..\Bot.TestKit\Bot.TestKit.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Updates/*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

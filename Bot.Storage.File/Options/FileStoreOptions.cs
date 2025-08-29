@@ -11,12 +11,12 @@ public sealed class FileStoreOptions
     public string Path { get; set; } = "data";
 
     /// <summary>
-    ///     Префикс пути (например, идентификатор арендатора)
+    ///     Включить буферизацию горячих ключей
     /// </summary>
-    public string? Prefix { get; set; }
+    public bool BufferHotKeys { get; set; }
 
     /// <summary>
-    ///     Период очистки просроченных ключей
+    ///     Период сброса буфера
     /// </summary>
-    public TimeSpan CleanUpPeriod { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan FlushPeriod { get; set; } = TimeSpan.FromSeconds(1);
 }
