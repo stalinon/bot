@@ -17,7 +17,7 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
         {
             ctx.CancellationToken.ThrowIfCancellationRequested();
             using var scope = sp.CreateScope();
-            var mw = (IUpdateMiddleware)scope.ServiceProvider.GetRequiredService(typeof(T));
+            var mw = ctx.Services.GetRequiredService<T>();
             await mw.InvokeAsync(ctx, next);
         });
 
@@ -48,6 +48,11 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
             app = _components[i](app);
         }
 
-        return app;
+        return async ctx =>
+        {
+            using var scope = sp.CreateScope();
+            var scopedCtx = ctx with { Services = scope.ServiceProvider };
+            await app(scopedCtx);
+        };
     }
 }
