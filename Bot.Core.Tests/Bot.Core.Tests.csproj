@@ -16,5 +16,6 @@
     <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
     <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
     <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
+    <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
   </ItemGroup>
 </Project>

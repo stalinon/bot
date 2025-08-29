@@ -12,7 +12,15 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
-        logger.LogInformation("update {UpdateId} from {UserId} text='{Text}'", ctx.UpdateId, ctx.User.Id, ctx.Text);
+        var updateType = ctx.GetItem<string>("UpdateType") ?? "unknown";
+        var messageId = ctx.GetItem<int?>("MessageId");
+        logger.LogInformation(
+            "update {UpdateType} {UpdateId} message {MessageId} from {UserId} text='{Text}'",
+            updateType,
+            ctx.UpdateId,
+            messageId,
+            ctx.User.Id,
+            ctx.Text);
         await next(ctx);
     }
 }
