@@ -4,6 +4,7 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
+using Bot.Core.Utils;
 using Bot.Hosting.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -23,7 +24,12 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions<BotOptions>().Configure(configure);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
-        services.AddSingleton<RateLimitOptions>(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>().Value.RateLimits);
+        services.AddSingleton<RateLimitOptions>(sp =>
+            sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
+                .Value.RateLimits);
+        services.AddSingleton(sp => new TtlCache<string>(sp
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
+            .Value.DeduplicationTtl));
         services.AddSingleton<BotHostedService>();
         services.AddHostedService<BotHostedService>();
         return services;
