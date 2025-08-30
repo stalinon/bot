@@ -21,7 +21,7 @@ public sealed class TelegramWebhookSource(
         {
             FullMode = BoundedChannelFullMode.Wait
         });
-    private readonly ITelegramBotClient _client = client;
+
     private readonly BotOptions _options = options.Value;
 
     /// <summary>
@@ -38,7 +38,7 @@ public sealed class TelegramWebhookSource(
         if (!string.IsNullOrWhiteSpace(_options.Transport.PublicUrl))
         {
             var url = $"{_options.Transport.PublicUrl.TrimEnd('/')}/tg/{_options.Transport.Secret}";
-            await _client.SetWebhook(url, cancellationToken: ct);
+            await client.SetWebhook(url, cancellationToken: ct);
         }
 
         await foreach (var update in _updates.Reader.ReadAllAsync(ct))

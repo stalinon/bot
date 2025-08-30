@@ -1,18 +1,20 @@
-using System;
 using System.Net.Http.Json;
-using System.Threading;
-using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Hosting.Options;
 using Bot.Telegram;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+
 using Xunit;
 
 namespace Bot.Core.Tests;
@@ -29,9 +31,9 @@ public sealed class WebhookIntegrationTests
     public async Task Webhook_delivers_update()
     {
         var tcs = new TaskCompletionSource<UpdateContext>();
-        var srcOptions = Options.Create(new BotOptions
+        var srcOptions = Microsoft.Extensions.Options.Options.Create(new BotOptions
         {
-            Transport = new TransportOptions { QueueCapacity = 8 }
+            Transport = new TransportOptions { QueueCapacity = 8, Mode = TransportMode.Webhook }
         });
         var source = new TelegramWebhookSource(Mock.Of<ITelegramBotClient>(), srcOptions);
 
@@ -40,9 +42,9 @@ public sealed class WebhookIntegrationTests
             {
                 services.AddRouting();
                 services.AddLogging();
-                services.AddSingleton<IOptions<BotOptions>>(Options.Create(new BotOptions
+                services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new BotOptions
                 {
-                    Transport = new TransportOptions { Secret = "s", QueueCapacity = 8 }
+                    Transport = new TransportOptions { Secret = "s", QueueCapacity = 8, Mode = TransportMode.Webhook }
                 }));
                 services.AddSingleton(source);
             })
@@ -61,7 +63,11 @@ public sealed class WebhookIntegrationTests
         }, cts.Token);
 
         var client = server.CreateClient();
-        var resp = await client.PostAsJsonAsync("/tg/s", new { update_id = 1 });
+        var resp = await client.PostAsJsonAsync("/tg/s", new Update { Id = 1, Message = new()
+        {
+            Chat = new Chat { Id = 1, Type = ChatType.Private },
+            From = new User { Username = "", LanguageCode = "" }
+        } });
         Assert.True(resp.IsSuccessStatusCode);
 
         await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(5)));
