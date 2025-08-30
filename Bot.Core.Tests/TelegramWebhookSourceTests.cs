@@ -53,7 +53,8 @@ public class TelegramWebhookSourceTests
         var json = JsonSerializer.Serialize(obj, Json);
         var upd = JsonSerializer.Deserialize<Update>(json, Json)!;
 
-        await source.Enqueue(upd);
+        var enqueued = source.TryEnqueue(upd);
+        Assert.True(enqueued);
 
         var ctx = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
         Assert.Equal("1", ctx.UpdateId);

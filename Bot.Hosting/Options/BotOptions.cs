@@ -12,6 +12,11 @@ public sealed class BotOptions
     ///     Токен бота
     /// </summary>
     public string Token { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Токен доступа к административным эндпоинтам
+    /// </summary>
+    public string AdminToken { get; set; } = string.Empty;
     
     /// <summary>
     ///     Настройки транспорта

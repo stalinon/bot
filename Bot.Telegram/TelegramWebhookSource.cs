@@ -16,14 +16,19 @@ public sealed class TelegramWebhookSource(
     IOptions<BotOptions> options)
     : IUpdateSource
 {
-    private readonly Channel<Update> _updates = Channel.CreateUnbounded<Update>();
+    private readonly Channel<Update> _updates = Channel.CreateBounded<Update>(
+        new BoundedChannelOptions(options.Value.Transport.QueueCapacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait
+        });
     private readonly ITelegramBotClient _client = client;
     private readonly BotOptions _options = options.Value;
 
     /// <summary>
-    ///     Поместить обновление в очередь
+    ///     Попытаться поместить обновление в очередь
     /// </summary>
-    public ValueTask Enqueue(Update update) => _updates.Writer.WriteAsync(update);
+    /// <returns><c>true</c>, если помещено успешно</returns>
+    public bool TryEnqueue(Update update) => _updates.Writer.TryWrite(update);
 
     /// <summary>
     ///     Читает очередь и передает обновления в обработчик

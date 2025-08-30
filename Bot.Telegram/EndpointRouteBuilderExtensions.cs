@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
 using Bot.Hosting.Options;
@@ -19,11 +20,18 @@ public static class EndpointRouteBuilderExtensions
     public static IEndpointRouteBuilder MapTelegramWebhook(this IEndpointRouteBuilder endpoints)
     {
         var opts = endpoints.ServiceProvider.GetRequiredService<IOptions<BotOptions>>().Value;
-        endpoints.MapPost($"/tg/{opts.Transport.Secret}", async (Update update, TelegramWebhookSource source) =>
-        {
-            await source.Enqueue(update);
-            return Results.Ok();
-        });
+        endpoints.MapPost(
+            $"/tg/{opts.Transport.Secret}",
+            (Update update, TelegramWebhookSource source, ILogger<TelegramWebhookSource> logger) =>
+            {
+                if (!source.TryEnqueue(update))
+                {
+                    logger.LogWarning("webhook queue overflow for update {UpdateId}", update.Id);
+                    return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+                }
+
+                return Results.Ok();
+            });
         return endpoints;
     }
 }
