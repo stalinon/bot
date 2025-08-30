@@ -18,7 +18,7 @@ builder.Configuration
 
 var cfg = builder.Configuration;
 
-builder.Services
+  builder.Services
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
@@ -39,4 +39,18 @@ builder.Services
         .Use<RouterMiddleware>())
     .UseStateStore(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
 
-await builder.Build().RunAsync();
+  var host = builder.Build();
+
+  if (args.Contains("set-webhook", StringComparer.OrdinalIgnoreCase))
+  {
+      await host.Services.GetRequiredService<WebhookService>().SetWebhookAsync(default);
+      return;
+  }
+
+  if (args.Contains("delete-webhook", StringComparer.OrdinalIgnoreCase))
+  {
+      await host.Services.GetRequiredService<WebhookService>().DeleteWebhookAsync(default);
+      return;
+  }
+
+  await host.RunAsync();

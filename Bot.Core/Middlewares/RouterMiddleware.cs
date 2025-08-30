@@ -1,6 +1,7 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Routing;
+using Bot.Core.Stats;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bot.Core.Middlewares;
@@ -8,7 +9,11 @@ namespace Bot.Core.Middlewares;
 /// <summary>
 ///     Роутер для команд
 /// </summary>
-public sealed class RouterMiddleware(IServiceProvider sp, HandlerRegistry registry, IFallbackHandler? fallbackHandler = null) : IUpdateMiddleware
+public sealed class RouterMiddleware(
+    IServiceProvider sp,
+    HandlerRegistry registry,
+    StatsCollector stats,
+    IFallbackHandler? fallbackHandler = null) : IUpdateMiddleware
 {
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
@@ -29,6 +34,15 @@ public sealed class RouterMiddleware(IServiceProvider sp, HandlerRegistry regist
         }
 
         var handler = (IUpdateHandler)sp.GetRequiredService(t);
-        await handler.HandleAsync(ctx);
+        using var m = stats.Measure(t.Name);
+        try
+        {
+            await handler.HandleAsync(ctx);
+        }
+        catch (Exception)
+        {
+            m.MarkError();
+            throw;
+        }
     }
 }

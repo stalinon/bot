@@ -5,6 +5,7 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Utils;
+using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -30,11 +31,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(sp => new TtlCache<string>(sp
             .GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
             .Value.DeduplicationTtl));
-        services.AddSingleton<BotHostedService>();
-        services.AddHostedService<BotHostedService>();
-        services.AddMetrics();
-        return services;
-    }
+          services.AddSingleton<BotHostedService>();
+          services.AddHostedService<BotHostedService>();
+          services.AddMetrics();
+          services.AddSingleton<StatsCollector>();
+          return services;
+      }
     
     /// <summary>
     ///     Добавить пайплайн
