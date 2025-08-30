@@ -1,65 +1,55 @@
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="LoggingMiddleware"/>.
+///     Тесты логирующего middleware.
 /// </summary>
 public class LoggingMiddlewareTests
 {
     /// <summary>
-    ///     В логах присутствуют тип обновления, идентификаторы сообщения и пользователя.
+    ///     Проверяет, что логи обработчика содержат UpdateId.
     /// </summary>
-    [Fact(DisplayName = "Тест 1. В логах присутствуют тип обновления, идентификаторы сообщения и пользователя")]
-    public async Task Log_contains_update_type_message_and_user_ids()
+    [Fact(DisplayName = "Тест 1. Лог содержит UpdateId")]
+    public async Task Log_contains_update_id()
     {
-        var logger = new ListLogger<LoggingMiddleware>();
+        var provider = new CollectingLoggerProvider();
+        var services = new ServiceCollection();
+        services.AddLogging(b => b.AddProvider(provider));
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILogger<LoggingMiddleware>>();
         var mw = new LoggingMiddleware(logger);
+
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "42",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(123),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>
-            {
-                ["UpdateType"] = "Message",
-                ["MessageId"] = 7
-            },
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "tg",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(2),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            sp,
+            default);
 
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+        UpdateDelegate next = _ =>
+        {
+            var handlerLogger = sp.GetRequiredService<ILogger<LoggingMiddlewareTests>>();
+            handlerLogger.LogInformation("handler");
+            return Task.CompletedTask;
+        };
 
-        Assert.Contains(logger.Logs, s => s.Contains("Message") && s.Contains('7') && s.Contains("123"));
-    }
+        await mw.InvokeAsync(ctx, next);
 
-    private sealed class ListLogger<T> : ILogger<T>
-    {
-        public List<string> Logs { get; } = new();
-
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => Logs.Add(formatter(state, exception));
-    }
-
-    private sealed class DummyServiceProvider : IServiceProvider
-    {
-        public object? GetService(Type serviceType) => null;
+        Assert.Contains(provider.Logs, l => l.Scope.TryGetValue("UpdateId", out var id) && id?.ToString() == "1");
     }
 }

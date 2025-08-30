@@ -21,4 +21,9 @@ public sealed class TransportOptions
     ///     Секрет для проверки вебхука
     /// </summary>
     public string Secret { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Размер очереди входящих обновлений вебхука
+    /// </summary>
+    public int QueueCapacity { get; set; } = 1024;
 }

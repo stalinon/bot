@@ -1,7 +1,9 @@
 using Bot.Core.Stats;
+using Bot.Hosting.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 
 namespace Bot.Hosting;
 
@@ -25,7 +27,18 @@ public static class EndpointRouteBuilderExtensions
     /// </summary>
     public static IEndpointRouteBuilder MapBotStats(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/admin/stats", (StatsCollector stats) => Results.Json(stats.GetSnapshot()));
+        endpoints.MapGet(
+            "/admin/stats",
+            (StatsCollector stats, HttpRequest request, IOptions<BotOptions> options) =>
+            {
+                if (!request.Headers.TryGetValue("X-Admin-Token", out var token) ||
+                    token != options.Value.AdminToken)
+                {
+                    return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                }
+
+                return Results.Json(stats.GetSnapshot());
+            });
         return endpoints;
     }
 }
