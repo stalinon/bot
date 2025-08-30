@@ -1,0 +1,78 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Bot.Abstractions;
+using Bot.Abstractions.Addresses;
+using Bot.Core.Scenes;
+using Bot.TestKit;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+
+namespace Bot.Core.Tests;
+
+/// <summary>
+///     Тесты навигатора по сценам.
+/// </summary>
+public sealed class SceneNavigatorTests
+{
+    /// <summary>
+    ///     Тест 1. Проверяем вход и выход из сцены.
+    /// </summary>
+    [Fact(DisplayName = "Тест 1. Проверяем вход и выход из сцены")]
+    public async Task EnterExit()
+    {
+        var store = new InMemoryStateStore();
+        var navigator = new SceneNavigator(store);
+        var ctx = Context();
+        var scene = new DummyScene();
+
+        await navigator.EnterAsync(ctx, scene);
+        var state = await navigator.GetStateAsync(ctx);
+        Assert.NotNull(state);
+        Assert.Equal(0, state!.Step);
+
+        await navigator.NextStepAsync(ctx);
+        state = await navigator.GetStateAsync(ctx);
+        Assert.Equal(1, state!.Step);
+
+        await navigator.ExitAsync(ctx);
+        state = await navigator.GetStateAsync(ctx);
+        Assert.Null(state);
+    }
+
+    /// <summary>
+    ///     Тест 2. Проверяем атомарность обновления шага.
+    /// </summary>
+    [Fact(DisplayName = "Тест 2. Проверяем атомарность обновления шага")]
+    public async Task ParallelSteps()
+    {
+        var store = new InMemoryStateStore();
+        var navigator = new SceneNavigator(store);
+        var ctx = Context();
+        var scene = new DummyScene();
+        await navigator.EnterAsync(ctx, scene);
+
+        var t1 = navigator.NextStepAsync(ctx);
+        var t2 = navigator.NextStepAsync(ctx);
+        await Task.WhenAll(t1, t2);
+
+        var state = await navigator.GetStateAsync(ctx);
+        Assert.Equal(2, state!.Step);
+    }
+
+    private static UpdateContext Context()
+    {
+        return new UpdateContext(
+            "tg",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(2),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new ServiceCollection().BuildServiceProvider(),
+            CancellationToken.None);
+    }
+}
