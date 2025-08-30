@@ -6,9 +6,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
-      <ProjectReference Include="..\Bot.Storage.File\Bot.Storage.File.csproj" />
-      <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
+      <ProjectReference Include="..\..\src\Bot.Hosting\Bot.Hosting.csproj" />
+      <ProjectReference Include="..\..\src\Bot.Storage.File\Bot.Storage.File.csproj" />
+      <ProjectReference Include="..\..\src\Bot.Telegram\Bot.Telegram.csproj" />
     </ItemGroup>
 
     <ItemGroup>

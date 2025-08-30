@@ -12,6 +12,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bot.Storage.File\Bot.Storage.File.csproj" />
+    <ProjectReference Include="..\..\src\Bot.Storage.File\Bot.Storage.File.csproj" />
   </ItemGroup>
 </Project>
