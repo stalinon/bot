@@ -12,6 +12,7 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Utils;
+using Bot.Core.Stats;
 using Bot.TestKit;
 using Bot.Hosting;
 using Bot.Hosting.Options;
@@ -52,7 +53,8 @@ public class PipelineIntegrationTests
         services.AddScoped<DedupMiddleware>();
         services.AddScoped<RateLimitMiddleware>();
         services.AddScoped<CommandParsingMiddleware>();
-        services.AddScoped<RouterMiddleware>();
+          services.AddScoped<RouterMiddleware>();
+          services.AddSingleton<StatsCollector>();
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(Array.Empty<Action<IUpdatePipeline>>());
         services.AddSingleton<IUpdateSource>(new JsonUpdateSource(updatePath));

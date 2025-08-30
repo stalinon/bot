@@ -23,8 +23,9 @@ public static class ServiceCollectionExtensions
             var opts = sp.GetRequiredService<IOptions<BotOptions>>().Value;
             return new TelegramBotClient(opts.Token, sp.GetRequiredService<IHttpClientFactory>().CreateClient(telegram));
         });
-        services.AddSingleton<TelegramPollingSource>();
-        services.AddSingleton<TelegramWebhookSource>();
+          services.AddSingleton<TelegramPollingSource>();
+          services.AddSingleton<TelegramWebhookSource>();
+          services.AddSingleton<WebhookService>();
         services.AddSingleton<IUpdateSource>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<BotOptions>>().Value;
