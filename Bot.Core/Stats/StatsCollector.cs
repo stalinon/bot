@@ -1,7 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Bot.Core.Stats;
 
@@ -10,25 +11,6 @@ namespace Bot.Core.Stats;
 /// </summary>
 public sealed class StatsCollector
 {
-    internal sealed class HandlerData
-    {
-        public long TotalRequests;
-        public long ErrorRequests;
-        public List<double> Latencies { get; } = new();
-        public DateTime StartTime { get; } = DateTime.UtcNow;
-        public object SyncRoot { get; } = new();
-    }
-
-    /// <summary>
-    ///     Метрика одного обработчика.
-    /// </summary>
-    public sealed record HandlerStat(double P50, double P95, double P99, double Rps, double ErrorRate);
-
-    /// <summary>
-    ///     Снимок текущей статистики.
-    /// </summary>
-    public sealed record Snapshot(Dictionary<string, HandlerStat> Handlers);
-
     private readonly ConcurrentDictionary<string, HandlerData> _data = new();
 
     /// <summary>
@@ -77,39 +59,5 @@ public sealed class StatsCollector
         return sorted[index] + fraction * (sorted[index + 1] - sorted[index]);
     }
 
-    /// <summary>
-    ///     Измерение длительности работы обработчика.
-    /// </summary>
-    public sealed class Measurement : IDisposable
-    {
-        private readonly HandlerData _info;
-        private readonly Stopwatch _sw;
-        private bool _error;
-
-        internal Measurement(HandlerData info, Stopwatch sw)
-        {
-            _info = info;
-            _sw = sw;
-        }
-
-        /// <summary>
-        ///     Отметить ошибку обработки.
-        /// </summary>
-        public void MarkError() => _error = true;
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            _sw.Stop();
-            lock (_info.SyncRoot)
-            {
-                _info.Latencies.Add(_sw.Elapsed.TotalMilliseconds);
-                if (_error)
-                {
-                    _info.ErrorRequests++;
-                }
-            }
-        }
-    }
 }
 
