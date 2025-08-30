@@ -22,7 +22,10 @@ var cfg = builder.Configuration;
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
-        o.Transport = TransportMode.Polling;
+        o.Transport = new TransportOptions
+        {
+            Mode = TransportMode.Polling
+        };
         o.Parallelism = 8;
         o.RateLimits = new RateLimitOptions { PerUserPerMinute = 20, PerChatPerMinute = 60, Mode = RateLimitMode.Soft };
     })
