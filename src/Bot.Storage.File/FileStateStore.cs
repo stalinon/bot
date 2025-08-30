@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using Bot.Abstractions.Contracts;
 using Bot.Storage.File.Options;
 
@@ -16,6 +18,7 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     private readonly ConcurrentDictionary<string, byte[]>? _buffer;
     private readonly Timer? _flushTimer;
     private readonly Timer _cleaner;
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
     /// <summary>
     ///     Создаёт файловое хранилище
@@ -112,6 +115,31 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
 
         var data = JsonSerializer.SerializeToUtf8Bytes(value, Json);
         _buffer[file] = data;
+    }
+
+    /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <inheritdoc />
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    {
+        var sem = _locks.GetOrAdd(PathFor(scope, key), _ => new SemaphoreSlim(1, 1));
+        await sem.WaitAsync(ct);
+        try
+        {
+            var current = await GetAsync<T>(scope, key, ct);
+            if (EqualityComparer<T>.Default.Equals(current, expected))
+            {
+                await SetAsync(scope, key, value, null, ct);
+                return true;
+            }
+
+            return false;
+        }
+        finally
+        {
+            sem.Release();
+        }
     }
 
     /// <summary>

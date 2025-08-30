@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Bot.Abstractions.Contracts;
@@ -38,6 +39,32 @@ public sealed class InMemoryStateStore : IStateStore
         var exp = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : (DateTimeOffset?)null;
         _store[(scope, key)] = (value!, exp);
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var k = (scope, key);
+        if (_store.TryGetValue(k, out var entry))
+        {
+            if (entry.expires is { } exp && exp <= DateTimeOffset.UtcNow)
+            {
+                _store.TryRemove(k, out _);
+                return Task.FromResult(false);
+            }
+
+            var current = (T)entry.value;
+            if (EqualityComparer<T>.Default.Equals(current, expected))
+            {
+                _store.TryUpdate(k, (value!, entry.expires), entry);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(false);
     }
 
     /// <inheritdoc />
