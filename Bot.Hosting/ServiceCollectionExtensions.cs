@@ -10,6 +10,7 @@ using Bot.Hosting.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Metrics;
 
 namespace Bot.Hosting;
 
@@ -19,9 +20,11 @@ namespace Bot.Hosting;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    ///     Добавить бота
+    ///     Добавить бота.
     /// </summary>
-    public static IServiceCollection AddBot(this IServiceCollection services, Action<BotOptions> configure)
+    /// <param name="configure">Настройка параметров бота.</param>
+    /// <param name="metrics">Дополнительная настройка <see cref="MeterProviderBuilder"/>.</param>
+    public static IServiceCollection AddBot(this IServiceCollection services, Action<BotOptions> configure, Action<MeterProviderBuilder>? metrics = null)
     {
         services.AddOptions<BotOptions>().Configure(configure);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
@@ -31,12 +34,22 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(sp => new TtlCache<string>(sp
             .GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
             .Value.DeduplicationTtl));
-          services.AddSingleton<BotHostedService>();
-          services.AddHostedService<BotHostedService>();
-          services.AddMetrics();
-          services.AddSingleton<StatsCollector>();
-          return services;
-      }
+        services.AddSingleton<BotHostedService>();
+        services.AddHostedService<BotHostedService>();
+        services.AddMetrics();
+        services.AddSingleton<StatsCollector>();
+
+        if (metrics is not null)
+        {
+            services.AddOpenTelemetry().WithMetrics(builder =>
+            {
+                builder.AddMeter(MetricsMiddleware.MeterName);
+                metrics(builder);
+            });
+        }
+
+        return services;
+    }
     
     /// <summary>
     ///     Добавить пайплайн
