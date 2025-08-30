@@ -4,13 +4,14 @@
         <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0-preview.7.25380.108" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics" Version="10.0.0-preview.7.25380.108" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
   </ItemGroup>
 
   <ItemGroup>
