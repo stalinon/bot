@@ -40,7 +40,7 @@ var cfg = builder.Configuration;
         .Use<RateLimitMiddleware>()
         .Use<CommandParsingMiddleware>()
         .Use<RouterMiddleware>())
-    .UseStateStore(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
+    .UseStateStorage(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
 
   var host = builder.Build();
 
