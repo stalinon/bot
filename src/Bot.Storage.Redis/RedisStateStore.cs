@@ -64,17 +64,20 @@ return val";
     }
 
     /// <inheritdoc />
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         const string script = @"if redis.call('EXISTS', KEYS[1]) == 0 then
-    redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2])
+    redis.call('SET', KEYS[1], ARGV[1])
+    if tonumber(ARGV[2]) and tonumber(ARGV[2]) > 0 then
+        redis.call('PEXPIRE', KEYS[1], ARGV[2])
+    end
     return 1
 end
 return 0";
         var json = JsonSerializer.Serialize(value, Json);
         var keys = new RedisKey[] { MakeKey(scope, key) };
-        var args = new RedisValue[] { json, (long)ttl.TotalMilliseconds };
+        var args = new RedisValue[] { json, ttl.HasValue ? (long)ttl.Value.TotalMilliseconds : -1 };
         var result = await _db.ScriptEvaluateAsync(script, keys, args).ConfigureAwait(false);
         return (int)result == 1;
     }

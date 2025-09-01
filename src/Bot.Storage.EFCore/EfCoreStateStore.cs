@@ -92,7 +92,7 @@ public sealed class EfCoreStateStore : IStateStorage
     }
 
     /// <inheritdoc />
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
@@ -106,7 +106,7 @@ public sealed class EfCoreStateStore : IStateStorage
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
         entity.Value = JsonSerializer.Serialize(value, Json);
-        entity.ExpiresAt = DateTimeOffset.UtcNow.Add(ttl);
+        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
     }

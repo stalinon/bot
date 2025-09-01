@@ -63,7 +63,7 @@ public sealed class InMemoryStateStore : IStateStorage
     /// <summary>
     ///     Установить значение, если ключ отсутствует
     /// </summary>
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var existing = await GetAsync<T>(scope, key, ct).ConfigureAwait(false);

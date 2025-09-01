@@ -41,5 +41,5 @@ public interface IStateStorage
     /// <param name="ct">Токен отмены</param>
     /// <typeparam name="T">Тип значения</typeparam>
     /// <returns>Возвращает <c>true</c>, если значение установлено</returns>
-    Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan ttl, CancellationToken ct);
+    Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct);
 }
