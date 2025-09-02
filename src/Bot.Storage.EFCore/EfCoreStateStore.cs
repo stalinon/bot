@@ -73,22 +73,36 @@ public sealed class EfCoreStateStore : IStateStorage
     public async Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
-        long current = 0;
-        if (entity is null)
+        while (true)
         {
-            entity = new StateEntry { Scope = scope, Key = key, Value = "0" };
-            await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
+            var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
+            long current;
+            if (entity is null)
+            {
+                entity = new StateEntry { Scope = scope, Key = key, Value = "0" };
+                await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
+            }
+            else if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
+            {
+                entity.Value = "0";
+            }
+            current = long.Parse(entity.Value) + value;
+            entity.Value = current.ToString();
+            entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+            try
+            {
+                await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+                return current;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                _db.Entry(entity).State = EntityState.Detached;
+            }
+            catch (DbUpdateException)
+            {
+                _db.Entry(entity).State = EntityState.Detached;
+            }
         }
-        else if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
-        {
-            entity.Value = "0";
-        }
-        current = long.Parse(entity.Value) + value;
-        entity.Value = current.ToString();
-        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
-        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        return current;
     }
 
     /// <inheritdoc />
@@ -107,7 +121,14 @@ public sealed class EfCoreStateStore : IStateStorage
         }
         entity.Value = JsonSerializer.Serialize(value, Json);
         entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
-        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        return true;
+        try
+        {
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (DbUpdateException)
+        {
+            return false;
+        }
     }
 }
