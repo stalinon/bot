@@ -9,7 +9,7 @@ namespace Bot.TestKit;
 /// <summary>
 ///     Простейшее хранилище состояний в памяти.
 /// </summary>
-public sealed class InMemoryStateStore : IStateStore
+public sealed class InMemoryStateStore : IStateStorage
 {
     private readonly ConcurrentDictionary<(string scope, string key), (object value, DateTimeOffset? expires)> _store = new();
 
@@ -46,5 +46,32 @@ public sealed class InMemoryStateStore : IStateStore
         ct.ThrowIfCancellationRequested();
         var removed = _store.TryRemove((scope, key), out _);
         return Task.FromResult(removed);
+    }
+
+    /// <summary>
+    ///     Увеличить числовое значение
+    /// </summary>
+    public async Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var current = await GetAsync<long>(scope, key, ct).ConfigureAwait(false);
+        current += value;
+        await SetAsync(scope, key, current, ttl, ct).ConfigureAwait(false);
+        return current;
+    }
+
+    /// <summary>
+    ///     Установить значение, если ключ отсутствует
+    /// </summary>
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var existing = await GetAsync<T>(scope, key, ct).ConfigureAwait(false);
+        if (existing is not null && !existing.Equals(default(T)))
+        {
+            return false;
+        }
+        await SetAsync(scope, key, value, ttl, ct).ConfigureAwait(false);
+        return true;
     }
 }
