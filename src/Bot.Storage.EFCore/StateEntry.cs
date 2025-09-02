@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Bot.Storage.EFCore;
 
@@ -20,6 +21,7 @@ public sealed class StateEntry
     /// <summary>
     ///     Значение
     /// </summary>
+    [ConcurrencyCheck]
     public required string Value { get; set; }
 
     /// <summary>

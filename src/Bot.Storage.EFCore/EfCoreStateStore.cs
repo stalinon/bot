@@ -73,48 +73,62 @@ public sealed class EfCoreStateStore : IStateStorage
     public async Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-
-        var now = DateTimeOffset.UtcNow;
-        var expiresAt = ttl.HasValue ? now.Add(ttl.Value) : (DateTimeOffset?)null;
-
-        FormattableString sql = $"""
-INSERT INTO states ("Scope", "Key", "Value", "ExpiresAt")
-VALUES ({scope}, {key}, {value.ToString()}, {expiresAt})
-ON CONFLICT ("Scope", "Key") DO UPDATE SET
-    "Value" = CASE
-        WHEN states."ExpiresAt" IS NULL OR states."ExpiresAt" > {now}
-            THEN (CAST(states."Value" AS bigint) + {value})::text
-        ELSE {value.ToString()}
-    END,
-    "ExpiresAt" = {expiresAt}
-RETURNING CAST("Value" AS bigint);
-""";
-
-        var result = await _db.Database.SqlQuery<long>(sql).SingleAsync(ct).ConfigureAwait(false);
-
-        return result;
+        while (true)
+        {
+            var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
+            long current;
+            if (entity is null)
+            {
+                entity = new StateEntry { Scope = scope, Key = key, Value = "0" };
+                await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
+            }
+            else if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
+            {
+                entity.Value = "0";
+            }
+            current = long.Parse(entity.Value) + value;
+            entity.Value = current.ToString();
+            entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+            try
+            {
+                await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+                return current;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                _db.Entry(entity).State = EntityState.Detached;
+            }
+            catch (DbUpdateException)
+            {
+                _db.Entry(entity).State = EntityState.Detached;
+            }
+        }
     }
 
     /// <inheritdoc />
     public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-
-        var now = DateTimeOffset.UtcNow;
-        var expiresAt = ttl.HasValue ? now.Add(ttl.Value) : (DateTimeOffset?)null;
-        var json = JsonSerializer.Serialize(value, Json);
-
-        FormattableString sql = $"""
-INSERT INTO states ("Scope", "Key", "Value", "ExpiresAt")
-VALUES ({scope}, {key}, {json}, {expiresAt})
-ON CONFLICT ("Scope", "Key") DO UPDATE SET
-    "Value" = EXCLUDED."Value",
-    "ExpiresAt" = EXCLUDED."ExpiresAt"
-WHERE states."ExpiresAt" IS NULL OR states."ExpiresAt" <= {now};
-""";
-
-        var affected = await _db.Database.ExecuteSqlInterpolatedAsync(sql, ct).ConfigureAwait(false);
-
-        return affected > 0;
+        var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
+        if (entity is not null && (entity.ExpiresAt is null || entity.ExpiresAt > DateTimeOffset.UtcNow))
+        {
+            return false;
+        }
+        if (entity is null)
+        {
+            entity = new StateEntry { Scope = scope, Key = key, Value = string.Empty };
+            await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
+        }
+        entity.Value = JsonSerializer.Serialize(value, Json);
+        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        try
+        {
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (DbUpdateException)
+        {
+            return false;
+        }
     }
 }
