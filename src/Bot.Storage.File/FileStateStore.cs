@@ -10,7 +10,7 @@ namespace Bot.Storage.File;
 /// <summary>
 ///     Файловое хранилище
 /// </summary>
-public sealed class FileStateStore : IStateStore, IAsyncDisposable
+public sealed class FileStateStore : IStateStorage, IAsyncDisposable
 {
     private readonly string _basePath;
     private readonly string[] _prefix;
@@ -160,6 +160,33 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
         }
 
         return Task.FromResult(removed);
+    }
+
+    /// <summary>
+    ///     Увеличить числовое значение
+    /// </summary>
+    public async Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var current = await GetAsync<long>(scope, key, ct).ConfigureAwait(false);
+        current += value;
+        await SetAsync(scope, key, current, ttl, ct).ConfigureAwait(false);
+        return current;
+    }
+
+    /// <summary>
+    ///     Установить значение, если ключ отсутствует
+    /// </summary>
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var existing = await GetAsync<T>(scope, key, ct).ConfigureAwait(false);
+        if (existing is not null && !existing.Equals(default(T)))
+        {
+            return false;
+        }
+        await SetAsync(scope, key, value, ttl, ct).ConfigureAwait(false);
+        return true;
     }
 
     private string DirFor(string scope, string key = "")

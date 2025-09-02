@@ -9,7 +9,7 @@ namespace Bot.Examples.WebhookBot.Handlers;
 ///     Пинг
 /// </summary>
 [Command("/ping")]
-public sealed class PingHandler(IStateStore store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
+public sealed class PingHandler(IStateStorage store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
 {
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)

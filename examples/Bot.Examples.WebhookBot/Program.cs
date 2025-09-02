@@ -41,7 +41,7 @@ builder.Services
         .Use<RateLimitMiddleware>()
         .Use<CommandParsingMiddleware>()
         .Use<Bot.Core.Middlewares.RouterMiddleware>())
-    .UseStateStore(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
+    .UseStateStorage(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
 
 var app = builder.Build();
 

@@ -11,13 +11,13 @@ using Bot.Abstractions.Contracts;
 public sealed class SceneNavigator : ISceneNavigator
 {
     private const string Scope = "scene";
-    private readonly IStateStore _store;
+    private readonly IStateStorage _store;
 
     /// <summary>
     ///     Создаёт навигатор.
     /// </summary>
     /// <param name="store">Хранилище состояний.</param>
-    public SceneNavigator(IStateStore store)
+    public SceneNavigator(IStateStorage store)
     {
         _store = store;
     }
@@ -27,13 +27,15 @@ public sealed class SceneNavigator : ISceneNavigator
     {
         var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0);
         await _store.SetAsync(Scope, Key(ctx), state, null, ctx.CancellationToken);
+        await _store.SetAsync(Scope, StepKey(ctx), 0L, null, ctx.CancellationToken);
         await scene.OnEnter(ctx);
     }
 
     /// <inheritdoc />
-    public Task ExitAsync(UpdateContext ctx)
+    public async Task ExitAsync(UpdateContext ctx)
     {
-        return _store.RemoveAsync(Scope, Key(ctx), ctx.CancellationToken);
+        await _store.RemoveAsync(Scope, Key(ctx), ctx.CancellationToken);
+        await _store.RemoveAsync(Scope, StepKey(ctx), ctx.CancellationToken);
     }
 
     /// <inheritdoc />
@@ -45,21 +47,13 @@ public sealed class SceneNavigator : ISceneNavigator
     /// <inheritdoc />
     public async Task<int> NextStepAsync(UpdateContext ctx)
     {
-        while (true)
-        {
-            var state = await GetStateAsync(ctx);
-            if (state is null)
-            {
-                throw new InvalidOperationException("No active scene");
-            }
-
-            var next = state with { Step = state.Step + 1 };
-            if (await _store.TrySetIfAsync(Scope, Key(ctx), state, next, ctx.CancellationToken))
-            {
-                return next.Step;
-            }
-        }
+        var step = await _store.IncrementAsync(Scope, StepKey(ctx), 1, null, ctx.CancellationToken);
+        var state = await GetStateAsync(ctx) ?? throw new InvalidOperationException("No active scene");
+        var next = state with { Step = (int)step };
+        await _store.SetAsync(Scope, Key(ctx), next, null, ctx.CancellationToken);
+        return next.Step;
     }
 
     private static string Key(UpdateContext ctx) => $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";
+    private static string StepKey(UpdateContext ctx) => $"{Key(ctx)}:step";
 }
