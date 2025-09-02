@@ -5,12 +5,11 @@ using Bot.Hosting.Options;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 using Bot.Telegram;
-using Bot.Examples.HelloBot.Services;
+using Bot.Examples.WebhookBot.Services;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false)
@@ -18,13 +17,15 @@ builder.Configuration
 
 var cfg = builder.Configuration;
 
-  builder.Services
+builder.Services
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
         o.Transport = new TransportOptions
         {
-            Mode = TransportMode.Polling
+            Mode = TransportMode.Webhook,
+            PublicUrl = cfg["PUBLIC_URL"] ?? throw new InvalidOperationException("PUBLIC_URL is required"),
+            Secret = cfg["WEBHOOK_SECRET"] ?? "secret"
         };
         o.Parallelism = 8;
         o.RateLimits = new RateLimitOptions { PerUserPerMinute = 20, PerChatPerMinute = 60, Mode = RateLimitMode.Soft };
@@ -39,21 +40,23 @@ var cfg = builder.Configuration;
         .Use<DedupMiddleware>()
         .Use<RateLimitMiddleware>()
         .Use<CommandParsingMiddleware>()
-        .Use<RouterMiddleware>())
+        .Use<Bot.Core.Middlewares.RouterMiddleware>())
     .UseStateStorage(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
 
-  var host = builder.Build();
+var app = builder.Build();
 
-  if (args.Contains("set-webhook", StringComparer.OrdinalIgnoreCase))
-  {
-      await host.Services.GetRequiredService<WebhookService>().SetWebhookAsync(default);
-      return;
-  }
+app.MapTelegramWebhook();
 
-  if (args.Contains("delete-webhook", StringComparer.OrdinalIgnoreCase))
-  {
-      await host.Services.GetRequiredService<WebhookService>().DeleteWebhookAsync(default);
-      return;
-  }
+if (args.Contains("set-webhook", StringComparer.OrdinalIgnoreCase))
+{
+    await app.Services.GetRequiredService<WebhookService>().SetWebhookAsync(default);
+    return;
+}
 
-  await host.RunAsync();
+if (args.Contains("delete-webhook", StringComparer.OrdinalIgnoreCase))
+{
+    await app.Services.GetRequiredService<WebhookService>().DeleteWebhookAsync(default);
+    return;
+}
+
+await app.RunAsync();

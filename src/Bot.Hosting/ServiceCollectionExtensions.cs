@@ -103,7 +103,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     ///     Использовать хранилище состояний
     /// </summary>
-    public static IServiceCollection UseStateStore(this IServiceCollection services, IStateStore store)
+    public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStorage store)
     {
         services.AddSingleton(store);
         return services;

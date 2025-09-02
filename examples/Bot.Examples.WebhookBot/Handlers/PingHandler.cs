@@ -1,9 +1,9 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
-using Bot.Examples.HelloBot.Services;
+using Bot.Examples.WebhookBot.Services;
 
-namespace Bot.Examples.HelloBot.Handlers;
+namespace Bot.Examples.WebhookBot.Handlers;
 
 /// <summary>
 ///     Пинг
@@ -15,7 +15,9 @@ public sealed class PingHandler(IStateStorage store, ITransportClient tx, Reques
     public async Task HandleAsync(UpdateContext ctx)
     {
         var key = $"ping:{ctx.User.Id}";
-        var n = await store.IncrementAsync("user", key, 1, TimeSpan.FromDays(30), ctx.CancellationToken);
+        var n = await store.GetAsync<int>("user", key, ctx.CancellationToken);
+        n++;
+        await store.SetAsync("user", key, n, TimeSpan.FromDays(30), ctx.CancellationToken);
         await tx.SendTextAsync(ctx.Chat, $"pong #{n} (req: {requestId.Id})", ctx.CancellationToken);
     }
 }
