@@ -27,6 +27,7 @@ public sealed class StatsCollector
     private readonly Counter<long>? _rateLimitedCounter;
     private readonly Histogram<double>? _handlerLatency;
     private readonly ObservableGauge<long>? _queueGauge;
+    private readonly DateTime _startTime = DateTime.UtcNow;
     private int _queueDepth;
     private long _droppedUpdates;
     private long _rateLimited;
@@ -103,6 +104,10 @@ public sealed class StatsCollector
     public Snapshot GetSnapshot()
     {
         var dict = new Dictionary<string, HandlerStat>();
+        var allLatencies = new List<double>();
+        long totalRequests = 0;
+        long errorRequests = 0;
+
         foreach (var (name, data) in _data)
         {
             lock (data.SyncRoot)
@@ -116,11 +121,29 @@ public sealed class StatsCollector
                 var rps = data.TotalRequests / seconds;
                 var errorRate = data.TotalRequests == 0 ? 0 : (double)data.ErrorRequests / data.TotalRequests;
                 dict[name] = new HandlerStat(p50, p95, p99, rps, errorRate);
+
+                allLatencies.AddRange(latencies);
+                totalRequests += data.TotalRequests;
+                errorRequests += data.ErrorRequests;
             }
         }
 
+        var globalLatencies = allLatencies.ToArray();
+        Array.Sort(globalLatencies);
+        var totalP50 = Percentile(globalLatencies, 0.50);
+        var totalP95 = Percentile(globalLatencies, 0.95);
+        var totalP99 = Percentile(globalLatencies, 0.99);
+        var totalSeconds = Math.Max(1, (DateTime.UtcNow - _startTime).TotalSeconds);
+        var totalRps = totalRequests / totalSeconds;
+        var totalErrorRate = totalRequests == 0 ? 0 : (double)errorRequests / totalRequests;
+
         return new Snapshot(
             dict,
+            totalP50,
+            totalP95,
+            totalP99,
+            totalRps,
+            totalErrorRate,
             Interlocked.Read(ref _droppedUpdates),
             Interlocked.Read(ref _rateLimited),
             Volatile.Read(ref _queueDepth));
