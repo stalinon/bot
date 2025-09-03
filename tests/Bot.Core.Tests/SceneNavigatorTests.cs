@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,6 +59,23 @@ public sealed class SceneNavigatorTests
 
         var state = await navigator.GetStateAsync(ctx);
         Assert.Equal(2, state!.Step);
+    }
+
+    /// <summary>
+    ///     Тест 3. Проверяем таймаут шага и автоматический выход.
+    /// </summary>
+    [Fact(DisplayName = "Тест 3. Проверяем таймаут шага и автоматический выход")]
+    public async Task StepTimeout()
+    {
+        var store = new InMemoryStateStore();
+        var navigator = new SceneNavigator(store, TimeSpan.FromMilliseconds(100));
+        var ctx = Context();
+        var scene = new DummyScene();
+
+        await navigator.EnterAsync(ctx, scene);
+        await Task.Delay(200);
+        var state = await navigator.GetStateAsync(ctx);
+        Assert.Null(state);
     }
 
     private static UpdateContext Context()
