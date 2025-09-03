@@ -130,13 +130,15 @@ public static class ServiceCollectionExtensions
     /// <param name="configuration">Конфигурация приложения.</param>
     public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = (configuration["STORAGE:PROVIDER"] ?? "file").ToLowerInvariant();
+        var section = configuration.GetSection("Storage");
+        var provider = (section["Provider"] ?? "file").ToLowerInvariant();
         switch (provider)
         {
             case "redis":
-                var conn = configuration["STORAGE:REDIS:CONNECTION"] ?? "localhost";
-                var db = int.TryParse(configuration["STORAGE:REDIS:DB"], out var d) ? d : 0;
-                var prefix = configuration["STORAGE:REDIS:PREFIX"] ?? string.Empty;
+                var redis = section.GetSection("Redis");
+                var conn = redis["Connection"] ?? "localhost";
+                var db = int.TryParse(redis["Db"], out var d) ? d : 0;
+                var prefix = redis["Prefix"] ?? string.Empty;
                 var mux = ConnectionMultiplexer.Connect(conn);
                 var options = new RedisOptions
                 {
@@ -147,8 +149,9 @@ public static class ServiceCollectionExtensions
                 services.UseStateStorage(new RedisStateStore(options));
                 break;
             case "ef":
-                var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";
-                var efProvider = (configuration["STORAGE:EF:PROVIDER"] ?? "sqlite").ToLowerInvariant();
+                var ef = section.GetSection("Ef");
+                var cs = ef["Connection"] ?? "Data Source=bot_state.db";
+                var efProvider = (ef["Provider"] ?? "sqlite").ToLowerInvariant();
                 services.AddDbContext<StateContext>(o =>
                 {
                     if (efProvider == "postgres")
@@ -164,7 +167,8 @@ public static class ServiceCollectionExtensions
                 services.AddScoped<IStateStorage>(sp => (IStateStorage)sp.GetRequiredService<IStateStore>());
                 break;
             default:
-                var path = configuration["STORAGE:FILE:PATH"] ?? "data";
+                var file = section.GetSection("File");
+                var path = file["Path"] ?? "data";
                 services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = path }));
                 break;
         }

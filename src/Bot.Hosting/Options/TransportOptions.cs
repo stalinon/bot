@@ -1,10 +1,15 @@
-using System;
-
 namespace Bot.Hosting.Options;
 
 /// <summary>
 ///     Настройки транспорта
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Выбор способа доставки</item>
+///         <item>Параллелизм обработки</item>
+///         <item>Параметры вебхука</item>
+///     </list>
+/// </remarks>
 public sealed class TransportOptions
 {
     /// <summary>
@@ -13,17 +18,12 @@ public sealed class TransportOptions
     public TransportMode Mode { get; set; } = TransportMode.Polling;
 
     /// <summary>
-    ///     Публичный URL для вебхука
+    ///     Максимальное число параллельных обработчиков
     /// </summary>
-    public string? PublicUrl { get; set; }
+    public int Parallelism { get; set; } = 8;
 
     /// <summary>
-    ///     Секрет для проверки вебхука
+    ///     Настройки вебхука
     /// </summary>
-    public string Secret { get; set; } = string.Empty;
-
-    /// <summary>
-    ///     Размер очереди входящих обновлений вебхука
-    /// </summary>
-    public int QueueCapacity { get; set; } = 1024;
+    public WebhookOptions Webhook { get; set; } = new();
 }

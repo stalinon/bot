@@ -30,7 +30,7 @@ public sealed class WebhookService
     public async Task SetWebhookAsync(CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var url = $"{_options.Transport.PublicUrl?.TrimEnd('/')}/tg/{_options.Transport.Secret}";
+        var url = $"{_options.Transport.Webhook.PublicUrl?.TrimEnd('/')}/tg/{_options.Transport.Webhook.Secret}";
         await _client.SetWebhook(url, cancellationToken: ct);
         _logger.LogInformation("webhook set to {Url}", url);
     }

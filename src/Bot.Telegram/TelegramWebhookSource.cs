@@ -26,7 +26,7 @@ public sealed class TelegramWebhookSource(
     : IUpdateSource
 {
     private readonly Channel<Update> _updates = Channel.CreateBounded<Update>(
-        new BoundedChannelOptions(options.Value.Transport.QueueCapacity)
+        new BoundedChannelOptions(options.Value.Transport.Webhook.QueueCapacity)
         {
             FullMode = BoundedChannelFullMode.Wait
         });
@@ -54,9 +54,9 @@ public sealed class TelegramWebhookSource(
     /// </summary>
     public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
     {
-        if (!string.IsNullOrWhiteSpace(_options.Transport.PublicUrl))
+        if (!string.IsNullOrWhiteSpace(_options.Transport.Webhook.PublicUrl))
         {
-            var url = $"{_options.Transport.PublicUrl.TrimEnd('/')}/tg/{_options.Transport.Secret}";
+            var url = $"{_options.Transport.Webhook.PublicUrl.TrimEnd('/')}/tg/{_options.Transport.Webhook.Secret}";
             await client.SetWebhook(url, cancellationToken: ct);
         }
 

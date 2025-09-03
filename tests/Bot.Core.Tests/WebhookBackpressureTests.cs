@@ -31,10 +31,13 @@ public class WebhookBackpressureTests
             .ConfigureServices(services =>
             {
                 services.AddRouting();
-                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
-                {
-                    Transport = new TransportOptions { Secret = "s", QueueCapacity = 1 }
-                }));
+                    services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                    {
+                        Transport = new TransportOptions
+                        {
+                            Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 1 }
+                        }
+                    }));
                 services.AddSingleton<ITelegramBotClient>(Mock.Of<ITelegramBotClient>());
                 services.AddSingleton<StatsCollector>();
                 services.AddSingleton<TelegramWebhookSource>();

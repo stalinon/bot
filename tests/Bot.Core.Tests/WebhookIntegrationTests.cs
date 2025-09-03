@@ -34,7 +34,11 @@ public sealed class WebhookIntegrationTests
         var tcs = new TaskCompletionSource<UpdateContext>();
         var srcOptions = Microsoft.Extensions.Options.Options.Create(new BotOptions
         {
-            Transport = new TransportOptions { QueueCapacity = 8, Mode = TransportMode.Webhook }
+            Transport = new TransportOptions
+            {
+                Mode = TransportMode.Webhook,
+                Webhook = new WebhookOptions { QueueCapacity = 8 }
+            }
         });
         var source = new TelegramWebhookSource(Mock.Of<ITelegramBotClient>(), srcOptions, new StatsCollector());
 
@@ -43,10 +47,14 @@ public sealed class WebhookIntegrationTests
             {
                 services.AddRouting();
                 services.AddLogging();
-                services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new BotOptions
-                {
-                    Transport = new TransportOptions { Secret = "s", QueueCapacity = 8, Mode = TransportMode.Webhook }
-                }));
+                    services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                    {
+                        Transport = new TransportOptions
+                        {
+                            Mode = TransportMode.Webhook,
+                            Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 8 }
+                        }
+                    }));
                 services.AddSingleton(source);
             })
             .Configure(app =>

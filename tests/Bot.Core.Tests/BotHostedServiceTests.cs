@@ -55,7 +55,7 @@ public class BotHostedServiceTests
         services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(new[] { (Action<IUpdatePipeline>)(p => p.Use(tracker.Middleware)) });
         services.AddSingleton<IUpdateSource>(new TestUpdateSource(updates));
         services.AddSingleton<ILogger<BotHostedService>>(sp => sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
-        services.AddOptions<BotOptions>().Configure(o => o.Parallelism = parallelism);
+        services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = parallelism);
 
         var sp = services.BuildServiceProvider();
         var svc = ActivatorUtilities.CreateInstance<BotHostedService>(sp);

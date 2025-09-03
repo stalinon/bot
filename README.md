@@ -25,5 +25,5 @@ For development or deployment you can adjust settings in `appsettings.json` or v
 
 ### Переключение хранилища
 
-Тип хранилища задаётся переменной окружения `STORAGE__PROVIDER` (`file`, `redis` или `ef`).
-Другие параметры берутся из секции `STORAGE`.
+Тип хранилища задаётся переменной окружения `Storage__Provider` (`file`, `redis` или `ef`).
+Другие параметры берутся из секции `Storage`.
