@@ -10,17 +10,24 @@
 
 ## Конфигурация
 
-Серверная часть использует `WebAppAuthOptions`.
+Серверная часть использует `WebAppAuthOptions` и строгую политику безопасности через `UseStrictCspForWebApp`.
 
 ```json
 {
   "WebAppAuthOptions": {
     "Secret": "0123456789ABCDEF0123456789ABCDEF"
+  },
+  "WebAppCsp": {
+    "AllowedOrigins": [
+      "https://example.com"
+    ]
   }
 }
 ```
 
-*Переменная окружения:* `WebAppAuthOptions__Secret`.
+*Переменные окружения:* `WebAppAuthOptions__Secret`, `WebAppCsp__AllowedOrigins__0`.
+
+Метод `UseStrictCspForWebApp` принимает список разрешённых origin'ов и добавляет заголовки `Content-Security-Policy`, `Referrer-Policy`, `X-Content-Type-Options` и `X-Frame-Options`.
 
 ## Обмен данными
 
