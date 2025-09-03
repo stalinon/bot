@@ -1,15 +1,17 @@
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Stats;
+
 using FluentAssertions;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace Bot.Admin.MinimalApi.Tests;
@@ -127,7 +129,7 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
 
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/health/ready");
-        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 
     /// <summary>
@@ -136,9 +138,16 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
     [Fact(DisplayName = "Тест 8: При ошибке пробы готовность возвращает 503")]
     public async Task Should_Return503_When_HealthReadyProbeFails()
     {
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<ITransportClient, FailingTransportClient>();
+            });
+        });
+        var client = factory.CreateClient();
+        var resp = await client.GetAsync("/health/ready");
         resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
-
-        stats.SetQueueDepth(0);
     }
 
     /// <summary>
