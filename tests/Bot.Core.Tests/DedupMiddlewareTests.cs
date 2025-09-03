@@ -3,9 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
-using Bot.Core.Middlewares;
-using Bot.Core.Utils;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Middlewares;
+using Bot.Core.Stats;
+using Bot.Core.Utils;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -14,17 +16,25 @@ namespace Bot.Core.Tests;
 /// <summary>
 ///     Тесты для <see cref="DedupMiddleware"/>.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Фильтрация дубликатов.</item>
+///         <item>Обработка уникальных обновлений.</item>
+///         <item>Учёт потерянных обновлений в статистике.</item>
+///     </list>
+/// </remarks>
 public class DedupMiddlewareTests
 {
     /// <summary>
-    ///     Дубликаты игнорируются в течение TTL и принимаются после его истечения.
+    ///     Тест 1: Дубликаты игнорируются в течение TTL и принимаются после его истечения.
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Дубликаты игнорируются в течение TTL и принимаются после его истечения")]
+    [Fact(DisplayName = "Тест 1: Дубликаты игнорируются в течение TTL и принимаются после его истечения")]
     public async Task Duplicate_within_ttl_is_ignored_and_after_ttl_passes()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
         using var cache = new TtlCache<string>(TimeSpan.FromMilliseconds(100));
-        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache);
+        var stats = new StatsCollector();
+        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
         var ctx = new UpdateContext(
             Transport: "test",
             UpdateId: "42",
@@ -46,22 +56,23 @@ public class DedupMiddlewareTests
 
         await mw.InvokeAsync(ctx, next);
         await mw.InvokeAsync(ctx, next); // дубликат в пределах TTL
-        Assert.Equal(1, calls);
+        calls.Should().Be(1);
 
         await Task.Delay(250); // ждём окончания TTL и очистки
         await mw.InvokeAsync(ctx, next); // после TTL должен пройти
-        Assert.Equal(2, calls);
+        calls.Should().Be(2);
     }
 
     /// <summary>
-    ///     Уникальные обновления обрабатываются независимо.
+    ///     Тест 2: Уникальные обновления обрабатываются независимо.
     /// </summary>
-    [Fact(DisplayName = "Тест 2. Уникальные обновления обрабатываются независимо")]
+    [Fact(DisplayName = "Тест 2: Уникальные обновления обрабатываются независимо")]
     public async Task Different_update_ids_are_processed_independently()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
         using var cache = new TtlCache<string>(TimeSpan.FromMilliseconds(100));
-        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache);
+        var stats = new StatsCollector();
+        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
         var ctx1 = new UpdateContext(
             Transport: "test",
             UpdateId: "1",
@@ -84,7 +95,36 @@ public class DedupMiddlewareTests
 
         await mw.InvokeAsync(ctx1, next);
         await mw.InvokeAsync(ctx2, next);
-        Assert.Equal(2, calls);
+        calls.Should().Be(2);
+    }
+
+    /// <summary>
+    ///     Тест 3: Игнорирование дубликата увеличивает счётчик потерянных обновлений.
+    /// </summary>
+    [Fact(DisplayName = "Тест 3: Игнорирование дубликата увеличивает счётчик потерянных обновлений")]
+    public async Task Duplicate_increments_dropped_counter()
+    {
+        var loggerFactory = LoggerFactory.Create(b => { });
+        using var cache = new TtlCache<string>(TimeSpan.FromMinutes(1));
+        var stats = new StatsCollector();
+        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
+        var ctx = new UpdateContext(
+            Transport: "test",
+            UpdateId: "1",
+            Chat: new ChatAddress(1),
+            User: new UserAddress(1),
+            Text: null,
+            Command: null,
+            Args: null,
+            Payload: null,
+            Items: new Dictionary<string, object>(),
+            Services: new DummyServiceProvider(),
+            CancellationToken: CancellationToken.None);
+
+        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+
+        stats.GetSnapshot().DroppedUpdates.Should().Be(1);
     }
 
     private sealed class DummyServiceProvider : IServiceProvider
