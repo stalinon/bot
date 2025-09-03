@@ -1,6 +1,6 @@
 # WebApp Demo
 
-Пример минимального фронтенда для Telegram Mini App. Приложение выдаёт JWT через `/webapp/auth` и отправляет введённый текст в бота через `WebApp.sendData`.
+Пример минимального фронтенда для Telegram Mini App. Приложение выдаёт JWT через POST `/webapp/auth` и отправляет введённый текст в бота через `WebApp.sendData`.
 
 ## Запуск
 
@@ -9,6 +9,7 @@
    ```bash
    export Bot__Token="<токен бота>"
    export WebAppAuth__Secret="0123456789ABCDEF0123456789ABCDEF"
+   export WebAppAuth__Lifetime="00:05:00"
    ```
 3. Запустить приложение:
    ```bash

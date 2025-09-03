@@ -1,3 +1,5 @@
+using System;
+
 namespace Bot.WebApp.MinimalApi;
 
 /// <summary>
@@ -6,6 +8,7 @@ namespace Bot.WebApp.MinimalApi;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Хранит секрет подписи JWT.</item>
+///         <item>Определяет срок действия JWT.</item>
 ///     </list>
 /// </remarks>
 public sealed class WebAppAuthOptions
@@ -14,4 +17,9 @@ public sealed class WebAppAuthOptions
     ///     Секрет подписи JWT.
     /// </summary>
     public string Secret { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Срок действия JWT.
+    /// </summary>
+    public TimeSpan Lifetime { get; set; } = TimeSpan.FromMinutes(5);
 }

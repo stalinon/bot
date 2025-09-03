@@ -4,10 +4,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Запрашиваем JWT с сервера
     try {
-        const resp = await fetch(`/webapp/auth?initData=${encodeURIComponent(tg.initData)}`);
+        const resp = await fetch('/webapp/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
         if (resp.ok) {
-            const jwt = await resp.text();
-            console.log('JWT', jwt);
+            const json = await resp.json();
+            console.log('JWT', json.token);
         } else {
             console.error('Не удалось получить JWT');
         }
