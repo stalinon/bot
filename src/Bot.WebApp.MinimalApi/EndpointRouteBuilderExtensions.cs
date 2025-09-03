@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -8,6 +10,7 @@ using Bot.Telegram;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -33,16 +36,34 @@ public static class EndpointRouteBuilderExtensions
             string initData,
             IWebAppInitDataValidator validator,
             IOptions<WebAppAuthOptions> options,
-            HttpRequest req) =>
+            HttpRequest req,
+            ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("WebAppAuth");
+            var sw = Stopwatch.StartNew();
+            long userId = 0;
+
+            IResult LogAndReturn(IResult result)
+            {
+                logger.LogInformation(
+                    "webapp auth",
+                    new Dictionary<string, object?>
+                    {
+                        ["webapp_user_id"] = userId,
+                        ["source"] = "miniapp",
+                        ["latency"] = sw.ElapsedMilliseconds
+                    });
+                return result;
+            }
+
             if (!req.IsHttps)
             {
-                return Results.StatusCode(StatusCodes.Status400BadRequest);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
 
             if (!validator.TryValidate(initData, out _))
             {
-                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
             }
 
             var dict = initData.Split('&', StringSplitOptions.RemoveEmptyEntries)
@@ -52,16 +73,17 @@ public static class EndpointRouteBuilderExtensions
 
             if (!dict.TryGetValue("user", out var userRaw))
             {
-                return Results.StatusCode(StatusCodes.Status400BadRequest);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
 
             var userJson = Uri.UnescapeDataString(userRaw);
             var user = JsonSerializer.Deserialize<UserPayload>(userJson, JsonOptions);
             if (user is null)
             {
-                return Results.StatusCode(StatusCodes.Status400BadRequest);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
 
+            userId = user.Id;
             var now = DateTimeOffset.UtcNow;
             var claims = new[]
             {
@@ -76,7 +98,7 @@ public static class EndpointRouteBuilderExtensions
                 expires: now.AddMinutes(5).UtcDateTime,
                 signingCredentials: creds);
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return Results.Text(jwt);
+            return LogAndReturn(Results.Text(jwt));
         });
 
         return endpoints;
@@ -89,13 +111,31 @@ public static class EndpointRouteBuilderExtensions
     {
         endpoints.MapGet("/webapp/me", (
             IOptions<WebAppAuthOptions> options,
-            HttpRequest req) =>
+            HttpRequest req,
+            ILoggerFactory loggerFactory) =>
         {
+            var logger = loggerFactory.CreateLogger("WebAppMe");
+            var sw = Stopwatch.StartNew();
+            long userId = 0;
+
+            IResult LogAndReturn(IResult result)
+            {
+                logger.LogInformation(
+                    "webapp me",
+                    new Dictionary<string, object?>
+                    {
+                        ["webapp_user_id"] = userId,
+                        ["source"] = "miniapp",
+                        ["latency"] = sw.ElapsedMilliseconds
+                    });
+                return result;
+            }
+
             var auth = req.Headers.Authorization.ToString();
             if (string.IsNullOrWhiteSpace(auth) ||
                 !auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
             {
-                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
             }
 
             var tokenRaw = auth["Bearer ".Length..].Trim();
@@ -119,20 +159,21 @@ public static class EndpointRouteBuilderExtensions
 
                 if (id is null || authDate is null)
                 {
-                    return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                    return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
                 }
 
-                return Results.Json(new
+                userId = long.Parse(id);
+                return LogAndReturn(Results.Json(new
                 {
-                    id = long.Parse(id),
+                    id = userId,
                     username,
                     language_code = languageCode,
                     auth_date = long.Parse(authDate)
-                });
+                }));
             }
             catch
             {
-                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
             }
         });
 

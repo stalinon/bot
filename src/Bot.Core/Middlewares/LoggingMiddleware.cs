@@ -48,12 +48,26 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
             await next(ctx);
             var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
             logger.LogInformation("handler {Handler} finished in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
+            LogWebAppData(sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
             logger.LogError(ex, "handler {Handler} failed in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
+            LogWebAppData(sw.ElapsedMilliseconds);
             throw;
+        }
+
+        void LogWebAppData(long latency)
+        {
+            if (ctx.GetItem<bool>(UpdateItems.WebAppData) == true)
+            {
+                logger.LogInformation(
+                    "web_app_data handled for {webapp_user_id} from {source} in {latency}ms",
+                    ctx.User.Id,
+                    "miniapp",
+                    latency);
+            }
         }
     }
 }
