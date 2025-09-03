@@ -6,6 +6,7 @@ using System.Text;
 
 using Bot.Hosting.Options;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Bot.Telegram;
@@ -24,53 +25,51 @@ public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
 {
     private const string SecretKeyName = "WebAppData";
     private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(5);
+    private readonly ILogger<WebAppInitDataValidator> _logger;
     private readonly string _token;
 
     /// <summary>
     ///     Создать экземпляр.
     /// </summary>
-    public WebAppInitDataValidator(IOptions<BotOptions> options)
+    public WebAppInitDataValidator(IOptions<BotOptions> options, ILogger<WebAppInitDataValidator> logger)
     {
         _token = options.Value.Token;
+        _logger = logger;
     }
 
     /// <inheritdoc />
     public bool TryValidate(string initData, out string? error)
     {
+        var logHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(initData))).ToLowerInvariant()[..8];
         var dict = new Dictionary<string, string>();
         foreach (var pair in initData.Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var kv = pair.Split('=', 2);
             if (kv.Length != 2)
             {
-                error = "неверный формат";
-                return false;
+                return Fail("missing_field", "неверный формат", out error);
             }
 
             if (!dict.TryAdd(kv[0], kv[1]))
             {
-                error = $"дублирующийся параметр {kv[0]}";
-                return false;
+                return Fail("missing_field", $"дублирующийся параметр {kv[0]}", out error);
             }
         }
 
         if (!dict.TryGetValue("hash", out var hash))
         {
-            error = "отсутствует hash";
-            return false;
+            return Fail("missing_field", "отсутствует hash", out error);
         }
         dict.Remove("hash");
 
         if (!dict.TryGetValue("auth_date", out var authDateRaw) || !long.TryParse(authDateRaw, out var authDateVal))
         {
-            error = "отсутствует auth_date";
-            return false;
+            return Fail("missing_field", "отсутствует auth_date", out error);
         }
         var authDate = DateTimeOffset.FromUnixTimeSeconds(authDateVal);
         if (DateTimeOffset.UtcNow - authDate > Ttl)
         {
-            error = "истёк срок действия auth_date";
-            return false;
+            return Fail("expired", "истёк срок действия auth_date", out error);
         }
 
         var dataCheckString = string.Join("\n", dict
@@ -84,11 +83,17 @@ public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
         var computedHash = Convert.ToHexString(computed).ToLowerInvariant();
         if (!string.Equals(computedHash, hash, StringComparison.Ordinal))
         {
-            error = "подпись не совпадает";
-            return false;
+            return Fail("bad_hash", "подпись не совпадает", out error);
         }
 
         error = null;
         return true;
+
+        bool Fail(string reason, string message, out string? err)
+        {
+            _logger.LogWarning("webapp init validation failed {Reason} {InitDataHash}", reason, logHash);
+            err = message;
+            return false;
+        }
     }
 }
