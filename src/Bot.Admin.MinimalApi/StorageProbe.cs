@@ -1,13 +1,24 @@
+using Bot.Abstractions.Contracts;
+
 namespace Bot.Admin.MinimalApi;
 
 /// <summary>
 ///     Проба хранилища.
 /// </summary>
-internal sealed class StorageProbe : IHealthProbe
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяет операции чтения и записи.</item>
+///     </list>
+/// </remarks>
+internal sealed class StorageProbe(IStateStore store) : IHealthProbe
 {
     /// <summary>
     ///     Проверить хранилище.
     /// </summary>
-    public Task ProbeAsync(CancellationToken ct) => Task.CompletedTask;
+    public async Task ProbeAsync(CancellationToken ct)
+    {
+        await store.SetAsync("health", "probe", 0, TimeSpan.FromSeconds(1), ct);
+        await store.GetAsync<int>("health", "probe", ct);
+    }
 }
 
