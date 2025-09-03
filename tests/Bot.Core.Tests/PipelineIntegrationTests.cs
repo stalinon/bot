@@ -64,13 +64,15 @@ public class PipelineIntegrationTests
         var sp = services.BuildServiceProvider();
         var svc = ActivatorUtilities.CreateInstance<BotHostedService>(sp);
         await svc.StartAsync(default);
-
+        await Task.Delay(1000);
         var tx = (FakeTransportClient)sp.GetRequiredService<ITransportClient>();
         Assert.Contains(tx.SentTexts, m => m.text == "pong");
 
         var store = (InMemoryStateStore)sp.GetRequiredService<IStateStorage>();
         var value = await store.GetAsync<long>("user", "ping:1", default);
         Assert.Equal(1, value);
+
+        await svc.StopAsync(default);
     }
 
     [Command("/ping")]

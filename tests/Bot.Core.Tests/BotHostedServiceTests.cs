@@ -60,8 +60,11 @@ public class BotHostedServiceTests
         var sp = services.BuildServiceProvider();
         var svc = ActivatorUtilities.CreateInstance<BotHostedService>(sp);
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => svc.StartAsync(cts.Token));
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(1));
+        await svc.StartAsync(cts.Token);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        await svc.StopAsync(CancellationToken.None);
 
         Assert.True(tracker.MaxActive <= parallelism, $"max {tracker.MaxActive} > {parallelism}");
     }
