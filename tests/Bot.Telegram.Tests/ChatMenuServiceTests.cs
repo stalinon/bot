@@ -2,10 +2,14 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Bot.Abstractions.Addresses;
 using Bot.Telegram;
+
 using FluentAssertions;
+
 using Telegram.Bot;
+
 using Xunit;
 
 namespace Bot.Telegram.Tests;

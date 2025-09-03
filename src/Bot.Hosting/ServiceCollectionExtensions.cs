@@ -1,23 +1,28 @@
 using System.Reflection;
+
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
-using Bot.Core.Utils;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 using Bot.Hosting.Options;
 using Bot.Storage.EFCore;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 using Bot.Storage.Redis;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+
 using OpenTelemetry.Metrics;
+
 using StackExchange.Redis;
 
 namespace Bot.Hosting;

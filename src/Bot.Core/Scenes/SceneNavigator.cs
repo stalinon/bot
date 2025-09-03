@@ -2,6 +2,7 @@ namespace Bot.Core.Scenes;
 
 using System;
 using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 

@@ -3,9 +3,10 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Bot.Abstractions;
-using Bot.Abstractions.Contracts;
 using Bot.Abstractions.Addresses;
+using Bot.Abstractions.Contracts;
 
 namespace Bot.TestKit;
 

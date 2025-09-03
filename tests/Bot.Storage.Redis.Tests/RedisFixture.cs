@@ -1,5 +1,7 @@
 using System.Diagnostics;
+
 using StackExchange.Redis;
+
 using Xunit;
 
 namespace Bot.Storage.Redis.Tests;

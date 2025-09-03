@@ -1,16 +1,21 @@
 using System.Net;
 using System.Net.Http.Json;
+
+using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Telegram;
-using Bot.Core.Stats;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Telegram.Bot;
+
 using Xunit;
 
 namespace Bot.Core.Tests;
@@ -31,13 +36,13 @@ public class WebhookBackpressureTests
             .ConfigureServices(services =>
             {
                 services.AddRouting();
-                    services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                {
+                    Transport = new TransportOptions
                     {
-                        Transport = new TransportOptions
-                        {
-                            Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 1 }
-                        }
-                    }));
+                        Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 1 }
+                    }
+                }));
                 services.AddSingleton<ITelegramBotClient>(Mock.Of<ITelegramBotClient>());
                 services.AddSingleton<StatsCollector>();
                 services.AddSingleton<TelegramWebhookSource>();

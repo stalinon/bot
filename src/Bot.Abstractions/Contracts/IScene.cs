@@ -9,17 +9,17 @@ public interface IScene
     ///     Название
     /// </summary>
     string Name { get; }
-    
+
     /// <summary>
     ///     Есть ли доступ
     /// </summary>
     Task<bool> CanEnter(UpdateContext ctx);
-    
+
     /// <summary>
     ///     На вход
     /// </summary>
     Task OnEnter(UpdateContext ctx);
-    
+
     /// <summary>
     ///     На обновление
     /// </summary>

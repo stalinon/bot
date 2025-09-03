@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Threading;
+
 using Bot.Core.Metrics;
 using Bot.Core.Middlewares;
+
 using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Stats;

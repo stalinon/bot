@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+
 using Bot.Hosting.Options;
 using Bot.Telegram;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.Options;
+
 using Xunit;
 
 namespace Bot.Telegram.Tests;

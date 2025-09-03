@@ -1,6 +1,7 @@
 namespace Bot.Abstractions.Contracts;
 
 using System;
+
 using Bot.Abstractions.Addresses;
 
 /// <summary>

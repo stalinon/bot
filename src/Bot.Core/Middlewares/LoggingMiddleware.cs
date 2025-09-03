@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Core.Middlewares;

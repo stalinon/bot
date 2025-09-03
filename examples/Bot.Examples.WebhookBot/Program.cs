@@ -1,8 +1,9 @@
-﻿using Bot.Core.Middlewares;
+using Bot.Core.Middlewares;
 using Bot.Core.Options;
+using Bot.Examples.WebhookBot.Services;
 using Bot.Hosting;
 using Bot.Telegram;
-using Bot.Examples.WebhookBot.Services;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

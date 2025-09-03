@@ -22,7 +22,7 @@ public sealed record UpdateContext(
     ///     Получить
     /// </summary>
     public T? GetItem<T>(string key) => Items.TryGetValue(key, out var v) ? (T?)v : default;
-    
+
     /// <summary>
     ///     Установить
     /// </summary>

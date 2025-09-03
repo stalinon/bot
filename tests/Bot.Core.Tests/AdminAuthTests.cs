@@ -1,13 +1,16 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using Bot.Core.Stats;
+
 using Bot.Admin.MinimalApi;
+using Bot.Core.Stats;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Xunit;
 
 namespace Bot.Core.Tests;

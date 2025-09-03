@@ -1,5 +1,6 @@
-using Bot.Core.Options;
 using System;
+
+using Bot.Core.Options;
 
 namespace Bot.Hosting.Options;
 

@@ -1,11 +1,12 @@
 using Bot.Hosting.Options;
 using Bot.Telegram;
 using Bot.WebApp.MinimalApi;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Examples.WebAppDemo;
+namespace Bot.Examples.WebAppDemo;
 
 /// <summary>
 ///     Точка входа хоста Mini App.

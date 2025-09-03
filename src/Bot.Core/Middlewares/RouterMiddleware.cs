@@ -2,6 +2,7 @@ using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bot.Core.Middlewares;

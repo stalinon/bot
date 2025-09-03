@@ -1,11 +1,13 @@
+using Bot.Hosting.Options;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Telegram.Bot.Types;
-using Bot.Hosting.Options;
 
 namespace Bot.Telegram;
 

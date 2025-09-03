@@ -1,12 +1,16 @@
 using System.Linq;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Core.Scenes;
 using Bot.Examples.HelloBot.Handlers;
 using Bot.Examples.HelloBot.Scenes;
 using Bot.TestKit;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace Bot.Examples.HelloBot.Tests;

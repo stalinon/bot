@@ -1,5 +1,5 @@
-using Bot.Abstractions.Addresses;
 using Bot.Abstractions;
+using Bot.Abstractions.Addresses;
 
 namespace Bot.Abstractions.Contracts;
 
@@ -12,7 +12,7 @@ public interface ITransportClient
     ///     Отправить текст
     /// </summary>
     Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct);
-    
+
     /// <summary>
     ///     Отправить фото
     /// </summary>

@@ -1,11 +1,14 @@
+using System.Threading.Channels;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
-using Bot.Hosting.Options;
 using Bot.Core.Stats;
-using System.Threading.Channels;
+using Bot.Hosting.Options;
+
+using Microsoft.Extensions.Options;
+
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Microsoft.Extensions.Options;
 
 namespace Bot.Telegram;
 

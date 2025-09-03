@@ -1,12 +1,17 @@
+using System.IO;
+using System.Reflection;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Telegram;
+
 using Moq;
-using System.Reflection;
-using System.IO;
+
 using Telegram.Bot;
-using TelegramChatAction = global::Telegram.Bot.Types.Enums.ChatAction;
+
 using Xunit;
+
+using TelegramChatAction = global::Telegram.Bot.Types.Enums.ChatAction;
 
 namespace Bot.Core.Tests;
 

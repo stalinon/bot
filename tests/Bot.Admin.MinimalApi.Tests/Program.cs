@@ -1,4 +1,5 @@
 using Bot.Admin.MinimalApi;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

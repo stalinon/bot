@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Options;

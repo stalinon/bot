@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;

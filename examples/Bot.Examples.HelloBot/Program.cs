@@ -1,12 +1,14 @@
 using System;
+
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Scenes;
-using Bot.Examples.HelloBot.Services;
 using Bot.Examples.HelloBot.Scenes;
+using Bot.Examples.HelloBot.Services;
 using Bot.Hosting;
 using Bot.Telegram;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

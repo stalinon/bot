@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -11,14 +12,16 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
-using Bot.Core.Utils;
 using Bot.Core.Stats;
-using Bot.TestKit;
+using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
+using Bot.TestKit;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics;
 using Microsoft.Extensions.Logging;
+
 using Xunit;
 
 namespace Bot.Core.Tests;
@@ -59,8 +62,8 @@ public class PipelineIntegrationTests
         services.AddScoped<DedupMiddleware>();
         services.AddScoped<RateLimitMiddleware>();
         services.AddScoped<CommandParsingMiddleware>();
-          services.AddScoped<RouterMiddleware>();
-          services.AddSingleton<StatsCollector>();
+        services.AddScoped<RouterMiddleware>();
+        services.AddSingleton<StatsCollector>();
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(Array.Empty<Action<IUpdatePipeline>>());
         services.AddSingleton<IUpdateSource>(new JsonUpdateSource(updatePath));
