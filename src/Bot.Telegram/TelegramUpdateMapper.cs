@@ -22,8 +22,8 @@ internal static class TelegramUpdateMapper
             var text = m.Type == MessageType.Text ? m.Text : null;
             var items = new Dictionary<string, object>
             {
-                ["UpdateType"] = u.Type.ToString(),
-                ["MessageId"] = m.MessageId
+                [UpdateItems.UpdateType] = u.Type.ToString(),
+                [UpdateItems.MessageId] = m.MessageId
             };
             return new UpdateContext(
                 Transport: "telegram",
@@ -45,8 +45,8 @@ internal static class TelegramUpdateMapper
             var user = new UserAddress(cq.From.Id, cq.From.Username, cq.From.LanguageCode);
             var items = new Dictionary<string, object>
             {
-                ["UpdateType"] = u.Type.ToString(),
-                ["MessageId"] = cq.Message!.MessageId
+                [UpdateItems.UpdateType] = u.Type.ToString(),
+                [UpdateItems.MessageId] = cq.Message!.MessageId
             };
             return new UpdateContext(
                 "telegram", u.Id.ToString(), chat, user,
