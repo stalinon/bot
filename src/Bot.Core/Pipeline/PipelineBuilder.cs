@@ -21,9 +21,8 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
             _components.Add(next => async ctx =>
             {
                 ctx.CancellationToken.ThrowIfCancellationRequested();
-              using var scope = sp.CreateScope();
-              var mw = ctx.Services.GetRequiredService<T>();
-              await mw.InvokeAsync(ctx, next);
+                var mw = ctx.Services.GetRequiredService<T>();
+                await mw.InvokeAsync(ctx, next);
             });
 
             return this;
