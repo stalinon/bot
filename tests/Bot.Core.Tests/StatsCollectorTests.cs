@@ -32,4 +32,21 @@ public class StatsCollectorTests
         Assert.True(h.P99 >= h.P95);
         Assert.Equal(0.5, h.ErrorRate, 1);
     }
+
+    /// <summary>
+    ///     Тест 2. Счётчики потерянных и ограниченных обновлений учитываются
+    /// </summary>
+    [Fact(DisplayName = "Тест 2. Счётчики потерянных и ограниченных обновлений учитываются")]
+    public void Tracks_dropped_and_rate_limited()
+    {
+        var stats = new StatsCollector();
+        stats.MarkDroppedUpdate();
+        stats.MarkRateLimited();
+        stats.SetQueueDepth(5);
+
+        var snapshot = stats.GetSnapshot();
+        Assert.Equal(1, snapshot.DroppedUpdates);
+        Assert.Equal(1, snapshot.RateLimited);
+        Assert.Equal(5, snapshot.QueueDepth);
+    }
 }

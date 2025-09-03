@@ -2,13 +2,21 @@ using System.Collections.Concurrent;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
+using Bot.Core.Stats;
 
 namespace Bot.Core.Middlewares;
 
 /// <summary>
 ///     Рейт-лиметер
 /// </summary>
-public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClient tx) : IUpdateMiddleware
+/// <remarks>
+///     <list type="number">
+///         <item>Ограничивает частоту запросов.</item>
+///         <item>Отправляет предупреждение в мягком режиме.</item>
+///         <item>Учитывает ограниченные обновления в статистике.</item>
+///     </list>
+/// </remarks>
+public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClient tx, StatsCollector stats) : IUpdateMiddleware
 {
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _chat = new();
@@ -20,6 +28,7 @@ public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClie
         if (!Check(_user, ctx.User.Id, options.PerUserPerMinute, now) ||
             !Check(_chat, ctx.Chat.Id, options.PerChatPerMinute, now))
         {
+            stats.MarkRateLimited();
             if (options.Mode == RateLimitMode.Soft)
             {
                 await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);

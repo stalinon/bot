@@ -9,9 +9,19 @@ namespace Bot.Core.Stats;
 /// <summary>
 ///     Сборщик статистики по обработчикам.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сохраняет метрики обработчиков.</item>
+///         <item>Учитывает потерянные и ограниченные обновления.</item>
+///         <item>Следит за глубиной очереди.</item>
+///     </list>
+/// </remarks>
 public sealed class StatsCollector
 {
     private readonly ConcurrentDictionary<string, HandlerData> _data = new();
+    private long _droppedUpdates;
+    private long _rateLimited;
+    private int _queueDepth;
 
     /// <summary>
     ///     Начать измерение для обработчика.
@@ -22,6 +32,21 @@ public sealed class StatsCollector
         Interlocked.Increment(ref info.TotalRequests);
         return new Measurement(info, Stopwatch.StartNew());
     }
+
+    /// <summary>
+    ///     Увеличить счётчик потерянных обновлений.
+    /// </summary>
+    public void MarkDroppedUpdate() => Interlocked.Increment(ref _droppedUpdates);
+
+    /// <summary>
+    ///     Увеличить счётчик ограниченных обновлений.
+    /// </summary>
+    public void MarkRateLimited() => Interlocked.Increment(ref _rateLimited);
+
+    /// <summary>
+    ///     Установить текущую глубину очереди.
+    /// </summary>
+    public void SetQueueDepth(int depth) => Volatile.Write(ref _queueDepth, depth);
 
     /// <summary>
     ///     Получить текущую статистику.
@@ -45,7 +70,11 @@ public sealed class StatsCollector
             }
         }
 
-        return new Snapshot(dict);
+        return new Snapshot(
+            dict,
+            Interlocked.Read(ref _droppedUpdates),
+            Interlocked.Read(ref _rateLimited),
+            Volatile.Read(ref _queueDepth));
     }
 
     private static double Percentile(double[] sorted, double percentile)
