@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -18,6 +19,9 @@ namespace Bot.Admin.MinimalApi.Tests;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
+///         <item>Проверяется авторизация для административных эндпоинтов.</item>
+///         <item>Проверяется работа health-проб.</item>
+///         <item>Проверяется наличие агрегированных метрик.</item>
 ///         <item>Проверяет эндпоинт статистики.</item>
 ///         <item>Проверяет эндпоинт рассылки.</item>
 ///         <item>Проверяет пробы готовности.</item>
@@ -27,7 +31,6 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    /// <inheritdoc/>
     public AdminApiTests(AdminApiFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
@@ -42,17 +45,16 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
     }
 
     /// <summary>
-    ///     Тест 1: Статистика без токена возвращает 401
+    ///     Тест 1: Статистика без токена возвращает 401.
     /// </summary>
     [Fact(DisplayName = "Тест 1: Статистика без токена возвращает 401")]
-    public async Task Should_Return401_When_StatsWithoutToken()
+    public async Task Should_Return401_When_StatsRequestedWithoutToken()
     {
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/admin/stats");
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    /// <summary>
     ///     Тест 2: Статистика с токеном возвращает 200
     /// </summary>
     [Fact(DisplayName = "Тест 2: Статистика с токеном возвращает 200")]
@@ -125,15 +127,24 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
 
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/health/ready");
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    /// <summary>
+    ///     Тест 8: При ошибке пробы готовность возвращает 503.
+    /// </summary>
+    [Fact(DisplayName = "Тест 8: При ошибке пробы готовность возвращает 503")]
+    public async Task Should_Return503_When_HealthReadyProbeFails()
+    {
         resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
 
         stats.SetQueueDepth(0);
     }
 
     /// <summary>
-    ///     Тест 8: При ошибке хранилища готовность возвращает 503
+    ///     Тест 9: При ошибке хранилища готовность возвращает 503
     /// </summary>
-    [Fact(DisplayName = "Тест 8: При ошибке хранилища готовность возвращает 503")]
+    [Fact(DisplayName = "Тест 9: При ошибке хранилища готовность возвращает 503")]
     public async Task Should_Return503_When_StorageFails()
     {
         var factory = _factory.WithWebHostBuilder(builder =>
@@ -150,9 +161,9 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
     }
 
     /// <summary>
-    ///     Тест 9: При ошибке транспорта готовность возвращает 503
+    ///     Тест 10: При ошибке транспорта готовность возвращает 503
     /// </summary>
-    [Fact(DisplayName = "Тест 9: При ошибке транспорта готовность возвращает 503")]
+    [Fact(DisplayName = "Тест 10: При ошибке транспорта готовность возвращает 503")]
     public async Task Should_Return503_When_TransportFails()
     {
         var factory = _factory.WithWebHostBuilder(builder =>
@@ -166,6 +177,22 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         var client = factory.CreateClient();
         var resp = await client.GetAsync("/health/ready");
         resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+
+    }
+
+    /// <summary>
+    ///     Тест 11: Статистика содержит агрегированные метрики.
+    /// </summary>
+    [Fact(DisplayName = "Тест 11: Статистика содержит агрегированные метрики")]
+    public async Task Should_ContainAggregatedMetrics_When_StatsRequestedWithToken()
+    {
+        var client = _factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/admin/stats");
+        request.Headers.Add("X-Admin-Token", "secret");
+        var resp = await client.SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate");
     }
 
     private sealed class DummyStateStore : IStateStore

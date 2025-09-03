@@ -11,13 +11,20 @@ namespace Bot.Core.Tests;
 /// <summary>
 ///     Тесты для <see cref="StatsCollector"/>.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяются перцентили и агрегированные метрики.</item>
+///         <item>Учитываются потерянные и ограниченные обновления.</item>
+///         <item>Экспортируются метрики через <see cref="Meter"/>.</item>
+///     </list>
+/// </remarks>
 public class StatsCollectorTests
 {
     /// <summary>
-    ///     Считаются перцентили и процент ошибок.
+    ///     Тест 1: Считаются перцентили, процент ошибок и агрегированные метрики.
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Считаются перцентили и процент ошибок")]
-    public void Calculates_percentiles_and_error_rate()
+    [Fact(DisplayName = "Тест 1: Считаются перцентили, процент ошибок и агрегированные метрики")]
+    public void Should_CalculatePercentilesAndErrorRate_When_HandlerMeasured()
     {
         var stats = new StatsCollector();
         for (var i = 0; i < 10; i++)
@@ -35,13 +42,17 @@ public class StatsCollectorTests
         h.P95.Should().BeGreaterOrEqualTo(h.P50);
         h.P99.Should().BeGreaterOrEqualTo(h.P95);
         h.ErrorRate.Should().BeApproximately(0.5, 0.1);
+        snapshot.P95.Should().BeGreaterOrEqualTo(snapshot.P50);
+        snapshot.P99.Should().BeGreaterOrEqualTo(snapshot.P95);
+        snapshot.ErrorRate.Should().BeApproximately(0.5, 0.1);
+        snapshot.Rps.Should().BeGreaterThan(0);
     }
 
     /// <summary>
-    ///     Тест 2. Счётчики потерянных и ограниченных обновлений учитываются
+    ///     Тест 2: Счётчики потерянных и ограниченных обновлений учитываются.
     /// </summary>
-    [Fact(DisplayName = "Тест 2. Счётчики потерянных и ограниченных обновлений учитываются")]
-    public void Tracks_dropped_and_rate_limited()
+    [Fact(DisplayName = "Тест 2: Счётчики потерянных и ограниченных обновлений учитываются")]
+    public void Should_TrackDroppedAndRateLimited_When_Marked()
     {
         var stats = new StatsCollector();
         stats.MarkDroppedUpdate();
@@ -55,10 +66,10 @@ public class StatsCollectorTests
     }
 
     /// <summary>
-    ///     Тест 3. Метрики экспортируются через Meter.
+    ///     Тест 3: Метрики экспортируются через Meter.
     /// </summary>
-    [Fact(DisplayName = "Тест 3. Метрики экспортируются через Meter")]
-    public void Exports_metrics_via_meter()
+    [Fact(DisplayName = "Тест 3: Метрики экспортируются через Meter")]
+    public void Should_ExportMetricsViaMeter_When_MeasurementsRecorded()
     {
         using var meter = new Meter(MetricsMiddleware.MeterName);
         var factory = new TestMeterFactory(meter);

@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using Bot.Core.Stats;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Generic;
 
 namespace Bot.Admin.MinimalApi;
 
@@ -75,6 +75,11 @@ public static class EndpointRouteBuilderExtensions
                 dropped = snapshot.DroppedUpdates,
                 rateLimited = snapshot.RateLimited,
                 queueDepth = snapshot.QueueDepth,
+                p50 = snapshot.P50,
+                p95 = snapshot.P95,
+                p99 = snapshot.P99,
+                rps = snapshot.Rps,
+                errorRate = snapshot.ErrorRate,
                 handlers = snapshot.Handlers
             });
         });
