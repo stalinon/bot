@@ -10,7 +10,13 @@ namespace Bot.TestKit;
 /// <summary>
 ///     Простейшее хранилище состояний в памяти.
 /// </summary>
-public sealed class InMemoryStateStore : IStateStorage
+/// <remarks>
+///     <list type="number">
+///         <item>Использует <see cref="ConcurrentDictionary{TKey, TValue}"/></item>
+///         <item>Поддерживает TTL для записей</item>
+///     </list>
+/// </remarks>
+public sealed class InMemoryStateStore : IStateStore
 {
     private readonly ConcurrentDictionary<(string scope, string key), (object value, DateTimeOffset? expires)> _store = new();
 
@@ -42,7 +48,7 @@ public sealed class InMemoryStateStore : IStateStorage
     }
 
     /// <inheritdoc />
-    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var k = (scope, key);
@@ -57,7 +63,8 @@ public sealed class InMemoryStateStore : IStateStorage
             var current = (T)entry.value;
             if (EqualityComparer<T>.Default.Equals(current, expected))
             {
-                _store.TryUpdate(k, (value!, entry.expires), entry);
+                var newExp = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : entry.expires;
+                _store.TryUpdate(k, (value!, newExp), entry);
                 return Task.FromResult(true);
             }
 

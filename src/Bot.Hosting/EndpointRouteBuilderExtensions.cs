@@ -28,7 +28,7 @@ public static class EndpointRouteBuilderExtensions
     {
         endpoints.MapGet("/health/ready", async (
             IUpdateSource source,
-            IStateStorage storage,
+            IStateStore storage,
             BotHostedService hosted,
             IOptions<BotOptions> options,
             CancellationToken ct) =>
