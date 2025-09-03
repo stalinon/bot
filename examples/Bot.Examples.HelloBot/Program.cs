@@ -2,8 +2,6 @@
 using Bot.Core.Options;
 using Bot.Hosting;
 using Bot.Hosting.Options;
-using Bot.Storage.File;
-using Bot.Storage.File.Options;
 using Bot.Telegram;
 using Bot.Examples.HelloBot.Services;
 using Microsoft.Extensions.Configuration;
@@ -40,7 +38,7 @@ var cfg = builder.Configuration;
         .Use<RateLimitMiddleware>()
         .Use<CommandParsingMiddleware>()
         .Use<RouterMiddleware>())
-    .UseStateStorage(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
+    .UseConfiguredStateStorage(cfg);
 
   var host = builder.Build();
 
