@@ -86,6 +86,9 @@ public static class EndpointRouteBuilderExtensions
                 handlers = snapshot.Handlers,
                 webappAuth = web.AuthTotal,
                 webappMe = web.MeTotal,
+                webappSendData = web.SendDataTotal,
+                webappSendDataSuccess = web.SendDataSuccess,
+                webappSendDataError = web.SendDataError,
                 webappLatencyP50 = web.P50,
                 webappLatencyP95 = web.P95,
                 webappLatencyP99 = web.P99

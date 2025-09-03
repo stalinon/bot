@@ -22,6 +22,7 @@ public sealed class BotMetricsEventSource : EventSource
     private readonly EventCounter _queueDepth;
     private readonly IncrementingEventCounter _webAppAuth;
     private readonly IncrementingEventCounter _webAppMe;
+    private readonly IncrementingEventCounter _webAppSendData;
     private readonly EventCounter _webAppLatency;
 
     private BotMetricsEventSource()
@@ -61,6 +62,10 @@ public sealed class BotMetricsEventSource : EventSource
         _webAppMe = new IncrementingEventCounter("tgbot_webapp_me_total", this)
         {
             DisplayName = "Профиль Web App"
+        };
+        _webAppSendData = new IncrementingEventCounter("tgbot_webapp_senddata_total", this)
+        {
+            DisplayName = "Передача данных Web App"
         };
         _webAppLatency = new EventCounter("tgbot_webapp_request_latency_ms", this)
         {
@@ -144,6 +149,16 @@ public sealed class BotMetricsEventSource : EventSource
     }
 
     /// <summary>
+    ///     Отметить получение данных Web App.
+    /// </summary>
+    /// <param name="latencyMs">Задержка обработки в миллисекундах.</param>
+    public void WebAppSendData(double latencyMs)
+    {
+        _webAppSendData.Increment();
+        _webAppLatency.WriteMetric(latencyMs);
+    }
+
+    /// <summary>
     ///     Освободить ресурсы.
     /// </summary>
     /// <param name="disposing">Признак явной очистки.</param>
@@ -160,6 +175,7 @@ public sealed class BotMetricsEventSource : EventSource
             _queueDepth.Dispose();
             _webAppAuth.Dispose();
             _webAppMe.Dispose();
+            _webAppSendData.Dispose();
             _webAppLatency.Dispose();
         }
 
