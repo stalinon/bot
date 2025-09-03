@@ -25,6 +25,9 @@ using OpenTelemetry.Metrics;
 
 using StackExchange.Redis;
 
+using Microsoft.Extensions.Options;
+using Bot.Abstractions.Contracts;
+
 namespace Bot.Hosting;
 
 /// <summary>
@@ -176,6 +179,40 @@ public static class ServiceCollectionExtensions
                 var path = file["Path"] ?? "data";
                 services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = path }));
                 break;
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Подключить Mini App.
+    /// </summary>
+    /// <param name="configuration">Конфигурация приложения.</param>
+    public static IServiceCollection AddWebApp(this IServiceCollection services, IConfiguration configuration)
+    {
+        var section = configuration.GetSection("WebApp");
+        services.AddOptions<WebAppOptions>().Bind(section);
+        services.AddOptions<WebAppAuthOptions>().Configure(o =>
+        {
+            o.Secret = section["Secret"] ?? string.Empty;
+            var authTtl = section.GetValue("AuthTtlSeconds", 300);
+            o.Lifetime = TimeSpan.FromSeconds(authTtl);
+        });
+
+        var validatorType = Type.GetType("Bot.Telegram.WebAppInitDataValidator, Bot.Telegram");
+        if (validatorType is not null)
+        {
+            services.TryAddSingleton(typeof(IWebAppInitDataValidator), validatorType);
+        }
+
+        var responderType = Type.GetType("Bot.Telegram.TelegramWebAppQueryResponder, Bot.Telegram");
+        if (responderType is not null)
+        {
+            services.TryAddSingleton(typeof(IWebAppQueryResponder), sp =>
+            {
+                var ttl = TimeSpan.FromSeconds(sp.GetRequiredService<IOptions<WebAppOptions>>().Value.InitDataTtlSeconds);
+                return ActivatorUtilities.CreateInstance(sp, responderType, ttl);
+            });
         }
 
         return services;

@@ -36,6 +36,9 @@ public sealed class WebAppInitDataValidatorTests
     /// <inheritdoc/>
     public WebAppInitDataValidatorTests()
     {
+        _validator = new WebAppInitDataValidator(
+            Options.Create(new BotOptions { Token = Token }),
+            Options.Create(new WebAppOptions()));
     }
 
     /// <summary>
@@ -179,6 +182,28 @@ public sealed class WebAppInitDataValidatorTests
         result.Should().BeTrue();
         error.Should().BeNull();
         logs.Logs.Should().BeEmpty();
+    }
+
+    /// <summary>
+    ///     Тест 7: Возвращает успех при увеличенном TTL.
+    /// </summary>
+    [Fact(DisplayName = "Тест 7: Возвращает успех при увеличенном TTL.")]
+    public void Should_ReturnTrue_WhenTtlIncreased()
+    {
+        var opts = Options.Create(new WebAppOptions { InitDataTtlSeconds = 600 });
+        var validator = new WebAppInitDataValidator(Options.Create(new BotOptions { Token = Token }), opts);
+        var old = DateTimeOffset.UtcNow.AddMinutes(-9).ToUnixTimeSeconds().ToString();
+        var data = CreateInitData(new Dictionary<string, string>
+        {
+            ["query_id"] = "1",
+            ["auth_date"] = old,
+            ["user"] = "u"
+        });
+
+        var result = validator.TryValidate(data, out var error);
+
+        result.Should().BeTrue();
+        error.Should().BeNull();
     }
 
     private static string CreateInitData(IDictionary<string, string> fields)

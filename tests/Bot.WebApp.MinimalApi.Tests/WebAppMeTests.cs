@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-using Bot.Telegram;
+using Bot.Abstractions.Contracts;
 
 using FluentAssertions;
 

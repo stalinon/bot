@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using Bot.Abstractions.Contracts;
 using Bot.Core.Stats;
 using Bot.Telegram;
 

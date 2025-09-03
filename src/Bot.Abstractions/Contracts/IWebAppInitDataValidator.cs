@@ -1,4 +1,4 @@
-namespace Bot.Telegram;
+namespace Bot.Abstractions.Contracts;
 
 /// <summary>
 ///     Валидатор <c>initData</c> Telegram Web App.
