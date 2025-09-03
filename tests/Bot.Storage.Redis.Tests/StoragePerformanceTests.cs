@@ -26,6 +26,11 @@ public sealed class StoragePerformanceTests : IClassFixture<RedisFixture>, IAsyn
     /// <inheritdoc/>
     public StoragePerformanceTests(RedisFixture fixture)
     {
+        if (fixture.Connection is null)
+        {
+            return;
+        }
+
         var options = new RedisOptions { Connection = fixture.Connection };
         _redis = new RedisStateStore(options);
         var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));

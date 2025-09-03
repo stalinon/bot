@@ -37,6 +37,7 @@ public sealed class RouterMiddleware(
         using var m = stats.Measure(t.Name);
         try
         {
+            ctx.SetItem(UpdateItems.Handler, t.Name);
             await handler.HandleAsync(ctx);
         }
         catch (Exception)

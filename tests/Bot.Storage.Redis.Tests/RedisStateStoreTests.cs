@@ -23,6 +23,11 @@ public sealed class RedisStateStoreTests : IClassFixture<RedisFixture>
     /// <inheritdoc/>
     public RedisStateStoreTests(RedisFixture fixture)
     {
+        if (fixture.Connection is null)
+        {
+            return;
+        }
+
         var options = new RedisOptions { Connection = fixture.Connection };
         _store = new RedisStateStore(options);
         _db = fixture.Connection.GetDatabase();

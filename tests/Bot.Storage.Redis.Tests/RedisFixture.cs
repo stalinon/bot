@@ -14,7 +14,7 @@ public sealed class RedisFixture : IAsyncLifetime
     /// <summary>
     ///     Подключение к Redis.
     /// </summary>
-    public IConnectionMultiplexer Connection { get; private set; } = null!;
+    public IConnectionMultiplexer? Connection { get; private set; }
 
     /// <summary>
     ///     Инициализация Redis перед тестами.
@@ -38,7 +38,7 @@ public sealed class RedisFixture : IAsyncLifetime
     /// </summary>
     public async Task DisposeAsync()
     {
-        Connection.Dispose();
+        Connection?.Dispose();
         if (_process is { HasExited: false })
         {
             _process.Kill();
