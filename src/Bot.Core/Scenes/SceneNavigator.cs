@@ -28,9 +28,9 @@ public sealed class SceneNavigator : ISceneNavigator
     /// <inheritdoc />
     public async Task EnterAsync(UpdateContext ctx, IScene scene)
     {
-        var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0);
-        await _store.SetAsync(Scope, Key(ctx), state, _ttl, ctx.CancellationToken);
-        await _store.SetAsync(Scope, StepKey(ctx), 0L, _ttl, ctx.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0, null, now, _ttl);
+        await _store.SetAsync(Scope, Key(ctx), state, null, ctx.CancellationToken);
         await scene.OnEnter(ctx);
     }
 
@@ -38,25 +38,49 @@ public sealed class SceneNavigator : ISceneNavigator
     public async Task ExitAsync(UpdateContext ctx)
     {
         await _store.RemoveAsync(Scope, Key(ctx), ctx.CancellationToken);
-        await _store.RemoveAsync(Scope, StepKey(ctx), ctx.CancellationToken);
     }
 
     /// <inheritdoc />
-    public Task<SceneState?> GetStateAsync(UpdateContext ctx)
+    public async Task<SceneState?> GetStateAsync(UpdateContext ctx)
     {
-        return _store.GetAsync<SceneState>(Scope, Key(ctx), ctx.CancellationToken);
+        var state = await _store.GetAsync<SceneState>(Scope, Key(ctx), ctx.CancellationToken)
+            .ConfigureAwait(false);
+        if (state is null)
+        {
+            return null;
+        }
+
+        if (state.Ttl is { } ttl && state.UpdatedAt.Add(ttl) <= DateTimeOffset.UtcNow)
+        {
+            await ExitAsync(ctx).ConfigureAwait(false);
+            return null;
+        }
+
+        return state;
     }
 
     /// <inheritdoc />
-    public async Task<int> NextStepAsync(UpdateContext ctx)
+    public async Task<int> NextStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null)
     {
-        var step = await _store.IncrementAsync(Scope, StepKey(ctx), 1, _ttl, ctx.CancellationToken);
-        var state = await GetStateAsync(ctx) ?? throw new InvalidOperationException("No active scene");
-        var next = state with { Step = (int)step };
-        await _store.SetAsync(Scope, Key(ctx), next, _ttl, ctx.CancellationToken);
-        return next.Step;
+        while (true)
+        {
+            var state = await GetStateAsync(ctx).ConfigureAwait(false) ??
+                        throw new InvalidOperationException("No active scene");
+            var next = state with
+            {
+                Step = state.Step + 1,
+                Data = data,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Ttl = ttl ?? _ttl
+            };
+            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, ctx.CancellationToken)
+                .ConfigureAwait(false);
+            if (updated)
+            {
+                return next.Step;
+            }
+        }
     }
 
     private static string Key(UpdateContext ctx) => $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";
-    private static string StepKey(UpdateContext ctx) => $"{Key(ctx)}:step";
 }

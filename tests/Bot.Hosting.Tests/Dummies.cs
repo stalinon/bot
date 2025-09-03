@@ -44,6 +44,11 @@ internal sealed class DummyStateStorage : IStateStorage
     ///     Заглушка условной установки.
     /// </summary>
     public Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromResult(true);
+
+    /// <summary>
+    ///     Заглушка сравнения и установки.
+    /// </summary>
+    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct) => Task.FromResult(true);
 }
 
 /// <summary>
