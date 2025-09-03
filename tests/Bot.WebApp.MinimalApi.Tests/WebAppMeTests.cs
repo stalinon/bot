@@ -27,6 +27,7 @@ namespace Bot.WebApp.MinimalApi.Tests;
 ///     <list type="number">
 ///         <item>Проверяет отказ без токена.</item>
 ///         <item>Проверяет успешное получение профиля при валидном токене.</item>
+///         <item>Проверяет отказ при использовании незащищённого протокола.</item>
 ///     </list>
 /// </remarks>
 public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
@@ -116,6 +117,34 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
         json["username"].GetString().Should().Be("test");
         json["language_code"].GetString().Should().Be("ru");
         json["auth_date"].GetInt64().Should().Be(1);
+    }
+
+    /// <summary>
+    ///     Тест 3: Незащищённый протокол возвращает 400.
+    /// </summary>
+    [Fact(DisplayName = "Тест 3: Незащищённый протокол возвращает 400")]
+    public async Task Should_Return400_When_NotHttps()
+    {
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IWebAppInitDataValidator, StubValidator>();
+                services.Configure<WebAppAuthOptions>(o =>
+                {
+                    o.Secret = "0123456789ABCDEF0123456789ABCDEF";
+                    o.Lifetime = TimeSpan.FromMinutes(5);
+                });
+            });
+        });
+
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("http://localhost")
+        });
+
+        var resp = await client.GetAsync("/webapp/me");
+        resp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     private sealed class StubValidator : IWebAppInitDataValidator

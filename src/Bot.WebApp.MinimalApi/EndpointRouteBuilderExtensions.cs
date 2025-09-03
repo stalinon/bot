@@ -148,6 +148,11 @@ public static class EndpointRouteBuilderExtensions
                 return result;
             }
 
+            if (!req.IsHttps)
+            {
+                return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
+            }
+
             var auth = req.Headers.Authorization.ToString();
             if (string.IsNullOrWhiteSpace(auth) ||
                 !auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
