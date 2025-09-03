@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
     {
         const string telegram = "telegram";
         services.AddHttpClient(telegram);
+        services.AddMemoryCache();
         services.AddSingleton<ITelegramBotClient>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<BotOptions>>().Value;
