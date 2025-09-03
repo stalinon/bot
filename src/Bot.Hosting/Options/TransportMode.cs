@@ -9,7 +9,7 @@ public enum TransportMode
     ///     Полинг
     /// </summary>
     Polling,
-    
+
     /// <summary>
     ///     Хук
     /// </summary>

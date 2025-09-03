@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Metrics;
+
 using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Middlewares;

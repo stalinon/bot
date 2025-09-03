@@ -1,15 +1,20 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Bot.Telegram;
+
 using Bot.Abstractions;
 using Bot.Core.Stats;
-using Telegram.Bot.Types;
-using System.Text.Json;
 using Bot.Hosting.Options;
+using Bot.Telegram;
+
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Telegram.Bot;
+using Telegram.Bot.Types;
+
 using Xunit;
 
 namespace Bot.Core.Tests;

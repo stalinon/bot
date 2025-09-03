@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+
 using Bot.Core.Middlewares;
+
 using Xunit;
 
 namespace Bot.Core.Tests;

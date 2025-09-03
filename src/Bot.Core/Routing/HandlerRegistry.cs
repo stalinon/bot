@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
@@ -14,7 +15,7 @@ public sealed class HandlerRegistry
 {
     private readonly ConcurrentDictionary<string, Type> _commands = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<(System.Text.RegularExpressions.Regex Pattern, Type Type)> _regexHandlers = new();
-    
+
     /// <summary>
     ///     Зарегистрировать обработчики из сборки
     /// </summary>
@@ -46,7 +47,7 @@ public sealed class HandlerRegistry
             _regexHandlers.Add((ta.Pattern, t));
         }
     }
-    
+
     /// <summary>
     ///     Отыскать обработчик для команды
     /// </summary>

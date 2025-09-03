@@ -1,5 +1,6 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Core.Middlewares;
@@ -18,7 +19,7 @@ public sealed class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddlew
         }
         catch (OperationCanceledException) when (ctx.CancellationToken.IsCancellationRequested)
         {
-             /* swallow */
+            /* swallow */
         }
         catch (Exception ex)
         {

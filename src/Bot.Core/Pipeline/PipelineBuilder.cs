@@ -1,4 +1,5 @@
 using Bot.Abstractions.Contracts;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bot.Core.Pipeline;

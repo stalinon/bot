@@ -1,4 +1,5 @@
 using Bot.Core.Stats;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

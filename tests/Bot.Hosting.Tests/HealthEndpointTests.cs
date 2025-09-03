@@ -3,10 +3,14 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace Bot.Hosting.Tests;

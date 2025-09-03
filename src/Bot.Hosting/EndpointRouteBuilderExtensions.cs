@@ -1,13 +1,15 @@
+using System;
+using System.Reflection;
+using System.Threading.Channels;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Hosting.Options;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
-using System;
-using System.Reflection;
-using System.Threading.Channels;
 
 namespace Bot.Hosting;
 /// <summary>

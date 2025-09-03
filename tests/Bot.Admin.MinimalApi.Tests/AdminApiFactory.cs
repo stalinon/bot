@@ -1,6 +1,7 @@
+using System.IO;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using System.IO;
 
 namespace Bot.Admin.MinimalApi.Tests;
 

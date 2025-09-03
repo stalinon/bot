@@ -5,7 +5,7 @@
 ## Запуск
 
 1. Установить .NET 8 SDK.
-2. В каталоге `examples/webapp-demo` задать переменные окружения:
+2. В каталоге `examples/Bot.Examples.WebAppDemo` задать переменные окружения:
    ```bash
    export Bot__Token="<токен бота>"
    export WebAppAuth__Secret="0123456789ABCDEF0123456789ABCDEF"

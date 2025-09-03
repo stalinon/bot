@@ -9,12 +9,12 @@ public interface IUpdatePipeline
     ///     Использовать мидлварь
     /// </summary>
     IUpdatePipeline Use<T>() where T : IUpdateMiddleware;
-    
+
     /// <summary>
     ///     Использовать преобразование
     /// </summary>
     IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component);
-    
+
     /// <summary>
     ///     Построить
     /// </summary>

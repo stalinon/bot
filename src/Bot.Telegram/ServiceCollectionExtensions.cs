@@ -1,7 +1,9 @@
 using Bot.Abstractions.Contracts;
 using Bot.Hosting.Options;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Telegram.Bot;
 
 namespace Bot.Telegram;

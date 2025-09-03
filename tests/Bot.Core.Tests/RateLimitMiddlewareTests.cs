@@ -1,13 +1,16 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Stats;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace Bot.Core.Tests;

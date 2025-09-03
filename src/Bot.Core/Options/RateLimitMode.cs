@@ -14,4 +14,4 @@ public enum RateLimitMode
     ///     Жёсткий режим: молчит
     /// </summary>
     Hard
-} 
+}

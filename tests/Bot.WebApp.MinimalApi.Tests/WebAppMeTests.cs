@@ -7,12 +7,16 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+
+using Bot.Telegram;
+
 using FluentAssertions;
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+
 using Xunit;
-using Bot.Telegram;
 
 namespace Bot.WebApp.MinimalApi.Tests;
 

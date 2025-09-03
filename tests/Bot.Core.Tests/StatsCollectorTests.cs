@@ -1,9 +1,13 @@
 using System.Diagnostics.Metrics;
 using System.Threading;
+
 using Bot.Core.Middlewares;
 using Bot.Core.Stats;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.Diagnostics;
+
 using Xunit;
 
 namespace Bot.Core.Tests;
