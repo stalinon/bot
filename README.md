@@ -31,3 +31,12 @@ For development or deployment you can adjust settings in `appsettings.json` or v
 ### Документация
 
 * [Mini App](docs/miniapps.md)
+
+### Настройки Mini App
+
+Мини-приложение настраивается через переменные окружения:
+
+* `WebApp__PublicUrl` — публичный URL страницы.
+* `WebApp__AuthTtlSeconds` — срок жизни JWT в секундах.
+* `WebApp__InitDataTtlSeconds` — время жизни параметра `initData` в секундах.
+* `WebApp__Csp__AllowedOrigins__0` — дополнительный origin для Content-Security-Policy.

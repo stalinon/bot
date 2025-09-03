@@ -36,7 +36,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TelegramPollingSource>();
         services.AddSingleton<TelegramWebhookSource>();
         services.AddSingleton<WebhookService>();
-        services.AddSingleton<IWebAppInitDataValidator, WebAppInitDataValidator>();
         services.AddSingleton<IUpdateSource>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<BotOptions>>().Value;
@@ -45,7 +44,6 @@ public static class ServiceCollectionExtensions
                 : sp.GetRequiredService<TelegramPollingSource>();
         });
         services.AddSingleton<ITransportClient, TelegramTransportClient>();
-        services.AddSingleton<IWebAppQueryResponder, TelegramWebAppQueryResponder>();
         services.AddSingleton<IBotUi, TelegramBotUi>();
         services.AddSingleton<IChatMenuService, ChatMenuService>();
         return services;

@@ -1,4 +1,5 @@
 using Bot.Hosting.Options;
+using Bot.Abstractions.Contracts;
 using Bot.Telegram;
 using Bot.WebApp.MinimalApi;
 

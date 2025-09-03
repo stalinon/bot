@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
+using Bot.Abstractions.Contracts;
 using Bot.Hosting.Options;
 
 using Microsoft.Extensions.Options;
@@ -23,15 +24,16 @@ namespace Bot.Telegram;
 public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
 {
     private const string SecretKeyName = "WebAppData";
-    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan _ttl;
     private readonly string _token;
 
     /// <summary>
     ///     Создать экземпляр.
     /// </summary>
-    public WebAppInitDataValidator(IOptions<BotOptions> options)
+    public WebAppInitDataValidator(IOptions<BotOptions> options, IOptions<WebAppOptions> webOptions)
     {
         _token = options.Value.Token;
+        _ttl = TimeSpan.FromSeconds(webOptions.Value.InitDataTtlSeconds);
     }
 
     /// <inheritdoc />
@@ -67,7 +69,7 @@ public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
             return false;
         }
         var authDate = DateTimeOffset.FromUnixTimeSeconds(authDateVal);
-        if (DateTimeOffset.UtcNow - authDate > Ttl)
+        if (DateTimeOffset.UtcNow - authDate > _ttl)
         {
             error = "истёк срок действия auth_date";
             return false;

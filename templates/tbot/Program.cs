@@ -36,6 +36,7 @@ var services = builder.Services
         cfg.GetSection("Transport").Bind(o.Transport);
     })
     .AddTelegramTransport()
+    .AddWebApp(cfg)
     .UsePipeline(p => p
         .Use<ExceptionHandlingMiddleware>()
         .Use<LoggingMiddleware>()
@@ -53,6 +54,7 @@ app.MapTelegramWebhook();
 app.MapAdminApi();
 #endif
 #if (webapp)
+app.UseStrictCspForWebApp(cfg.GetSection("WebApp:Csp:AllowedOrigins").Get<string[]>() ?? []);
 app.MapWebAppAuth();
 app.MapWebAppMe();
 #endif

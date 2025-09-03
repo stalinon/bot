@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Bot.Telegram;
+using Bot.Abstractions.Contracts;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
