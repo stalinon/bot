@@ -6,6 +6,13 @@ namespace Bot.Hosting.Options;
 /// <summary>
 ///     Настройки бота
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Параметры доступа</item>
+///         <item>Настройки транспорта</item>
+///         <item>Ограничения и дедупликация</item>
+///     </list>
+/// </remarks>
 public sealed class BotOptions
 {
     /// <summary>
@@ -17,17 +24,12 @@ public sealed class BotOptions
     ///     Токен доступа к административным эндпоинтам
     /// </summary>
     public string AdminToken { get; set; } = string.Empty;
-    
+
     /// <summary>
     ///     Настройки транспорта
     /// </summary>
     public TransportOptions Transport { get; set; } = new();
-    
-    /// <summary>
-    ///     Параллелизм
-    /// </summary>
-    public int Parallelism { get; set; } = 8;
-    
+
     /// <summary>
     ///     Ограничения
     /// </summary>

@@ -6,7 +6,6 @@ using Bot.Core.Scenes;
 using Bot.Examples.HelloBot.Services;
 using Bot.Examples.HelloBot.Scenes;
 using Bot.Hosting;
-using Bot.Hosting.Options;
 using Bot.Telegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,11 +23,7 @@ builder.Services
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
-        o.Transport = new TransportOptions
-        {
-            Mode = TransportMode.Polling
-        };
-        o.Parallelism = 8;
+        cfg.GetSection("Transport").Bind(o.Transport);
         o.RateLimits = new RateLimitOptions { PerUserPerMinute = 20, PerChatPerMinute = 60, Mode = RateLimitMode.Soft };
     })
     .AddTelegramTransport()

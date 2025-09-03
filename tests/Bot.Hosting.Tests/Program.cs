@@ -37,14 +37,17 @@ public class Program
             Array.Empty<Action<IUpdatePipeline>>(),
             new StatsCollector(),
             new LoggerFactory().CreateLogger<BotHostedService>(),
-            Microsoft.Extensions.Options.Options.Create(new BotOptions { Parallelism = 1 }));
+            Microsoft.Extensions.Options.Options.Create(new BotOptions
+            {
+                Transport = new TransportOptions { Parallelism = 1 }
+            }));
         typeof(BotHostedService).GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(hosted, channel);
 
         builder.Services.AddSingleton<IUpdateSource, DummyUpdateSource>();
         builder.Services.AddSingleton<IStateStore, DummyStateStore>();
         builder.Services.AddSingleton(hosted);
         builder.Services.AddSingleton(channel);
-        builder.Services.AddOptions<BotOptions>().Configure(o => o.Parallelism = 1);
+        builder.Services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = 1);
 
         var app = builder.Build();
         app.MapHealth();

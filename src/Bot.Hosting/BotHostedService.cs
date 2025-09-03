@@ -54,7 +54,7 @@ public sealed class BotHostedService(
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         _channel = Channel.CreateBounded<UpdateContext>(
-            new BoundedChannelOptions(_options.Parallelism * 16)
+            new BoundedChannelOptions(_options.Transport.Parallelism * 16)
             {
                 FullMode = BoundedChannelFullMode.Wait
             });
@@ -64,7 +64,7 @@ public sealed class BotHostedService(
             _channel.Reader.ReadAllAsync(_cts.Token),
             new ParallelOptions
             {
-                MaxDegreeOfParallelism = _options.Parallelism,
+                MaxDegreeOfParallelism = _options.Transport.Parallelism,
                 CancellationToken = _cts.Token
             },
             async (ctx, ct) =>

@@ -48,7 +48,7 @@ public static class EndpointRouteBuilderExtensions
                     return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
                 }
 
-                var capacity = options.Value.Parallelism * 16;
+                var capacity = options.Value.Transport.Parallelism * 16;
                 if (channel.Reader.Count >= capacity)
                 {
                     return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
