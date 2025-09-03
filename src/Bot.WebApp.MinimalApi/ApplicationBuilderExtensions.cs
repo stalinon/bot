@@ -16,7 +16,7 @@ namespace Bot.WebApp.MinimalApi;
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
-    ///     Подключить строгую политику безопасности для Mini App.
+    ///     Подключить строгую политику безопасности для Mini App и полностью запретить фреймы для предотвращения атак clickjacking.
     /// </summary>
     /// <param name="app">Построитель приложения.</param>
     /// <param name="allowedOrigins">Дополнительные origin'ы, разрешённые в Content-Security-Policy.</param>
@@ -34,7 +34,7 @@ public static class ApplicationBuilderExtensions
             context.Response.Headers.Append("Content-Security-Policy", $"{csp};");
             context.Response.Headers.Append("Referrer-Policy", "no-referrer");
             context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
             await next();
         });
 
