@@ -9,6 +9,7 @@ using Bot.Telegram;
 
 using FluentAssertions;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Xunit;
@@ -31,7 +32,6 @@ namespace Bot.Telegram.Tests;
 public sealed class WebAppInitDataValidatorTests
 {
     private const string Token = "token";
-    private readonly WebAppInitDataValidator _validator;
 
     /// <inheritdoc/>
     public WebAppInitDataValidatorTests()
@@ -47,6 +47,7 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 1: Возвращает успех при валидных данных.")]
     public void Should_ReturnTrue_OnValidData()
     {
+        var sut = CreateSut(out var logs);
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -55,10 +56,11 @@ public sealed class WebAppInitDataValidatorTests
             ["user"] = "u"
         });
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeTrue();
         error.Should().BeNull();
+        logs.Logs.Should().BeEmpty();
     }
 
     /// <summary>
@@ -67,6 +69,7 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 2: Возвращает ошибку при неверной подписи.")]
     public void Should_ReturnError_OnInvalidSignature()
     {
+        var sut = CreateSut(out var logs);
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -76,10 +79,13 @@ public sealed class WebAppInitDataValidatorTests
         });
         data = data.Replace("hash=", "hash=deadbeef");
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeFalse();
         error.Should().Contain("подпись");
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(data))).ToLowerInvariant()[..8];
+        var log = logs.Logs.Should().ContainSingle().Which;
+        log.Message.Should().Contain("bad_hash").And.Contain(expectedHash);
     }
 
     /// <summary>
@@ -88,6 +94,7 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 3: Возвращает ошибку при просроченном auth_date.")]
     public void Should_ReturnError_OnExpiredAuthDate()
     {
+        var sut = CreateSut(out var logs);
         var old = DateTimeOffset.UtcNow.AddMinutes(-10).ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -96,10 +103,13 @@ public sealed class WebAppInitDataValidatorTests
             ["user"] = "u"
         });
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeFalse();
         error.Should().Contain("auth_date");
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(data))).ToLowerInvariant()[..8];
+        var log = logs.Logs.Should().ContainSingle().Which;
+        log.Message.Should().Contain("expired").And.Contain(expectedHash);
     }
 
     /// <summary>
@@ -108,16 +118,20 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 4: Возвращает ошибку при отсутствии обязательного поля.")]
     public void Should_ReturnError_WhenFieldMissing()
     {
+        var sut = CreateSut(out var logs);
         var data = CreateInitData(new Dictionary<string, string>
         {
             ["query_id"] = "1",
             ["user"] = "u"
         });
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeFalse();
         error.Should().Contain("auth_date");
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(data))).ToLowerInvariant()[..8];
+        var log = logs.Logs.Should().ContainSingle().Which;
+        log.Message.Should().Contain("missing_field").And.Contain(expectedHash);
     }
 
     /// <summary>
@@ -126,6 +140,7 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 5: Возвращает ошибку при дублировании параметров.")]
     public void Should_ReturnError_OnDuplicateParameters()
     {
+        var sut = CreateSut(out var logs);
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -135,10 +150,13 @@ public sealed class WebAppInitDataValidatorTests
         });
         data = $"user=u&{data}";
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeFalse();
         error.Should().Contain("дублирующийся");
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(data))).ToLowerInvariant()[..8];
+        var log = logs.Logs.Should().ContainSingle().Which;
+        log.Message.Should().Contain("missing_field").And.Contain(expectedHash);
     }
 
     /// <summary>
@@ -147,6 +165,7 @@ public sealed class WebAppInitDataValidatorTests
     [Fact(DisplayName = "Тест 6: Возвращает успех при другом порядке параметров.")]
     public void Should_ReturnTrue_WhenOrderDiffers()
     {
+        var sut = CreateSut(out var logs);
         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -158,10 +177,11 @@ public sealed class WebAppInitDataValidatorTests
         Array.Reverse(parts);
         data = string.Join('&', parts);
 
-        var result = _validator.TryValidate(data, out var error);
+        var result = sut.TryValidate(data, out var error);
 
         result.Should().BeTrue();
         error.Should().BeNull();
+        logs.Logs.Should().BeEmpty();
     }
 
     /// <summary>
@@ -195,5 +215,14 @@ public sealed class WebAppInitDataValidatorTests
         var hash = Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(dataCheckString))).ToLowerInvariant();
         var query = string.Join("&", fields.Select(x => $"{x.Key}={x.Value}"));
         return $"{query}&hash={hash}";
+    }
+
+    private static WebAppInitDataValidator CreateSut(out CollectingLoggerProvider provider)
+    {
+        provider = new CollectingLoggerProvider();
+        var factory = new LoggerFactory(new[] { provider });
+        var logger = factory.CreateLogger<WebAppInitDataValidator>();
+        var options = Options.Create(new BotOptions { Token = Token });
+        return new WebAppInitDataValidator(options, logger);
     }
 }

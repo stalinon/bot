@@ -31,9 +31,29 @@ STATUS_START=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
   -H 'Content-Type: application/json' \
   -d '{"update_id":1,"message":{"message_id":1,"date":0,"chat":{"id":1,"type":"private"},"from":{"id":1},"text":"/start"}}' || echo 000)
 
-# Проверка Mini App
-STATUS_WEBAPP=$(curl -s -o /dev/null -w "%{http_code}" \
-  "http://localhost:5000/webapp/auth?initData=test" || echo 000)
+# Подготовка initData для Mini App
+NOW=$(date +%s)
+DATA_CHECK="auth_date=$NOW\nquery_id=1\nuser={\"id\":1}"
+SECRET=$(printf 'WebAppData' | openssl dgst -sha256 -hmac "$BOT_TOKEN" -binary | xxd -p -c 256)
+HASH=$(printf "$DATA_CHECK" | openssl dgst -sha256 -mac HMAC -macopt hexkey:$SECRET | awk '{print $2}')
+INIT_DATA="auth_date=$NOW&query_id=1&user=%7B%22id%22%3A1%7D&hash=$HASH"
+
+# Получение JWT
+AUTH_RESP=$(curl -s -k -w "%{http_code}" -o auth.json -X POST https://localhost:5001/webapp/auth \
+  -H 'Content-Type: application/json' \
+  -d "{\"initData\":\"$INIT_DATA\"}" || echo 000)
+STATUS_AUTH="$AUTH_RESP"
+TOKEN=$(grep -o '"token":"[^"]*"' auth.json | cut -d'"' -f4)
+
+# Проверка профиля
+STATUS_ME=$(curl -s -k -o /dev/null -w "%{http_code}" https://localhost:5001/webapp/me \
+  -H "Authorization: Bearer $TOKEN" || echo 000)
+
+# Отправка web_app_data
+STATUS_DATA=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+  http://localhost:5000/tg/secret \
+  -H 'Content-Type: application/json' \
+  -d '{"update_id":2,"message":{"message_id":2,"date":0,"chat":{"id":1,"type":"private"},"from":{"id":1},"web_app_data":{"data":"42"}}}' || echo 000)
 
 # Завершение процесса
 kill $PID >/dev/null 2>&1 || true
@@ -42,9 +62,9 @@ cd ..
 rm -rf "$PROJECT_DIR"
 
 # Итог
-if [[ "$STATUS_START" -eq 200 && ( "$STATUS_WEBAPP" -eq 401 || "$STATUS_WEBAPP" -eq 400 ) ]]; then
+if [[ "$STATUS_START" -eq 200 && "$STATUS_AUTH" -eq 200 && "$STATUS_ME" -eq 200 && "$STATUS_DATA" -eq 200 ]]; then
   echo "Быстрый старт выполнен успешно"
 else
-  echo "Ошибка: /start=$STATUS_START webapp=$STATUS_WEBAPP" >&2
+  echo "Ошибка: /start=$STATUS_START auth=$STATUS_AUTH me=$STATUS_ME sendData=$STATUS_DATA" >&2
   exit 1
 fi

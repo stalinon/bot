@@ -202,7 +202,7 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         var resp = await client.SendAsync(request);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
-        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate");
+        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate", "webappAuth", "webappMe", "webappLatencyP50", "webappLatencyP95", "webappLatencyP99");
     }
 
     private sealed class DummyStateStore : IStateStore
