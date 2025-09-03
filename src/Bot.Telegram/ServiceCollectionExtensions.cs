@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITransportClient, TelegramTransportClient>();
         services.AddSingleton<IWebAppQueryResponder, TelegramWebAppQueryResponder>();
         services.AddSingleton<IBotUi, TelegramBotUi>();
+        services.AddSingleton<IChatMenuService, ChatMenuService>();
         return services;
     }
 }
