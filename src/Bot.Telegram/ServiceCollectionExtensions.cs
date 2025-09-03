@@ -13,7 +13,7 @@ namespace Bot.Telegram;
 ///     <list type="number">
 ///         <item>Регистрирует HTTP-клиент и клиента Telegram.</item>
 ///         <item>Настраивает источники обновлений.</item>
-///         <item>Подключает транспорт и валидатор Web App.</item>
+///         <item>Подключает транспорт, UI и валидатор Web App.</item>
 ///     </list>
 /// </remarks>
 public static class ServiceCollectionExtensions
@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
                 : sp.GetRequiredService<TelegramPollingSource>();
         });
         services.AddSingleton<ITransportClient, TelegramTransportClient>();
+        services.AddSingleton<IBotUi, TelegramBotUi>();
         return services;
     }
 }
