@@ -27,3 +27,7 @@ For development or deployment you can adjust settings in `appsettings.json` or v
 
 Тип хранилища задаётся переменной окружения `Storage__Provider` (`file`, `redis` или `ef`).
 Другие параметры берутся из секции `Storage`.
+
+### Документация
+
+* [Mini App](docs/miniapps.md)
