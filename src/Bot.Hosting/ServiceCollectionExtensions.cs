@@ -134,8 +134,16 @@ public static class ServiceCollectionExtensions
         {
             case "redis":
                 var conn = configuration["STORAGE:REDIS:CONNECTION"] ?? "localhost";
+                var db = int.TryParse(configuration["STORAGE:REDIS:DB"], out var d) ? d : 0;
+                var prefix = configuration["STORAGE:REDIS:PREFIX"] ?? string.Empty;
                 var mux = ConnectionMultiplexer.Connect(conn);
-                services.UseStateStorage(new RedisStateStore(mux));
+                var options = new RedisOptions
+                {
+                    Connection = mux,
+                    Database = db,
+                    Prefix = prefix,
+                };
+                services.UseStateStorage(new RedisStateStore(options));
                 break;
             case "ef":
                 var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";

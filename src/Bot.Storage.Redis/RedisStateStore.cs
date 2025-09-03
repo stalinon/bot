@@ -17,15 +17,18 @@ namespace Bot.Storage.Redis;
 public sealed class RedisStateStore : IStateStore
 {
     private readonly IDatabase _db;
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private readonly string _prefix;
+    private readonly JsonSerializerOptions _json;
 
     /// <summary>
-    ///     Создаёт хранилище Redis
+    ///     Создаёт хранилище Redis.
     /// </summary>
-    /// <param name="connection">Подключение к Redis</param>
-    public RedisStateStore(IConnectionMultiplexer connection)
+    /// <param name="options">Опции Redis</param>
+    public RedisStateStore(RedisOptions options)
     {
-        _db = connection.GetDatabase();
+        _db = options.Connection.GetDatabase(options.Database);
+        _prefix = options.Prefix ?? string.Empty;
+        _json = options.Serialization ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
     }
 
     /// <inheritdoc />
@@ -37,14 +40,14 @@ public sealed class RedisStateStore : IStateStore
         {
             return default;
         }
-        return JsonSerializer.Deserialize<T>(val!, Json);
+        return JsonSerializer.Deserialize<T>(val!, _json);
     }
 
     /// <inheritdoc />
     public async Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        var json = JsonSerializer.Serialize(value, Json);
+        var json = JsonSerializer.Serialize(value, _json);
         await _db.StringSetAsync(MakeKey(scope, key), json, ttl).ConfigureAwait(false);
     }
 
@@ -82,7 +85,7 @@ return val";
     return 1
 end
 return 0";
-        var json = JsonSerializer.Serialize(value, Json);
+        var json = JsonSerializer.Serialize(value, _json);
         var keys = new RedisKey[] { MakeKey(scope, key) };
         var args = new RedisValue[] { json, ttl.HasValue ? (long)ttl.Value.TotalMilliseconds : -1 };
         var result = await _db.ScriptEvaluateAsync(script, keys, args).ConfigureAwait(false);
@@ -105,13 +108,15 @@ if cur == ARGV[1] then
     return 1
 end
 return 0";
-        var jsonExpected = JsonSerializer.Serialize(expected, Json);
-        var jsonValue = JsonSerializer.Serialize(value, Json);
+        var jsonExpected = JsonSerializer.Serialize(expected, _json);
+        var jsonValue = JsonSerializer.Serialize(value, _json);
         var keys = new RedisKey[] { MakeKey(scope, key) };
         var args = new RedisValue[] { jsonExpected, jsonValue, ttl.HasValue ? (long)ttl.Value.TotalMilliseconds : -1 };
         var result = await _db.ScriptEvaluateAsync(script, keys, args).ConfigureAwait(false);
         return (int)result == 1;
     }
 
-    private static string MakeKey(string scope, string key) => $"{scope}:{key}";
+    private string MakeKey(string scope, string key) => string.IsNullOrEmpty(_prefix)
+        ? $"{scope}:{key}"
+        : $"{_prefix}:{scope}:{key}";
 }

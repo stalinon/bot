@@ -1,9 +1,12 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 using Bot.Storage.Redis;
+using FluentAssertions;
 using Xunit;
 
 namespace Bot.Storage.Redis.Tests;
@@ -11,26 +14,30 @@ namespace Bot.Storage.Redis.Tests;
 /// <summary>
 ///     Нагрузочные тесты хранилищ.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сравнивается производительность Redis и файла</item>
+///         <item>Оценивается время инкремента</item>
+///     </list>
+/// </remarks>
 public sealed class StoragePerformanceTests : IClassFixture<RedisFixture>, IAsyncLifetime
 {
     private readonly RedisStateStore _redis;
     private readonly FileStateStore _file;
 
-    /// <summary>
-    ///     Создаёт тесты.
-    /// </summary>
-    /// <param name="fixture">Фикстура Redis.</param>
+    /// <inheritdoc/>
     public StoragePerformanceTests(RedisFixture fixture)
     {
-        _redis = new RedisStateStore(fixture.Connection);
+        var options = new RedisOptions { Connection = fixture.Connection };
+        _redis = new RedisStateStore(options);
         var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         _file = new FileStateStore(new FileStoreOptions { Path = dir });
     }
 
     /// <summary>
-    ///     Тест 1. Redis не хуже File на инкременте.
+    ///     Тест 1: Redis не хуже File на инкременте.
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Redis не хуже File на инкременте")]
+    [Fact(DisplayName = "Тест 1: Redis не хуже File на инкременте")]
     public async Task RedisNotSlowerThanFileOnIncrement()
     {
         const int n = 100;
@@ -48,7 +55,7 @@ public sealed class StoragePerformanceTests : IClassFixture<RedisFixture>, IAsyn
         }
         swRedis.Stop();
 
-        Assert.True(swRedis.Elapsed <= swFile.Elapsed * 2, $"Redis slower: file {swFile.Elapsed}, redis {swRedis.Elapsed}");
+        swRedis.Elapsed.Should().BeLessOrEqualTo(swFile.Elapsed * 2, $"Redis slower: file {swFile.Elapsed}, redis {swRedis.Elapsed}");
     }
 
     /// <summary>
