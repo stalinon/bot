@@ -24,7 +24,8 @@
       "description": "Хранилище состояния",
       "choices": [
         { "choice": "file", "description": "Файлы" },
-        { "choice": "redis", "description": "Redis" }
+        { "choice": "redis", "description": "Redis" },
+        { "choice": "ef", "description": "EF Core" }
       ],
       "defaultValue": "file"
     },
@@ -32,7 +33,7 @@
       "type": "parameter",
       "datatype": "bool",
       "description": "Подключить административное API",
-      "defaultValue": "false"
+      "defaultValue": "true"
     },
     "webapp": {
       "type": "parameter",

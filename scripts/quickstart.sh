@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Скрипт быстрый старт для шаблона tbot
 # 1. Устанавливает локальный шаблон.
-# 2. Генерирует проект с вебхуком и Mini App.
+# 2. Генерирует проект с вебхуком, Mini App и EF Core хранилищем.
 # 3. Запускает проект и проверяет /start и Mini App.
 
 # Установка шаблона
@@ -16,7 +16,7 @@ rm -rf "$PROJECT_DIR"
 dotnet new tbot --transport webhook --webapp -n "$PROJECT_DIR" >/dev/null
 cd "$PROJECT_DIR"
 sed -i 's/{{transport}}/webhook/' appsettings.json
-sed -i 's/{{store}}/file/' appsettings.json
+sed -i 's/{{store}}/ef/' appsettings.json
 sed -i '/UsePipeline(p => p/,+3 c\    .UsePipeline(_ => { })' Program.cs
 
 # Запуск бота в фоне
@@ -58,6 +58,7 @@ STATUS_DATA=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
 # Завершение процесса
 kill $PID >/dev/null 2>&1 || true
 wait $PID 2>/dev/null || true
+rm -f bot_state.db
 cd ..
 rm -rf "$PROJECT_DIR"
 
