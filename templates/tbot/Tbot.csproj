@@ -11,6 +11,10 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Bot.Storage.Redis\Bot.Storage.Redis.csproj" />
   </ItemGroup>
+  <!--#elif (store == "ef")-->
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.Storage.EFCore\Bot.Storage.EFCore.csproj" />
+  </ItemGroup>
   <!--#else-->
   <ItemGroup>
     <ProjectReference Include="..\src\Bot.Storage.File\Bot.Storage.File.csproj" />

@@ -4,6 +4,13 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Hosting;
 using Bot.Telegram;
+#if (store == "redis")
+using Bot.Storage.Redis;
+#elif (store == "ef")
+using Bot.Storage.EFCore;
+#else
+using Bot.Storage.File;
+#endif
 #if (transport == "webhook")
 using Microsoft.AspNetCore.Builder;
 #endif

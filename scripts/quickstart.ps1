@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 
 # Скрипт быстрый старт для шаблона tbot
 # 1. Устанавливает локальный шаблон.
-# 2. Генерирует проект с вебхуком и Mini App.
+# 2. Генерирует проект с вебхуком, Mini App и EF Core хранилищем.
 # 3. Запускает проект и проверяет /start и Mini App.
 
 # Установка шаблона
@@ -16,7 +16,7 @@ $project = Join-Path (Get-Location) 'quickstart-bot'
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $project
 $null = dotnet new tbot --transport webhook --webapp -n 'quickstart-bot'
 Set-Location $project
-(Get-Content appsettings.json) -replace '{{transport}}','webhook' -replace '{{store}}','file' | Set-Content appsettings.json
+(Get-Content appsettings.json) -replace '{{transport}}','webhook' -replace '{{store}}','ef' | Set-Content appsettings.json
 (Get-Content Program.cs) -replace 'UsePipeline\(p => p[\s\S]*?UseConfiguredStateStorage', 'UsePipeline(_ => { })`n    .UseConfiguredStateStorage' | Set-Content Program.cs
 
 # Запуск бота
@@ -68,6 +68,7 @@ $dataStatus = try {
 # Завершение процесса
 Stop-Process $proc.Id
 $proc.WaitForExit()
+Remove-Item -Force -ErrorAction SilentlyContinue bot_state.db
 Set-Location ..
 Remove-Item -Recurse -Force $project
 

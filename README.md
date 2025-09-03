@@ -32,6 +32,11 @@ Use `scripts/quickstart.sh` or `scripts/quickstart.ps1` to validate the template
 Тип хранилища задаётся переменной окружения `Storage__Provider` (`file`, `redis` или `ef`).
 Другие параметры берутся из секции `Storage`.
 
+### Административное API
+
+Административное API включено по умолчанию. Для запросов требуется заголовок `X-Admin-Token`,
+значение берётся из секции `Admin` или переменной окружения `Admin__AdminToken`.
+
 ### Документация
 
 * [Mini App](docs/miniapps.md)
