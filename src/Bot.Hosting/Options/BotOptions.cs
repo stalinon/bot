@@ -37,4 +37,9 @@ public sealed class BotOptions
     ///     Время жизни записей для дедупликации
     /// </summary>
     public TimeSpan DeduplicationTtl { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    ///     Таймаут дренажа очереди при остановке
+    /// </summary>
+    public TimeSpan DrainTimeout { get; set; } = TimeSpan.FromSeconds(5);
 }
