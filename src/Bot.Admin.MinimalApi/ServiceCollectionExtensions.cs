@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddAdminApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<StatsCollector>();
+        services.AddSingleton<WebAppStatsCollector>();
         services.Configure<AdminOptions>(configuration.GetSection("Admin"));
         services.AddSingleton<IHealthProbe, TransportProbe>();
         services.AddSingleton<IHealthProbe, QueueProbe>();

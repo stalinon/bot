@@ -20,6 +20,9 @@ public sealed class BotMetricsEventSource : EventSource
     private readonly EventCounter _updateLatency;
     private readonly EventCounter _handlerLatency;
     private readonly EventCounter _queueDepth;
+    private readonly IncrementingEventCounter _webAppAuth;
+    private readonly IncrementingEventCounter _webAppMe;
+    private readonly EventCounter _webAppLatency;
 
     private BotMetricsEventSource()
     {
@@ -50,6 +53,18 @@ public sealed class BotMetricsEventSource : EventSource
         _queueDepth = new EventCounter("tgbot_queue_depth", this)
         {
             DisplayName = "Глубина очереди"
+        };
+        _webAppAuth = new IncrementingEventCounter("tgbot_webapp_auth_total", this)
+        {
+            DisplayName = "Авторизация Web App"
+        };
+        _webAppMe = new IncrementingEventCounter("tgbot_webapp_me_total", this)
+        {
+            DisplayName = "Профиль Web App"
+        };
+        _webAppLatency = new EventCounter("tgbot_webapp_request_latency_ms", this)
+        {
+            DisplayName = "Задержка запроса Web App, мс"
         };
     }
 
@@ -109,6 +124,26 @@ public sealed class BotMetricsEventSource : EventSource
     }
 
     /// <summary>
+    ///     Отметить запрос авторизации Web App.
+    /// </summary>
+    /// <param name="latencyMs">Задержка запроса в миллисекундах.</param>
+    public void WebAppAuth(double latencyMs)
+    {
+        _webAppAuth.Increment();
+        _webAppLatency.WriteMetric(latencyMs);
+    }
+
+    /// <summary>
+    ///     Отметить запрос профиля Web App.
+    /// </summary>
+    /// <param name="latencyMs">Задержка запроса в миллисекундах.</param>
+    public void WebAppMe(double latencyMs)
+    {
+        _webAppMe.Increment();
+        _webAppLatency.WriteMetric(latencyMs);
+    }
+
+    /// <summary>
     ///     Освободить ресурсы.
     /// </summary>
     /// <param name="disposing">Признак явной очистки.</param>
@@ -123,6 +158,9 @@ public sealed class BotMetricsEventSource : EventSource
             _updateLatency.Dispose();
             _handlerLatency.Dispose();
             _queueDepth.Dispose();
+            _webAppAuth.Dispose();
+            _webAppMe.Dispose();
+            _webAppLatency.Dispose();
         }
 
         base.Dispose(disposing);
