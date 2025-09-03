@@ -41,7 +41,7 @@ public class Program
         typeof(BotHostedService).GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(hosted, channel);
 
         builder.Services.AddSingleton<IUpdateSource, DummyUpdateSource>();
-        builder.Services.AddSingleton<IStateStorage, DummyStateStorage>();
+        builder.Services.AddSingleton<IStateStore, DummyStateStore>();
         builder.Services.AddSingleton(hosted);
         builder.Services.AddSingleton(channel);
         builder.Services.AddOptions<BotOptions>().Configure(o => o.Parallelism = 1);

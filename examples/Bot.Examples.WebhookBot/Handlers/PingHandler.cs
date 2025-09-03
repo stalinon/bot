@@ -6,10 +6,16 @@ using Bot.Examples.WebhookBot.Services;
 namespace Bot.Examples.WebhookBot.Handlers;
 
 /// <summary>
-///     Пинг
+///     Пинг.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Считает количество запросов пользователя</item>
+///         <item>Отправляет ответ с номером</item>
+///     </list>
+/// </remarks>
 [Command("/ping")]
-public sealed class PingHandler(IStateStorage store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
+public sealed class PingHandler(IStateStore store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
 {
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)

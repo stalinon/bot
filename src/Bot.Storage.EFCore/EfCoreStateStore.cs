@@ -7,9 +7,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Bot.Storage.EFCore;
 
 /// <summary>
-///     Хранилище состояний на EF Core
+///     Хранилище состояний на EF Core.
 /// </summary>
-public sealed class EfCoreStateStore : IStateStorage
+/// <remarks>
+///     <list type="number">
+///         <item>Использует базу данных для хранения состояния</item>
+///         <item>Выполняет миграции при инициализации</item>
+///     </list>
+/// </remarks>
+public sealed class EfCoreStateStore : IStateStore
 {
     private readonly StateContext _db;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -117,7 +123,7 @@ public sealed class EfCoreStateStore : IStateStorage
     ///     Установить значение, если текущее совпадает с ожидаемым.
     /// </summary>
     /// <inheritdoc />
-    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
@@ -140,6 +146,11 @@ public sealed class EfCoreStateStore : IStateStorage
         }
 
         entity.Value = JsonSerializer.Serialize(value, Json);
+        if (ttl.HasValue)
+        {
+            entity.ExpiresAt = DateTimeOffset.UtcNow.Add(ttl.Value);
+        }
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
     }

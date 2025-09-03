@@ -22,8 +22,14 @@ using StackExchange.Redis;
 namespace Bot.Hosting;
 
 /// <summary>
-///     Расширения <see cref="IServiceCollection"/>
+///     Расширения <see cref="IServiceCollection"/>.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Подключают бота и необходимые сервисы</item>
+///         <item>Настраивают хранилище состояний</item>
+///     </list>
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
@@ -108,11 +114,12 @@ public static class ServiceCollectionExtensions
     }
     
     /// <summary>
-    ///     Использовать хранилище состояний
+    ///     Использовать хранилище состояний.
     /// </summary>
-    public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStorage store)
+    public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStore store)
     {
-        services.AddSingleton(store);
+        services.AddSingleton<IStateStore>(store);
+        services.AddSingleton<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
         return services;
     }
 
@@ -133,7 +140,8 @@ public static class ServiceCollectionExtensions
             case "ef":
                 var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";
                 services.AddDbContext<StateContext>(o => o.UseSqlite(cs));
-                services.AddScoped<IStateStorage, EfCoreStateStore>();
+                services.AddScoped<IStateStore, EfCoreStateStore>();
+                services.AddScoped<IStateStorage>(sp => (IStateStorage)sp.GetRequiredService<IStateStore>());
                 break;
             default:
                 var path = configuration["STORAGE:FILE:PATH"] ?? "data";

@@ -8,10 +8,16 @@ using Bot.Abstractions.Contracts;
 /// <summary>
 ///     Навигатор по сценам.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сохраняет состояние сцен в хранилище</item>
+///         <item>Переходит между шагами с учётом TTL</item>
+///     </list>
+/// </remarks>
 public sealed class SceneNavigator : ISceneNavigator
 {
     private const string Scope = "scene";
-    private readonly IStateStorage _store;
+    private readonly IStateStore _store;
     private readonly TimeSpan _ttl;
 
     /// <summary>
@@ -19,7 +25,7 @@ public sealed class SceneNavigator : ISceneNavigator
     /// </summary>
     /// <param name="store">Хранилище состояний.</param>
     /// <param name="stepTtl">Время жизни шага.</param>
-    public SceneNavigator(IStateStorage store, TimeSpan? stepTtl = null)
+    public SceneNavigator(IStateStore store, TimeSpan? stepTtl = null)
     {
         _store = store;
         _ttl = stepTtl ?? TimeSpan.FromMinutes(5);
@@ -73,7 +79,7 @@ public sealed class SceneNavigator : ISceneNavigator
                 UpdatedAt = DateTimeOffset.UtcNow,
                 Ttl = ttl ?? _ttl
             };
-            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, ctx.CancellationToken)
+            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, null, ctx.CancellationToken)
                 .ConfigureAwait(false);
             if (updated)
             {

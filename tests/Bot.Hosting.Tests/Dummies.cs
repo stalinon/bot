@@ -7,6 +7,12 @@ namespace Bot.Hosting.Tests;
 /// <summary>
 ///     Заглушка источника обновлений.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Не генерирует реальные обновления</item>
+///         <item>Применяется только в тестах</item>
+///     </list>
+/// </remarks>
 internal sealed class DummyUpdateSource : IUpdateSource
 {
     /// <summary>
@@ -18,7 +24,13 @@ internal sealed class DummyUpdateSource : IUpdateSource
 /// <summary>
 ///     Заглушка хранилища состояний.
 /// </summary>
-internal sealed class DummyStateStorage : IStateStorage
+/// <remarks>
+///     <list type="number">
+///         <item>Не сохраняет данные</item>
+///         <item>Используется для изоляции тестов</item>
+///     </list>
+/// </remarks>
+internal sealed class DummyStateStore : IStateStore
 {
     /// <summary>
     ///     Заглушка получения.
@@ -48,12 +60,18 @@ internal sealed class DummyStateStorage : IStateStorage
     /// <summary>
     ///     Заглушка сравнения и установки.
     /// </summary>
-    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct) => Task.FromResult(true);
+    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromResult(true);
 }
 
 /// <summary>
 ///     Заглушка построителя пайплайна.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Не добавляет реальные промежуточные слои</item>
+///         <item>Применяется в тестах</item>
+///     </list>
+/// </remarks>
 internal sealed class DummyPipeline : IUpdatePipeline
 {
     /// <summary>

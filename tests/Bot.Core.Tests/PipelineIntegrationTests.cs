@@ -26,6 +26,12 @@ namespace Bot.Core.Tests;
 /// <summary>
 ///     Интеграционные тесты локального пайплайна.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяется обработка обновлений из файла</item>
+///         <item>Проверяется подсчёт состояния</item>
+///     </list>
+/// </remarks>
 public class PipelineIntegrationTests
 {
     /// <summary>
@@ -42,7 +48,7 @@ public class PipelineIntegrationTests
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
         services.AddSingleton(new RateLimitOptions { PerUserPerMinute = 100, PerChatPerMinute = 100, Mode = RateLimitMode.Soft });
         services.AddSingleton<ITransportClient, FakeTransportClient>();
-        services.AddSingleton<IStateStorage, InMemoryStateStore>();
+        services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();
         registry.Register(typeof(PingHandler));
         services.AddSingleton(registry);
@@ -68,7 +74,7 @@ public class PipelineIntegrationTests
         var tx = (FakeTransportClient)sp.GetRequiredService<ITransportClient>();
         Assert.Contains(tx.SentTexts, m => m.text == "pong");
 
-        var store = (InMemoryStateStore)sp.GetRequiredService<IStateStorage>();
+        var store = (InMemoryStateStore)sp.GetRequiredService<IStateStore>();
         var value = await store.GetAsync<long>("user", "ping:1", default);
         Assert.Equal(1, value);
 
@@ -76,7 +82,7 @@ public class PipelineIntegrationTests
     }
 
     [Command("/ping")]
-    private sealed class PingHandler(IStateStorage store, ITransportClient tx) : IUpdateHandler
+    private sealed class PingHandler(IStateStore store, ITransportClient tx) : IUpdateHandler
     {
         /// <inheritdoc />
         public async Task HandleAsync(UpdateContext ctx)

@@ -6,10 +6,16 @@ using Bot.Examples.HelloBot.Services;
 namespace Bot.Examples.HelloBot.Handlers;
 
 /// <summary>
-///     Пинг
+///     Пинг.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Увеличивает счётчик пользователя</item>
+///         <item>Отправляет ответ с порядковым номером</item>
+///     </list>
+/// </remarks>
 [Command("/ping")]
-public sealed class PingHandler(IStateStorage store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
+public sealed class PingHandler(IStateStore store, ITransportClient tx, RequestIdProvider requestId) : IUpdateHandler
 {
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)
