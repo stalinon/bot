@@ -82,6 +82,63 @@ public static class EndpointRouteBuilderExtensions
         return endpoints;
     }
 
+    /// <summary>
+    ///     Подключить эндпоинт профиля Web App.
+    /// </summary>
+    public static IEndpointRouteBuilder MapWebAppMe(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/webapp/me", (
+            IOptions<WebAppAuthOptions> options,
+            HttpRequest req) =>
+        {
+            var auth = req.Headers.Authorization.ToString();
+            if (string.IsNullOrWhiteSpace(auth) ||
+                !auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            var tokenRaw = auth["Bearer ".Length..].Trim();
+            var handler = new JwtSecurityTokenHandler();
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Secret)),
+                ClockSkew = TimeSpan.Zero
+            };
+
+            try
+            {
+                var principal = handler.ValidateToken(tokenRaw, parameters, out _);
+                var id = principal.FindFirst("id")?.Value;
+                var username = principal.FindFirst("username")?.Value;
+                var languageCode = principal.FindFirst("language_code")?.Value;
+                var authDate = principal.FindFirst("auth_date")?.Value;
+
+                if (id is null || authDate is null)
+                {
+                    return Results.StatusCode(StatusCodes.Status401Unauthorized);
+                }
+
+                return Results.Json(new
+                {
+                    id = long.Parse(id),
+                    username,
+                    language_code = languageCode,
+                    auth_date = long.Parse(authDate)
+                });
+            }
+            catch
+            {
+                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+            }
+        });
+
+        return endpoints;
+    }
+
     private sealed record UserPayload(long Id, string? Username);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
