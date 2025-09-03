@@ -23,10 +23,7 @@ public sealed class RedisStateStoreTests : IClassFixture<RedisFixture>
     /// <inheritdoc/>
     public RedisStateStoreTests(RedisFixture fixture)
     {
-        if (fixture.Connection is null)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(fixture.Connection);
 
         var options = new RedisOptions { Connection = fixture.Connection };
         _store = new RedisStateStore(options);
@@ -36,13 +33,13 @@ public sealed class RedisStateStoreTests : IClassFixture<RedisFixture>
     /// <summary>
     ///     Тест 1: Проверяем инкремент и TTL.
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Проверяем инкремент и TTL", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 1: Проверяем инкремент и TTL")]
     public async Task IncrementAndTtl()
     {
         await _db.KeyDeleteAsync("s:k");
-        var val = await _store.IncrementAsync("s", "k", 1, TimeSpan.FromMilliseconds(200), CancellationToken.None);
+        var val = await _store.IncrementAsync("s", "k", 1, TimeSpan.FromSeconds(1), CancellationToken.None);
         val.Should().Be(1);
-        await Task.Delay(1500);
+        await Task.Delay(3000);
         var exists = await _db.KeyExistsAsync("s:k");
         exists.Should().BeFalse();
     }
@@ -50,7 +47,7 @@ public sealed class RedisStateStoreTests : IClassFixture<RedisFixture>
     /// <summary>
     ///     Тест 2: Проверяем условную установку.
     /// </summary>
-    [Fact(DisplayName = "Тест 2: Проверяем условную установку", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 2: Проверяем условную установку")]
     public async Task SetIfNotExists()
     {
         var set1 = await _store.SetIfNotExistsAsync("s", "k2", "v1", TimeSpan.FromSeconds(1), CancellationToken.None);

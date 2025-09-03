@@ -29,6 +29,8 @@ public sealed class RedisStateStoreCasTests : IClassFixture<RedisFixture>
     /// <inheritdoc/>
     public RedisStateStoreCasTests(RedisFixture fixture)
     {
+        ArgumentNullException.ThrowIfNull(fixture.Connection);
+
         _fixture = fixture;
         _db = fixture.Connection.GetDatabase();
     }
@@ -36,16 +38,11 @@ public sealed class RedisStateStoreCasTests : IClassFixture<RedisFixture>
     /// <summary>
     ///     Тест 1: Должен обновлять значение при совпадении ожидаемого.
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Должен обновлять значение при совпадении ожидаемого", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 1: Должен обновлять значение при совпадении ожидаемого")]
     public async Task Should_UpdateValue_WhenExpectedMatches()
     {
-        if (_fixture.Connection is null)
-        {
-            return;
-        }
-
         // Arrange
-        var options = new RedisOptions { Connection = _fixture.Connection };
+        var options = new RedisOptions { Connection = _fixture.Connection! };
         var store = new RedisStateStore(options);
         var key = Guid.NewGuid().ToString("N");
         await store.SetAsync("s", key, "v1", null, CancellationToken.None);
@@ -62,16 +59,11 @@ public sealed class RedisStateStoreCasTests : IClassFixture<RedisFixture>
     /// <summary>
     ///     Тест 2: Не должен обновлять значение при несовпадении ожидаемого.
     /// </summary>
-    [Fact(DisplayName = "Тест 2: Не должен обновлять значение при несовпадении ожидаемого", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 2: Не должен обновлять значение при несовпадении ожидаемого")]
     public async Task Should_NotUpdate_WhenExpectedDiffers()
     {
-        if (_fixture.Connection is null)
-        {
-            return;
-        }
-
         // Arrange
-        var options = new RedisOptions { Connection = _fixture.Connection };
+        var options = new RedisOptions { Connection = _fixture.Connection! };
         var store = new RedisStateStore(options);
         var key = Guid.NewGuid().ToString("N");
         await store.SetAsync("s", key, "v1", null, CancellationToken.None);
@@ -88,16 +80,11 @@ public sealed class RedisStateStoreCasTests : IClassFixture<RedisFixture>
     /// <summary>
     ///     Тест 3: Должен применять префикс к ключу.
     /// </summary>
-    [Fact(DisplayName = "Тест 3: Должен применять префикс к ключу", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 3: Должен применять префикс к ключу")]
     public async Task Should_ApplyPrefixToKey()
     {
-        if (_fixture.Connection is null)
-        {
-            return;
-        }
-
         // Arrange
-        var options = new RedisOptions { Connection = _fixture.Connection, Prefix = "pfx" };
+        var options = new RedisOptions { Connection = _fixture.Connection!, Prefix = "pfx" };
         var store = new RedisStateStore(options);
 
         // Act

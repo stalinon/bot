@@ -23,3 +23,4 @@ public sealed class WebAppAuthOptions
     /// </summary>
     public TimeSpan Lifetime { get; set; } = TimeSpan.FromMinutes(5);
 }
+

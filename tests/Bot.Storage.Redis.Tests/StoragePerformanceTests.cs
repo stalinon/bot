@@ -26,10 +26,7 @@ public sealed class StoragePerformanceTests : IClassFixture<RedisFixture>, IAsyn
     /// <inheritdoc/>
     public StoragePerformanceTests(RedisFixture fixture)
     {
-        if (fixture.Connection is null)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(fixture.Connection);
 
         var options = new RedisOptions { Connection = fixture.Connection };
         _redis = new RedisStateStore(options);
@@ -40,7 +37,7 @@ public sealed class StoragePerformanceTests : IClassFixture<RedisFixture>, IAsyn
     /// <summary>
     ///     Тест 1: Redis не хуже File на инкременте.
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Redis не хуже File на инкременте", Skip = "Требуется стабильный Redis")]
+    [Fact(DisplayName = "Тест 1: Redis не хуже File на инкременте")]
     public async Task RedisNotSlowerThanFileOnIncrement()
     {
         const int n = 100;

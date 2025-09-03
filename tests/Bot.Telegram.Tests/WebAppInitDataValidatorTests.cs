@@ -10,6 +10,7 @@ using Bot.Telegram;
 using FluentAssertions;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 using Xunit;
@@ -32,14 +33,6 @@ namespace Bot.Telegram.Tests;
 public sealed class WebAppInitDataValidatorTests
 {
     private const string Token = "token";
-
-    /// <inheritdoc/>
-    public WebAppInitDataValidatorTests()
-    {
-        _validator = new WebAppInitDataValidator(
-            Options.Create(new BotOptions { Token = Token }),
-            Options.Create(new WebAppOptions()));
-    }
 
     /// <summary>
     ///     Тест 1: Возвращает успех при валидных данных.
@@ -191,7 +184,10 @@ public sealed class WebAppInitDataValidatorTests
     public void Should_ReturnTrue_WhenTtlIncreased()
     {
         var opts = Options.Create(new WebAppOptions { InitDataTtlSeconds = 600 });
-        var validator = new WebAppInitDataValidator(Options.Create(new BotOptions { Token = Token }), opts);
+        var validator = new WebAppInitDataValidator(
+            Options.Create(new BotOptions { Token = Token }),
+            opts,
+            NullLogger<WebAppInitDataValidator>.Instance);
         var old = DateTimeOffset.UtcNow.AddMinutes(-9).ToUnixTimeSeconds().ToString();
         var data = CreateInitData(new Dictionary<string, string>
         {
@@ -223,6 +219,7 @@ public sealed class WebAppInitDataValidatorTests
         var factory = new LoggerFactory(new[] { provider });
         var logger = factory.CreateLogger<WebAppInitDataValidator>();
         var options = Options.Create(new BotOptions { Token = Token });
-        return new WebAppInitDataValidator(options, logger);
+        var web = Options.Create(new WebAppOptions());
+        return new WebAppInitDataValidator(options, web, logger);
     }
 }
