@@ -2,6 +2,7 @@ using System;
 using System.Threading.Channels;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Stats;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 using Microsoft.AspNetCore.Builder;
@@ -34,6 +35,7 @@ public class Program
             new DummyUpdateSource(),
             new DummyPipeline(),
             Array.Empty<Action<IUpdatePipeline>>(),
+            new StatsCollector(),
             new LoggerFactory().CreateLogger<BotHostedService>(),
             Microsoft.Extensions.Options.Options.Create(new BotOptions { Parallelism = 1 }));
         typeof(BotHostedService).GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(hosted, channel);
