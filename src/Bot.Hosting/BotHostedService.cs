@@ -1,11 +1,12 @@
+using System.Threading.Channels;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
+using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Threading.Channels;
 
 namespace Bot.Hosting;
 
@@ -16,6 +17,7 @@ public sealed class BotHostedService(
     IUpdateSource source,
     IUpdatePipeline pipeline,
     IEnumerable<Action<IUpdatePipeline>> configurePipeline,
+    StatsCollector stats,
     ILogger<BotHostedService> logger,
     IOptions<BotOptions> options)
     : IHostedService
@@ -23,6 +25,7 @@ public sealed class BotHostedService(
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
     private Task? _processing;
+    private readonly StatsCollector _stats = stats;
 
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
@@ -48,6 +51,7 @@ public sealed class BotHostedService(
             {
                 FullMode = BoundedChannelFullMode.Wait
             });
+        _stats.SetQueueDepth(_channel.Reader.Count);
 
         _processing = Parallel.ForEachAsync(
             _channel.Reader.ReadAllAsync(cancellationToken),
@@ -56,10 +60,18 @@ public sealed class BotHostedService(
                 MaxDegreeOfParallelism = options.Value.Parallelism,
                 CancellationToken = cancellationToken
             },
-            async (ctx, ct) => await _app(ctx));
+            async (ctx, ct) =>
+            {
+                await _app(ctx);
+                _stats.SetQueueDepth(_channel.Reader.Count);
+            });
 
         var writing = source.StartAsync(
-            ctx => _channel.Writer.WriteAsync(ctx, cancellationToken).AsTask(),
+            async ctx =>
+            {
+                await _channel.Writer.WriteAsync(ctx, cancellationToken);
+                _stats.SetQueueDepth(_channel.Reader.Count);
+            },
             cancellationToken);
 
         writing.ContinueWith(t => _channel.Writer.TryComplete(t.Exception), TaskScheduler.Current);

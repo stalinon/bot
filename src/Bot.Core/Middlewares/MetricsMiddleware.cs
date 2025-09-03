@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
-using Microsoft.Extensions.Diagnostics;
 using Bot.Core.Metrics;
+using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Middlewares;
 
@@ -17,9 +17,9 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
     /// </summary>
     public const string MeterName = "Bot.Core.Metrics";
 
-    private readonly Counter<long> _rps;
+    private readonly Counter<long> _updates;
     private readonly Counter<long> _errors;
-    private readonly Histogram<double> _latency;
+    private readonly Histogram<double> _updateLatency;
     private readonly BotMetricsEventSource _eventSource;
 
     /// <summary>
@@ -29,9 +29,9 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
     public MetricsMiddleware(IMeterFactory meterFactory)
     {
         var meter = meterFactory.Create(MeterName);
-        _rps = meter.CreateCounter<long>("updates", unit: "count");
-        _errors = meter.CreateCounter<long>("errors", unit: "count");
-        _latency = meter.CreateHistogram<double>("latency", unit: "ms");
+        _updates = meter.CreateCounter<long>("tgbot_updates_total", unit: "count");
+        _errors = meter.CreateCounter<long>("tgbot_errors_total", unit: "count");
+        _updateLatency = meter.CreateHistogram<double>("tgbot_update_latency_ms", unit: "ms");
         _eventSource = BotMetricsEventSource.Log;
     }
 
@@ -57,8 +57,8 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
         finally
         {
             sw.Stop();
-            _rps.Add(1);
-            _latency.Record(sw.Elapsed.TotalMilliseconds);
+            _updates.Add(1);
+            _updateLatency.Record(sw.Elapsed.TotalMilliseconds);
             _eventSource.Update(sw.Elapsed.TotalMilliseconds, success);
         }
     }
