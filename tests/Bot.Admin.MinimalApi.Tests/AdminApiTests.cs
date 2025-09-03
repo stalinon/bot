@@ -57,6 +57,7 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
+    /// <summary>
     ///     Тест 2: Статистика с токеном возвращает 200
     /// </summary>
     [Fact(DisplayName = "Тест 2: Статистика с токеном возвращает 200")]
