@@ -2,8 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using Bot.Core.Stats;
-using Bot.Hosting;
-using Bot.Hosting.Options;
+using Bot.Admin.MinimalApi;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -29,7 +28,7 @@ public class AdminAuthTests
             {
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
-                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"
                 }));
@@ -37,7 +36,7 @@ public class AdminAuthTests
             .Configure(app =>
             {
                 app.UseRouting();
-                app.UseEndpoints(endpoints => endpoints.MapBotStats());
+                app.UseEndpoints(endpoints => endpoints.MapAdminStats());
             });
 
         using var server = new TestServer(builder);
@@ -58,7 +57,7 @@ public class AdminAuthTests
             {
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
-                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"
                 }));
@@ -66,7 +65,7 @@ public class AdminAuthTests
             .Configure(app =>
             {
                 app.UseRouting();
-                app.UseEndpoints(endpoints => endpoints.MapBotStats());
+                app.UseEndpoints(endpoints => endpoints.MapAdminStats());
             });
 
         using var server = new TestServer(builder);
