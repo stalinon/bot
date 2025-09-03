@@ -22,3 +22,8 @@ These steps will run the sample **HelloBot** in a couple of minutes.
 5. Send `/start` to your bot in Telegram and it will reply with "Hello".
 
 For development or deployment you can adjust settings in `appsettings.json` or via environment variables.
+
+### Переключение хранилища
+
+Тип хранилища задаётся переменной окружения `STORAGE__PROVIDER` (`file`, `redis` или `ef`).
+Другие параметры берутся из секции `STORAGE`.

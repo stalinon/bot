@@ -7,10 +7,17 @@ using Bot.Core.Routing;
 using Bot.Core.Utils;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
+using Bot.Storage.EFCore;
+using Bot.Storage.File;
+using Bot.Storage.File.Options;
+using Bot.Storage.Redis;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry.Metrics;
+using StackExchange.Redis;
 
 namespace Bot.Hosting;
 
@@ -106,6 +113,34 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStorage store)
     {
         services.AddSingleton(store);
+        return services;
+    }
+
+    /// <summary>
+    ///     Использовать хранилище состояний из конфигурации.
+    /// </summary>
+    /// <param name="configuration">Конфигурация приложения.</param>
+    public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        var provider = (configuration["STORAGE:PROVIDER"] ?? "file").ToLowerInvariant();
+        switch (provider)
+        {
+            case "redis":
+                var conn = configuration["STORAGE:REDIS:CONNECTION"] ?? "localhost";
+                var mux = ConnectionMultiplexer.Connect(conn);
+                services.UseStateStorage(new RedisStateStore(mux));
+                break;
+            case "ef":
+                var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";
+                services.AddDbContext<StateContext>(o => o.UseSqlite(cs));
+                services.AddScoped<IStateStorage, EfCoreStateStore>();
+                break;
+            default:
+                var path = configuration["STORAGE:FILE:PATH"] ?? "data";
+                services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = path }));
+                break;
+        }
+
         return services;
     }
 }

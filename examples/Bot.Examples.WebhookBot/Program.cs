@@ -2,8 +2,6 @@
 using Bot.Core.Options;
 using Bot.Hosting;
 using Bot.Hosting.Options;
-using Bot.Storage.File;
-using Bot.Storage.File.Options;
 using Bot.Telegram;
 using Bot.Examples.WebhookBot.Services;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +39,7 @@ builder.Services
         .Use<RateLimitMiddleware>()
         .Use<CommandParsingMiddleware>()
         .Use<Bot.Core.Middlewares.RouterMiddleware>())
-    .UseStateStorage(new FileStateStore(new FileStoreOptions { Path = cfg["DATA_PATH"] ?? "data" }));
+    .UseConfiguredStateStorage(cfg);
 
 var app = builder.Build();
 
