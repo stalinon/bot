@@ -41,6 +41,23 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Admin.MinimalApi", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Admin.MinimalApi.Tests", "tests\Bot.Admin.MinimalApi.Tests\Bot.Admin.MinimalApi.Tests.csproj", "{66435E7A-939C-41BF-B330-C547E4D8FDCB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{DD8D543F-A3EF-409A-8BC1-27CDA8BA1A1E}"
+	ProjectSection(SolutionItems) = preProject
+		docs\.gitkeep = docs\.gitkeep
+		docs\scenes.md = docs\scenes.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "environment", "environment", "{E44D280A-2370-459E-91F2-A8E79A19FF3F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Bot.sln.DotSettings.user = Bot.sln.DotSettings.user
+		Directory.Build.props = Directory.Build.props
+		LICENSE = LICENSE
+		README.md = README.md
+		AGENTS.md = AGENTS.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
