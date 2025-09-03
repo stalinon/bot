@@ -33,15 +33,8 @@ public static class Program
 
         var app = builder.Build();
 
-        app.Use(async (context, next) =>
-        {
-            context.Response.Headers.Append(
-                "Content-Security-Policy",
-                "default-src 'self' https://telegram.org https://*.telegram.org;");
-            context.Response.Headers.Append("Referrer-Policy", "no-referrer");
-            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-            await next();
-        });
+        app.UseStrictCspForWebApp(
+            builder.Configuration.GetSection("WebAppCsp:AllowedOrigins").Get<string[]>() ?? []);
 
         app.UseDefaultFiles();
         app.UseStaticFiles();
