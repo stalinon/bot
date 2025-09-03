@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.Hosting\Bot.Hosting.csproj" />
+    <ProjectReference Include="..\src\Bot.Telegram\Bot.Telegram.csproj" />
+  </ItemGroup>
+  <!--#if (store == "redis")-->
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.Storage.Redis\Bot.Storage.Redis.csproj" />
+  </ItemGroup>
+  <!--#else-->
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.Storage.File\Bot.Storage.File.csproj" />
+  </ItemGroup>
+  <!--#endif-->
+  <!--#if (admin)-->
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.Admin.MinimalApi\Bot.Admin.MinimalApi.csproj" />
+  </ItemGroup>
+  <!--#endif-->
+  <!--#if (webapp)-->
+  <ItemGroup>
+    <ProjectReference Include="..\src\Bot.WebApp.MinimalApi\Bot.WebApp.MinimalApi.csproj" />
+  </ItemGroup>
+  <!--#endif-->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.7.25380.108" />
+  </ItemGroup>
+</Project>
