@@ -21,9 +21,11 @@ public partial class StateContextModelSnapshot : ModelSnapshot
             b.Property<string>("Scope").HasColumnType("text");
             b.Property<string>("Key").HasColumnType("text");
             b.Property<string>("Value").HasColumnType("text");
-            b.Property<DateTimeOffset?>("ExpiresAt").HasColumnType("timestamp with time zone");
+            b.Property<DateTimeOffset>("UpdatedUtc").HasColumnType("timestamp with time zone");
+            b.Property<DateTimeOffset?>("TtlUtc").HasColumnType("timestamp with time zone");
+            b.Property<long>("Version").HasColumnType("bigint");
             b.HasKey("Scope", "Key");
-            b.HasIndex("ExpiresAt");
+            b.HasIndex("TtlUtc");
             b.ToTable("states");
         });
     }

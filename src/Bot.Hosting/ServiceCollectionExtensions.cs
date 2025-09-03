@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using OpenTelemetry.Metrics;
 using StackExchange.Redis;
 
@@ -139,7 +140,18 @@ public static class ServiceCollectionExtensions
                 break;
             case "ef":
                 var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";
-                services.AddDbContext<StateContext>(o => o.UseSqlite(cs));
+                var efProvider = (configuration["STORAGE:EF:PROVIDER"] ?? "sqlite").ToLowerInvariant();
+                services.AddDbContext<StateContext>(o =>
+                {
+                    if (efProvider == "postgres")
+                    {
+                        o.UseNpgsql(cs, b => b.MigrationsAssembly(typeof(StateContext).Assembly.FullName));
+                    }
+                    else
+                    {
+                        o.UseSqlite(cs, b => b.MigrationsAssembly(typeof(StateContext).Assembly.FullName));
+                    }
+                });
                 services.AddScoped<IStateStore, EfCoreStateStore>();
                 services.AddScoped<IStateStorage>(sp => (IStateStorage)sp.GetRequiredService<IStateStore>());
                 break;

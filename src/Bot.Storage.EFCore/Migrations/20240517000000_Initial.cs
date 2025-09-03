@@ -21,16 +21,18 @@ public partial class Initial : Migration
                 Scope = table.Column<string>(type: "text", nullable: false),
                 Key = table.Column<string>(type: "text", nullable: false),
                 Value = table.Column<string>(type: "text", nullable: false),
-                ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                UpdatedUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                TtlUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                Version = table.Column<long>(type: "bigint", nullable: false)
             },
             constraints: table =>
             {
                 table.PrimaryKey("PK_states", x => new { x.Scope, x.Key });
             });
         migrationBuilder.CreateIndex(
-            name: "IX_states_ExpiresAt",
+            name: "IX_states_TtlUtc",
             table: "states",
-            column: "ExpiresAt");
+            column: "TtlUtc");
     }
 
     /// <inheritdoc />
