@@ -1,6 +1,12 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Bot.Abstractions;
+using Bot.Abstractions.Addresses;
+using Bot.Abstractions.Contracts;
+using Bot.Core.Stats;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -10,13 +16,18 @@ namespace Bot.Admin.MinimalApi.Tests;
 /// <summary>
 ///     Тесты административного API.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяет эндпоинт статистики.</item>
+///         <item>Проверяет эндпоинт рассылки.</item>
+///         <item>Проверяет пробы готовности.</item>
+///     </list>
+/// </remarks>
 public class AdminApiTests : IClassFixture<AdminApiFactory>
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    /// <summary>
-    ///     Создаёт экземпляр тестов.
-    /// </summary>
+    /// <inheritdoc/>
     public AdminApiTests(AdminApiFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
@@ -24,102 +35,176 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
             builder.ConfigureServices(services =>
             {
                 services.Configure<AdminOptions>(opts => opts.AdminToken = "secret");
+                services.AddSingleton<IStateStore, DummyStateStore>();
+                services.AddSingleton<ITransportClient, DummyTransportClient>();
             });
         });
     }
 
     /// <summary>
-    ///     Проверяет, что статистика без токена возвращает 401.
+    ///     Тест 1: Статистика без токена возвращает 401
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Статистика без токена возвращает 401")]
-    public async Task Stats_without_token_returns_401()
+    [Fact(DisplayName = "Тест 1: Статистика без токена возвращает 401")]
+    public async Task Should_Return401_When_StatsWithoutToken()
     {
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/admin/stats");
-        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     /// <summary>
-    ///     Проверяет, что статистика с токеном возвращает 200.
+    ///     Тест 2: Статистика с токеном возвращает 200
     /// </summary>
-    [Fact(DisplayName = "Тест 2. Статистика с токеном возвращает 200")]
-    public async Task Stats_with_token_returns_200()
+    [Fact(DisplayName = "Тест 2: Статистика с токеном возвращает 200")]
+    public async Task Should_Return200_When_StatsWithToken()
     {
         var client = _factory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Get, "/admin/stats");
         request.Headers.Add("X-Admin-Token", "secret");
         var resp = await client.SendAsync(request);
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     /// <summary>
-    ///     Проверяет, что рассылка без токена возвращает 401.
+    ///     Тест 3: Рассылка без токена возвращает 401
     /// </summary>
-    [Fact(DisplayName = "Тест 3. Рассылка без токена возвращает 401")]
-    public async Task Broadcast_without_token_returns_401()
+    [Fact(DisplayName = "Тест 3: Рассылка без токена возвращает 401")]
+    public async Task Should_Return401_When_BroadcastWithoutToken()
     {
         var client = _factory.CreateClient();
-        var resp = await client.PostAsJsonAsync("/admin/broadcast", new { chatIds = new long[] { 1 } });
-        Assert.Equal(HttpStatusCode.Unauthorized, resp.StatusCode);
+        var resp = await client.PostAsJsonAsync(
+            "/admin/broadcast",
+            new { chatIds = new List<long> { 1 } });
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     /// <summary>
-    ///     Проверяет, что рассылка с токеном возвращает 200.
+    ///     Тест 4: Рассылка с токеном возвращает 200
     /// </summary>
-    [Fact(DisplayName = "Тест 4. Рассылка с токеном возвращает 200")]
-    public async Task Broadcast_with_token_returns_200()
+    [Fact(DisplayName = "Тест 4: Рассылка с токеном возвращает 200")]
+    public async Task Should_Return200_When_BroadcastWithToken()
     {
         var client = _factory.CreateClient();
         var request = new HttpRequestMessage(HttpMethod.Post, "/admin/broadcast");
         request.Headers.Add("X-Admin-Token", "secret");
-        request.Content = JsonContent.Create(new { chatIds = new long[] { 1, 2 } });
+        request.Content = JsonContent.Create(new { chatIds = new List<long> { 1, 2 } });
         var resp = await client.SendAsync(request);
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     /// <summary>
-    ///     Проверяет, что живая проба возвращает 200.
+    ///     Тест 5: Живая проба возвращает 200
     /// </summary>
-    [Fact(DisplayName = "Тест 5. Живая проба возвращает 200")]
-    public async Task Health_live_returns_200()
+    [Fact(DisplayName = "Тест 5: Живая проба возвращает 200")]
+    public async Task Should_Return200_On_HealthLive()
     {
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/health/live");
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     /// <summary>
-    ///     Проверяет, что готовность возвращает 200.
+    ///     Тест 6: Готовность возвращает 200
     /// </summary>
-    [Fact(DisplayName = "Тест 6. Готовность возвращает 200")]
-    public async Task Health_ready_returns_200()
+    [Fact(DisplayName = "Тест 6: Готовность возвращает 200")]
+    public async Task Should_Return200_On_HealthReady()
     {
         var client = _factory.CreateClient();
         var resp = await client.GetAsync("/health/ready");
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     /// <summary>
-    ///     Проверяет, что при ошибке пробы готовность возвращает 503.
+    ///     Тест 7: При переполнении очереди готовность возвращает 503
     /// </summary>
-    [Fact(DisplayName = "Тест 7. При ошибке пробы готовность возвращает 503")]
-    public async Task Health_ready_returns_503_when_probe_fails()
+    [Fact(DisplayName = "Тест 7: При переполнении очереди готовность возвращает 503")]
+    public async Task Should_Return503_When_QueueOverflow()
+    {
+        var stats = _factory.Services.GetRequiredService<StatsCollector>();
+        stats.SetQueueDepth(1001);
+
+        var client = _factory.CreateClient();
+        var resp = await client.GetAsync("/health/ready");
+        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+
+        stats.SetQueueDepth(0);
+    }
+
+    /// <summary>
+    ///     Тест 8: При ошибке хранилища готовность возвращает 503
+    /// </summary>
+    [Fact(DisplayName = "Тест 8: При ошибке хранилища готовность возвращает 503")]
+    public async Task Should_Return503_When_StorageFails()
     {
         var factory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
-                services.AddSingleton<IHealthProbe, FailingProbe>();
+                services.AddSingleton<IStateStore, FailingStateStore>();
             });
         });
+
         var client = factory.CreateClient();
         var resp = await client.GetAsync("/health/ready");
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, resp.StatusCode);
+        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 
-    private sealed class FailingProbe : IHealthProbe
+    /// <summary>
+    ///     Тест 9: При ошибке транспорта готовность возвращает 503
+    /// </summary>
+    [Fact(DisplayName = "Тест 9: При ошибке транспорта готовность возвращает 503")]
+    public async Task Should_Return503_When_TransportFails()
     {
-        public Task ProbeAsync(CancellationToken ct) => Task.FromException(new Exception("fail"));
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<ITransportClient, FailingTransportClient>();
+            });
+        });
+
+        var client = factory.CreateClient();
+        var resp = await client.GetAsync("/health/ready");
+        resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
+
+    private sealed class DummyStateStore : IStateStore
+    {
+        public Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct) => Task.FromResult<T?>(default);
+        public Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct) => Task.CompletedTask;
+        public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromResult(false);
+        public Task<bool> RemoveAsync(string scope, string key, CancellationToken ct) => Task.FromResult(false);
+        public Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct) => Task.FromResult(0L);
+        public Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromResult(false);
+    }
+
+    private sealed class DummyTransportClient : ITransportClient
+    {
+        public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct) => Task.CompletedTask;
+        public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.CompletedTask;
+        public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.CompletedTask;
+        public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.CompletedTask;
+        public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
+        public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
+    }
+
+    private sealed class FailingStateStore : IStateStore
+    {
+        public Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct) => Task.FromException<T?>(new Exception("fail"));
+        public Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromException<bool>(new Exception("fail"));
+        public Task<bool> RemoveAsync(string scope, string key, CancellationToken ct) => Task.FromException<bool>(new Exception("fail"));
+        public Task<long> IncrementAsync(string scope, string key, long value, TimeSpan? ttl, CancellationToken ct) => Task.FromException<long>(new Exception("fail"));
+        public Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct) => Task.FromException<bool>(new Exception("fail"));
+    }
+
+    private sealed class FailingTransportClient : ITransportClient
+    {
+        public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.FromException(new Exception("fail"));
+        public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.FromException(new Exception("fail"));
     }
 }
-
