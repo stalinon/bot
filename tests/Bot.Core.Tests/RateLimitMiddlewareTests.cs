@@ -3,6 +3,7 @@ using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
+using Bot.Core.Stats;
 
 using Xunit;
 
@@ -26,7 +27,8 @@ public class RateLimitMiddlewareTests
             Mode = RateLimitMode.Hard
         };
         var tx = new DummyTransportClient();
-        var mw = new RateLimitMiddleware(options, tx);
+        var stats = new StatsCollector();
+        var mw = new RateLimitMiddleware(options, tx, stats);
         var ctx = new UpdateContext(
             Transport: "test",
             UpdateId: "1",
@@ -51,6 +53,7 @@ public class RateLimitMiddlewareTests
 
         Assert.Equal(1, calls);
         Assert.Empty(tx.SentTexts);
+        Assert.Equal(1, stats.GetSnapshot().RateLimited);
     }
 
     /// <summary>
@@ -66,7 +69,8 @@ public class RateLimitMiddlewareTests
             Mode = RateLimitMode.Soft
         };
         var tx = new DummyTransportClient();
-        var mw = new RateLimitMiddleware(options, tx);
+        var stats = new StatsCollector();
+        var mw = new RateLimitMiddleware(options, tx, stats);
         var ctx1 = new UpdateContext(
             Transport: "test",
             UpdateId: "1",
@@ -93,6 +97,7 @@ public class RateLimitMiddlewareTests
         Assert.Equal(1, calls);
         Assert.Single(tx.SentTexts);
         Assert.Equal("помедленнее", tx.SentTexts[0].text);
+        Assert.Equal(1, stats.GetSnapshot().RateLimited);
     }
 
     private sealed class DummyServiceProvider : IServiceProvider

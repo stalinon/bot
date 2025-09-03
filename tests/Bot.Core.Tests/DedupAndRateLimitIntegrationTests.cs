@@ -9,6 +9,7 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Utils;
+using Bot.Core.Stats;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -32,6 +33,7 @@ public class DedupAndRateLimitIntegrationTests
         services.AddScoped<DedupMiddleware>();
         services.AddSingleton<RateLimitMiddleware>();
         services.AddSingleton<ITransportClient, DummyTransportClient>();
+        services.AddSingleton<StatsCollector>();
 
         using var sp = services.BuildServiceProvider();
         var pipeline = new PipelineBuilder(sp.GetRequiredService<IServiceScopeFactory>());

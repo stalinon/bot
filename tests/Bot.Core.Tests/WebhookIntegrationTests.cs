@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Bot.Abstractions;
 using Bot.Hosting.Options;
 using Bot.Telegram;
+using Bot.Core.Stats;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -35,7 +36,7 @@ public sealed class WebhookIntegrationTests
         {
             Transport = new TransportOptions { QueueCapacity = 8, Mode = TransportMode.Webhook }
         });
-        var source = new TelegramWebhookSource(Mock.Of<ITelegramBotClient>(), srcOptions);
+        var source = new TelegramWebhookSource(Mock.Of<ITelegramBotClient>(), srcOptions, new StatsCollector());
 
         var builder = new WebHostBuilder()
             .ConfigureServices(services =>
