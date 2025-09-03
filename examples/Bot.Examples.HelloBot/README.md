@@ -8,6 +8,7 @@
 - `/start` — приветствует пользователя и предлагает написать `/ping`.
 - `/ping` — отвечает `pong` и ведёт счёт для каждого пользователя, используя файловое хранилище состояний.
 - `/typing` — показывает индикатор печати перед ответом.
+- `/phone` — запускает ввод номера телефона с подтверждением.
 - Любой другой ввод — сообщение «не понимаю :(».
 
 ## Запуск
@@ -27,3 +28,5 @@ dotnet run --project examples/Bot.Examples.HelloBot
 dotnet run --project examples/Bot.Examples.HelloBot -- set-webhook
 dotnet run --project examples/Bot.Examples.HelloBot -- delete-webhook
 ```
+
+Время ожидания ввода телефона задаётся параметром `PHONE_STEP_TTL_SECONDS`.

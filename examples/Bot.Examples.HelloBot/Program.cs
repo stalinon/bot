@@ -1,12 +1,16 @@
-﻿using Bot.Core.Middlewares;
+using System;
+using Bot.Abstractions.Contracts;
+using Bot.Core.Middlewares;
 using Bot.Core.Options;
+using Bot.Core.Scenes;
+using Bot.Examples.HelloBot.Services;
+using Bot.Examples.HelloBot.Scenes;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 using Bot.Telegram;
-using Bot.Examples.HelloBot.Services;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -16,7 +20,7 @@ builder.Configuration
 
 var cfg = builder.Configuration;
 
-  builder.Services
+builder.Services
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
@@ -30,6 +34,11 @@ var cfg = builder.Configuration;
     .AddTelegramTransport()
     .AddScoped<RequestIdProvider>()
     .AddHandlersFromAssembly(typeof(Program).Assembly)
+    .AddSingleton<ISceneNavigator>(sp =>
+        new SceneNavigator(
+            sp.GetRequiredService<IStateStore>(),
+            TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
+    .AddScoped<PhoneScene>()
     .UsePipeline(p => p
         .Use<ExceptionHandlingMiddleware>()
         .Use<MetricsMiddleware>()
@@ -40,18 +49,18 @@ var cfg = builder.Configuration;
         .Use<RouterMiddleware>())
     .UseConfiguredStateStorage(cfg);
 
-  var host = builder.Build();
+var host = builder.Build();
 
-  if (args.Contains("set-webhook", StringComparer.OrdinalIgnoreCase))
-  {
-      await host.Services.GetRequiredService<WebhookService>().SetWebhookAsync(default);
-      return;
-  }
+if (args.Contains("set-webhook", StringComparer.OrdinalIgnoreCase))
+{
+    await host.Services.GetRequiredService<WebhookService>().SetWebhookAsync(default);
+    return;
+}
 
-  if (args.Contains("delete-webhook", StringComparer.OrdinalIgnoreCase))
-  {
-      await host.Services.GetRequiredService<WebhookService>().DeleteWebhookAsync(default);
-      return;
-  }
+if (args.Contains("delete-webhook", StringComparer.OrdinalIgnoreCase))
+{
+    await host.Services.GetRequiredService<WebhookService>().DeleteWebhookAsync(default);
+    return;
+}
 
-  await host.RunAsync();
+await host.RunAsync();
