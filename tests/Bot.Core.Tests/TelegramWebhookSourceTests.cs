@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bot.Telegram;
 using Bot.Abstractions;
+using Bot.Core.Stats;
 using Telegram.Bot.Types;
 using System.Text.Json;
 using Bot.Hosting.Options;
@@ -28,7 +29,7 @@ public class TelegramWebhookSourceTests
     {
         var bot = Mock.Of<ITelegramBotClient>();
         var options = Microsoft.Extensions.Options.Options.Create(new BotOptions { Transport = new TransportOptions() });
-        var source = new TelegramWebhookSource(bot, options);
+        var source = new TelegramWebhookSource(bot, options, new StatsCollector());
         var tcs = new TaskCompletionSource<UpdateContext>();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 

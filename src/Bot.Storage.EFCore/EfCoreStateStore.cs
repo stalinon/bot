@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using Bot.Abstractions.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -5,9 +6,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Bot.Storage.EFCore;
 
 /// <summary>
-///     Хранилище состояний на EF Core
+///     Хранилище состояний на EF Core.
 /// </summary>
-public sealed class EfCoreStateStore : IStateStorage
+/// <remarks>
+///     <list type="number">
+///         <item>Использует базу данных для хранения состояния</item>
+///         <item>Выполняет миграции при инициализации</item>
+///     </list>
+/// </remarks>
+public sealed class EfCoreStateStore : IStateStore
 {
     private readonly StateContext _db;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -31,7 +38,7 @@ public sealed class EfCoreStateStore : IStateStorage
         {
             return default;
         }
-        if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
+        if (entity.TtlUtc is { } exp && exp <= DateTimeOffset.UtcNow)
         {
             _db.States.Remove(entity);
             await _db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -51,7 +58,9 @@ public sealed class EfCoreStateStore : IStateStorage
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
         entity.Value = JsonSerializer.Serialize(value, Json);
-        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.UpdatedUtc = DateTimeOffset.UtcNow;
+        entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.Version++;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
@@ -80,13 +89,15 @@ public sealed class EfCoreStateStore : IStateStorage
             entity = new StateEntry { Scope = scope, Key = key, Value = "0" };
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
-        else if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
+        else if (entity.TtlUtc is { } exp && exp <= DateTimeOffset.UtcNow)
         {
             entity.Value = "0";
         }
         current = long.Parse(entity.Value) + value;
         entity.Value = current.ToString();
-        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.UpdatedUtc = DateTimeOffset.UtcNow;
+        entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.Version++;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return current;
     }
@@ -96,7 +107,7 @@ public sealed class EfCoreStateStore : IStateStorage
     {
         ct.ThrowIfCancellationRequested();
         var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
-        if (entity is not null && (entity.ExpiresAt is null || entity.ExpiresAt > DateTimeOffset.UtcNow))
+        if (entity is not null && (entity.TtlUtc is null || entity.TtlUtc > DateTimeOffset.UtcNow))
         {
             return false;
         }
@@ -106,8 +117,46 @@ public sealed class EfCoreStateStore : IStateStorage
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
         entity.Value = JsonSerializer.Serialize(value, Json);
-        entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.UpdatedUtc = DateTimeOffset.UtcNow;
+        entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        entity.Version++;
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
+    }
+
+    /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <inheritdoc />
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        if (entity.TtlUtc is { } exp && exp <= DateTimeOffset.UtcNow)
+        {
+            _db.States.Remove(entity);
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return false;
+        }
+
+        entity.Value = JsonSerializer.Serialize(value, Json);
+        entity.UpdatedUtc = DateTimeOffset.UtcNow;
+        entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : entity.TtlUtc;
+        entity.Version++;
+
+        try
+        {
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return false;
+        }
     }
 }

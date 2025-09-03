@@ -1,8 +1,16 @@
 namespace Bot.Abstractions.Contracts;
 
+using System;
+
 /// <summary>
-///     Хранилище состояний
+///     Хранилище состояний.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Старое имя интерфейса, оставлено для совместимости</item>
+///         <item>Используйте <see cref="IStateStore"/></item>
+///     </list>
+/// </remarks>
 public interface IStateStorage
 {
     /// <summary>
@@ -14,6 +22,19 @@ public interface IStateStorage
     ///     Установить
     /// </summary>
     Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct);
+
+    /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <param name="scope">Область</param>
+    /// <param name="key">Ключ</param>
+    /// <param name="expected">Ожидаемое значение</param>
+    /// <param name="value">Новое значение</param>
+    /// <param name="ttl">Время жизни</param>
+    /// <param name="ct">Токен отмены</param>
+    /// <typeparam name="T">Тип значения</typeparam>
+    /// <returns>Возвращает <c>true</c>, если значение обновлено</returns>
+    Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct);
 
     /// <summary>
     ///     Удалить

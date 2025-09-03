@@ -8,10 +8,16 @@ using Bot.Abstractions.Contracts;
 /// <summary>
 ///     Навигатор по сценам.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сохраняет состояние сцен в хранилище</item>
+///         <item>Переходит между шагами с учётом TTL</item>
+///     </list>
+/// </remarks>
 public sealed class SceneNavigator : ISceneNavigator
 {
     private const string Scope = "scene";
-    private readonly IStateStorage _store;
+    private readonly IStateStore _store;
     private readonly TimeSpan _ttl;
 
     /// <summary>
@@ -19,7 +25,7 @@ public sealed class SceneNavigator : ISceneNavigator
     /// </summary>
     /// <param name="store">Хранилище состояний.</param>
     /// <param name="stepTtl">Время жизни шага.</param>
-    public SceneNavigator(IStateStorage store, TimeSpan? stepTtl = null)
+    public SceneNavigator(IStateStore store, TimeSpan? stepTtl = null)
     {
         _store = store;
         _ttl = stepTtl ?? TimeSpan.FromMinutes(5);
@@ -28,9 +34,9 @@ public sealed class SceneNavigator : ISceneNavigator
     /// <inheritdoc />
     public async Task EnterAsync(UpdateContext ctx, IScene scene)
     {
-        var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0);
-        await _store.SetAsync(Scope, Key(ctx), state, _ttl, ctx.CancellationToken);
-        await _store.SetAsync(Scope, StepKey(ctx), 0L, _ttl, ctx.CancellationToken);
+        var now = DateTimeOffset.UtcNow;
+        var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0, null, now, _ttl);
+        await _store.SetAsync(Scope, Key(ctx), state, null, ctx.CancellationToken);
         await scene.OnEnter(ctx);
     }
 
@@ -38,25 +44,49 @@ public sealed class SceneNavigator : ISceneNavigator
     public async Task ExitAsync(UpdateContext ctx)
     {
         await _store.RemoveAsync(Scope, Key(ctx), ctx.CancellationToken);
-        await _store.RemoveAsync(Scope, StepKey(ctx), ctx.CancellationToken);
     }
 
     /// <inheritdoc />
-    public Task<SceneState?> GetStateAsync(UpdateContext ctx)
+    public async Task<SceneState?> GetStateAsync(UpdateContext ctx)
     {
-        return _store.GetAsync<SceneState>(Scope, Key(ctx), ctx.CancellationToken);
+        var state = await _store.GetAsync<SceneState>(Scope, Key(ctx), ctx.CancellationToken)
+            .ConfigureAwait(false);
+        if (state is null)
+        {
+            return null;
+        }
+
+        if (state.Ttl is { } ttl && state.UpdatedAt.Add(ttl) <= DateTimeOffset.UtcNow)
+        {
+            await ExitAsync(ctx).ConfigureAwait(false);
+            return null;
+        }
+
+        return state;
     }
 
     /// <inheritdoc />
-    public async Task<int> NextStepAsync(UpdateContext ctx)
+    public async Task<int> NextStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null)
     {
-        var step = await _store.IncrementAsync(Scope, StepKey(ctx), 1, _ttl, ctx.CancellationToken);
-        var state = await GetStateAsync(ctx) ?? throw new InvalidOperationException("No active scene");
-        var next = state with { Step = (int)step };
-        await _store.SetAsync(Scope, Key(ctx), next, _ttl, ctx.CancellationToken);
-        return next.Step;
+        while (true)
+        {
+            var state = await GetStateAsync(ctx).ConfigureAwait(false) ??
+                        throw new InvalidOperationException("No active scene");
+            var next = state with
+            {
+                Step = state.Step + 1,
+                Data = data,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Ttl = ttl ?? _ttl
+            };
+            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, null, ctx.CancellationToken)
+                .ConfigureAwait(false);
+            if (updated)
+            {
+                return next.Step;
+            }
+        }
     }
 
     private static string Key(UpdateContext ctx) => $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";
-    private static string StepKey(UpdateContext ctx) => $"{Key(ctx)}:step";
 }

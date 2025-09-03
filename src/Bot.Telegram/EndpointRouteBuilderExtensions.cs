@@ -21,7 +21,7 @@ public static class EndpointRouteBuilderExtensions
     {
         var opts = endpoints.ServiceProvider.GetRequiredService<IOptions<BotOptions>>().Value;
         endpoints.MapPost(
-            $"/tg/{opts.Transport.Secret}",
+            $"/tg/{opts.Transport.Webhook.Secret}",
             (Update update, TelegramWebhookSource source, ILogger<TelegramWebhookSource> logger) =>
             {
                 if (!source.TryEnqueue(update))

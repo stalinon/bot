@@ -11,6 +11,13 @@ namespace Bot.Admin.MinimalApi;
 /// <summary>
 ///     Расширения для подключения административных эндпоинтов.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Подключает проверки здоровья.</item>
+///         <item>Возвращает статистику бота.</item>
+///         <item>Организует рассылку сообщений.</item>
+///     </list>
+/// </remarks>
 public static class EndpointRouteBuilderExtensions
 {
     /// <summary>
@@ -62,7 +69,14 @@ public static class EndpointRouteBuilderExtensions
                 return Results.StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            return Results.Json(stats.GetSnapshot());
+            var snapshot = stats.GetSnapshot();
+            return Results.Json(new
+            {
+                dropped = snapshot.DroppedUpdates,
+                rateLimited = snapshot.RateLimited,
+                queueDepth = snapshot.QueueDepth,
+                handlers = snapshot.Handlers
+            });
         });
         return endpoints;
     }

@@ -18,6 +18,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
       <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
+      <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
     </ItemGroup>
 
 </Project>

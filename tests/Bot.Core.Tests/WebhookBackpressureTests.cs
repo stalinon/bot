@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Bot.Hosting.Options;
 using Bot.Telegram;
+using Bot.Core.Stats;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -30,11 +31,15 @@ public class WebhookBackpressureTests
             .ConfigureServices(services =>
             {
                 services.AddRouting();
-                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
-                {
-                    Transport = new TransportOptions { Secret = "s", QueueCapacity = 1 }
-                }));
+                    services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                    {
+                        Transport = new TransportOptions
+                        {
+                            Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 1 }
+                        }
+                    }));
                 services.AddSingleton<ITelegramBotClient>(Mock.Of<ITelegramBotClient>());
+                services.AddSingleton<StatsCollector>();
                 services.AddSingleton<TelegramWebhookSource>();
                 services.AddLogging(b => b.AddProvider(provider));
             })
@@ -55,5 +60,10 @@ public class WebhookBackpressureTests
         var resp2 = await client.PostAsync("/tg/s", content2);
         Assert.Equal(HttpStatusCode.TooManyRequests, resp2.StatusCode);
         Assert.Contains(provider.Logs, l => l.Message.Contains("webhook queue overflow"));
+
+        var stats = server.Services.GetRequiredService<StatsCollector>();
+        var snapshot = stats.GetSnapshot();
+        Assert.Equal(1, snapshot.DroppedUpdates);
+        Assert.Equal(1, snapshot.QueueDepth);
     }
 }

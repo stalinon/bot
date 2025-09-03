@@ -1,11 +1,14 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Channels;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
+using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Threading.Channels;
 
 namespace Bot.Hosting;
 
@@ -16,6 +19,7 @@ public sealed class BotHostedService(
     IUpdateSource source,
     IUpdatePipeline pipeline,
     IEnumerable<Action<IUpdatePipeline>> configurePipeline,
+    StatsCollector stats,
     ILogger<BotHostedService> logger,
     IOptions<BotOptions> options)
     : IHostedService
@@ -23,6 +27,10 @@ public sealed class BotHostedService(
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
     private Task? _processing;
+    private Task? _writing;
+    private CancellationTokenSource? _cts;
+    private readonly StatsCollector _stats = stats;
+    private readonly BotOptions _options = options.Value;
 
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
@@ -43,35 +51,75 @@ public sealed class BotHostedService(
 
         _app = pipeline.Build(_ => Task.CompletedTask);
 
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
         _channel = Channel.CreateBounded<UpdateContext>(
-            new BoundedChannelOptions(options.Value.Parallelism * 16)
+            new BoundedChannelOptions(_options.Transport.Parallelism * 16)
             {
                 FullMode = BoundedChannelFullMode.Wait
             });
+        _stats.SetQueueDepth(_channel.Reader.Count);
 
         _processing = Parallel.ForEachAsync(
-            _channel.Reader.ReadAllAsync(cancellationToken),
+            _channel.Reader.ReadAllAsync(_cts.Token),
             new ParallelOptions
             {
-                MaxDegreeOfParallelism = options.Value.Parallelism,
-                CancellationToken = cancellationToken
+                MaxDegreeOfParallelism = _options.Transport.Parallelism,
+                CancellationToken = _cts.Token
             },
-            async (ctx, ct) => await _app(ctx));
+            async (ctx, ct) =>
+            {
+                await _app(ctx);
+                _stats.SetQueueDepth(_channel.Reader.Count);
+            });
 
-        var writing = source.StartAsync(
-            ctx => _channel.Writer.WriteAsync(ctx, cancellationToken).AsTask(),
-            cancellationToken);
+        _writing = source.StartAsync(
+            async ctx =>
+            {
+                await _channel.Writer.WriteAsync(ctx, _cts.Token);
+                _stats.SetQueueDepth(_channel.Reader.Count);
+            },
+            _cts.Token);
 
-        writing.ContinueWith(t => _channel.Writer.TryComplete(t.Exception), TaskScheduler.Current);
+        _writing.ContinueWith(t => _channel.Writer.TryComplete(t.Exception), TaskScheduler.Current);
 
-        return Task.WhenAll(writing, _processing);
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("bot hosted service stopping");
+        _cts?.Cancel();
         _channel?.Writer.TryComplete();
-        return Task.CompletedTask;
+
+        var tasks = new List<Task>();
+        if (_writing is not null)
+        {
+            tasks.Add(_writing);
+        }
+
+        if (_processing is not null)
+        {
+            tasks.Add(_processing);
+        }
+
+        if (tasks.Count > 0)
+        {
+            using var timeout = new CancellationTokenSource(_options.DrainTimeout);
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+            try
+            {
+                await Task.WhenAll(tasks).WaitAsync(linked.Token);
+                logger.LogInformation(
+                    "bot hosted service stopped: writing {WritingStatus}, processing {ProcessingStatus}",
+                    _writing?.Status,
+                    _processing?.Status);
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogWarning("bot hosted service drain timeout {Timeout} exceeded", _options.DrainTimeout);
+            }
+        }
     }
 }

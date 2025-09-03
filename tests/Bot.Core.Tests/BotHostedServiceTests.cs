@@ -55,13 +55,16 @@ public class BotHostedServiceTests
         services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(new[] { (Action<IUpdatePipeline>)(p => p.Use(tracker.Middleware)) });
         services.AddSingleton<IUpdateSource>(new TestUpdateSource(updates));
         services.AddSingleton<ILogger<BotHostedService>>(sp => sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
-        services.AddOptions<BotOptions>().Configure(o => o.Parallelism = parallelism);
+        services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = parallelism);
 
         var sp = services.BuildServiceProvider();
         var svc = ActivatorUtilities.CreateInstance<BotHostedService>(sp);
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => svc.StartAsync(cts.Token));
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(1));
+        await svc.StartAsync(cts.Token);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        await svc.StopAsync(CancellationToken.None);
 
         Assert.True(tracker.MaxActive <= parallelism, $"max {tracker.MaxActive} > {parallelism}");
     }

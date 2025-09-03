@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
-using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -13,13 +14,65 @@ namespace Bot.Core.Tests;
 /// <summary>
 ///     Тесты логирующего middleware.
 /// </summary>
-public class LoggingMiddlewareTests
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяется добавление идентификаторов и усечение текста</item>
+///         <item>Проверяется логирование ошибок обработчика</item>
+///     </list>
+/// </remarks>
+public sealed class LoggingMiddlewareTests
 {
+
     /// <summary>
-    ///     Проверяет, что логи обработчика содержат UpdateId.
+    ///     Тест 1: Лог содержит идентификаторы и усечённый текст
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Лог содержит UpdateId")]
-    public async Task Log_contains_update_id()
+    [Fact(DisplayName = "Тест 1: Лог содержит идентификаторы и усечённый текст")]
+    public async Task Should_AddScope_WithTruncatedText_When_Invoked()
+    {
+        var provider = new CollectingLoggerProvider();
+        var services = new ServiceCollection();
+        services.AddLogging(b => b.AddProvider(provider));
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILogger<LoggingMiddleware>>();
+        var mw = new LoggingMiddleware(logger);
+
+        var longText = new string('a', 200);
+        var ctx = new UpdateContext(
+            "tg",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(2),
+            longText,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>
+            {
+                [UpdateItems.MessageId] = 3,
+                [UpdateItems.UpdateType] = "message",
+                [UpdateItems.Handler] = "TestHandler"
+            },
+            sp,
+            default);
+
+        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+
+        var entry = provider.Logs.Should().ContainSingle(e => e.Message == "update").Subject;
+        entry.Scope["UpdateId"].Should().Be("1");
+        entry.Scope["ChatId"].Should().Be(1L);
+        entry.Scope["UserId"].Should().Be(2L);
+        entry.Scope["MessageId"].Should().Be(3);
+        entry.Scope["UpdateType"].Should().Be("message");
+        entry.Scope["Text"].Should().Be(longText[..128]);
+
+        provider.Logs.Should().Contain(e => e.Message.StartsWith("handler TestHandler finished"));
+    }
+
+    /// <summary>
+    ///     Тест 2: Ошибка обработчика логируется с длительностью
+    /// </summary>
+    [Fact(DisplayName = "Тест 2: Ошибка обработчика логируется с длительностью")]
+    public async Task Should_LogError_WithHandlerAndDuration_When_HandlerThrows()
     {
         var provider = new CollectingLoggerProvider();
         var services = new ServiceCollection();
@@ -33,23 +86,26 @@ public class LoggingMiddlewareTests
             "1",
             new ChatAddress(1),
             new UserAddress(2),
+            "hi",
             null,
             null,
             null,
-            null,
-            new Dictionary<string, object>(),
+            new Dictionary<string, object>
+            {
+                [UpdateItems.MessageId] = 3,
+                [UpdateItems.UpdateType] = "message",
+                [UpdateItems.Handler] = "TestHandler"
+            },
             sp,
             default);
 
-        UpdateDelegate next = _ =>
+        var act = async () =>
         {
-            var handlerLogger = sp.GetRequiredService<ILogger<LoggingMiddlewareTests>>();
-            handlerLogger.LogInformation("handler");
-            return Task.CompletedTask;
+            await mw.InvokeAsync(ctx, _ => throw new InvalidOperationException("fail"));
         };
 
-        await mw.InvokeAsync(ctx, next);
+        await act.Should().ThrowAsync<InvalidOperationException>();
 
-        Assert.Contains(provider.Logs, l => l.Scope.TryGetValue("UpdateId", out var id) && id?.ToString() == "1");
+        provider.Logs.Should().Contain(e => e.Level == LogLevel.Error && e.Message.StartsWith("handler TestHandler failed"));
     }
 }

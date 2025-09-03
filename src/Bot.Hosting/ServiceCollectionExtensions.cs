@@ -16,14 +16,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using OpenTelemetry.Metrics;
 using StackExchange.Redis;
 
 namespace Bot.Hosting;
 
 /// <summary>
-///     Расширения <see cref="IServiceCollection"/>
+///     Расширения <see cref="IServiceCollection"/>.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Подключают бота и необходимые сервисы</item>
+///         <item>Настраивают хранилище состояний</item>
+///     </list>
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
@@ -108,11 +115,12 @@ public static class ServiceCollectionExtensions
     }
     
     /// <summary>
-    ///     Использовать хранилище состояний
+    ///     Использовать хранилище состояний.
     /// </summary>
-    public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStorage store)
+    public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStore store)
     {
-        services.AddSingleton(store);
+        services.AddSingleton<IStateStore>(store);
+        services.AddSingleton<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
         return services;
     }
 
@@ -122,21 +130,45 @@ public static class ServiceCollectionExtensions
     /// <param name="configuration">Конфигурация приложения.</param>
     public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = (configuration["STORAGE:PROVIDER"] ?? "file").ToLowerInvariant();
+        var section = configuration.GetSection("Storage");
+        var provider = (section["Provider"] ?? "file").ToLowerInvariant();
         switch (provider)
         {
             case "redis":
-                var conn = configuration["STORAGE:REDIS:CONNECTION"] ?? "localhost";
+                var redis = section.GetSection("Redis");
+                var conn = redis["Connection"] ?? "localhost";
+                var db = int.TryParse(redis["Db"], out var d) ? d : 0;
+                var prefix = redis["Prefix"] ?? string.Empty;
                 var mux = ConnectionMultiplexer.Connect(conn);
-                services.UseStateStorage(new RedisStateStore(mux));
+                var options = new RedisOptions
+                {
+                    Connection = mux,
+                    Database = db,
+                    Prefix = prefix,
+                };
+                services.UseStateStorage(new RedisStateStore(options));
                 break;
             case "ef":
-                var cs = configuration["STORAGE:EF:CONNECTION"] ?? "Data Source=bot_state.db";
-                services.AddDbContext<StateContext>(o => o.UseSqlite(cs));
-                services.AddScoped<IStateStorage, EfCoreStateStore>();
+                var ef = section.GetSection("Ef");
+                var cs = ef["Connection"] ?? "Data Source=bot_state.db";
+                var efProvider = (ef["Provider"] ?? "sqlite").ToLowerInvariant();
+                services.AddDbContext<StateContext>(o =>
+                {
+                    if (efProvider == "postgres")
+                    {
+                        o.UseNpgsql(cs, b => b.MigrationsAssembly(typeof(StateContext).Assembly.FullName));
+                    }
+                    else
+                    {
+                        o.UseSqlite(cs, b => b.MigrationsAssembly(typeof(StateContext).Assembly.FullName));
+                    }
+                });
+                services.AddScoped<IStateStore, EfCoreStateStore>();
+                services.AddScoped<IStateStorage>(sp => (IStateStorage)sp.GetRequiredService<IStateStore>());
                 break;
             default:
-                var path = configuration["STORAGE:FILE:PATH"] ?? "data";
+                var file = section.GetSection("File");
+                var path = file["Path"] ?? "data";
                 services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = path }));
                 break;
         }

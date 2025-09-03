@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -8,9 +9,15 @@ using Bot.Storage.File.Options;
 namespace Bot.Storage.File;
 
 /// <summary>
-///     Файловое хранилище
+///     Файловое хранилище.
 /// </summary>
-public sealed class FileStateStore : IStateStorage, IAsyncDisposable
+/// <remarks>
+///     <list type="number">
+///         <item>Хранит состояния в файловой системе</item>
+///         <item>Буферизует часто используемые ключи</item>
+///     </list>
+/// </remarks>
+public sealed class FileStateStore : IStateStore, IAsyncDisposable
 {
     private readonly string _basePath;
     private readonly string[] _prefix;
@@ -121,7 +128,7 @@ public sealed class FileStateStore : IStateStorage, IAsyncDisposable
     ///     Установить значение, если текущее совпадает с ожидаемым.
     /// </summary>
     /// <inheritdoc />
-    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
     {
         var sem = _locks.GetOrAdd(PathFor(scope, key), _ => new SemaphoreSlim(1, 1));
         await sem.WaitAsync(ct);
@@ -130,7 +137,7 @@ public sealed class FileStateStore : IStateStorage, IAsyncDisposable
             var current = await GetAsync<T>(scope, key, ct);
             if (EqualityComparer<T>.Default.Equals(current, expected))
             {
-                await SetAsync(scope, key, value, null, ct);
+                await SetAsync(scope, key, value, ttl, ct);
                 return true;
             }
 

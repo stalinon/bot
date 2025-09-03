@@ -2,16 +2,50 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Threading;
+using Bot.Core.Metrics;
+using Bot.Core.Middlewares;
+using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Stats;
 
 /// <summary>
 ///     Сборщик статистики по обработчикам.
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сохраняет метрики обработчиков.</item>
+///         <item>Учитывает потерянные и ограниченные обновления.</item>
+///         <item>Следит за глубиной очереди.</item>
+///     </list>
+/// </remarks>
 public sealed class StatsCollector
 {
     private readonly ConcurrentDictionary<string, HandlerData> _data = new();
+    private readonly Counter<long>? _droppedCounter;
+    private readonly Counter<long>? _rateLimitedCounter;
+    private readonly Histogram<double>? _handlerLatency;
+    private readonly ObservableGauge<long>? _queueGauge;
+    private int _queueDepth;
+    private long _droppedUpdates;
+    private long _rateLimited;
+
+    /// <summary>
+    ///     Создать сборщик статистики.
+    /// </summary>
+    /// <param name="meterFactory">Фабрика метрик.</param>
+    public StatsCollector(IMeterFactory? meterFactory = null)
+    {
+        if (meterFactory is not null)
+        {
+            var meter = meterFactory.Create(MetricsMiddleware.MeterName);
+            _droppedCounter = meter.CreateCounter<long>("tgbot_dropped_updates_total", unit: "count");
+            _rateLimitedCounter = meter.CreateCounter<long>("tgbot_rate_limited_total", unit: "count");
+            _handlerLatency = meter.CreateHistogram<double>("tgbot_handler_latency_ms", unit: "ms");
+            _queueGauge = meter.CreateObservableGauge<long>("tgbot_queue_depth", () => Volatile.Read(ref _queueDepth));
+        }
+    }
 
     /// <summary>
     ///     Начать измерение для обработчика.
@@ -20,7 +54,47 @@ public sealed class StatsCollector
     {
         var info = _data.GetOrAdd(handler, _ => new HandlerData());
         Interlocked.Increment(ref info.TotalRequests);
-        return new Measurement(info, Stopwatch.StartNew());
+        return new Measurement(info, Stopwatch.StartNew(), this);
+    }
+
+    /// <summary>
+    ///     Записать метрику обработчика.
+    /// </summary>
+    /// <param name="latencyMs">Длительность обработчика в миллисекундах.</param>
+    /// <param name="success">Признак успешной обработки.</param>
+    internal void RecordHandler(double latencyMs, bool success)
+    {
+        _handlerLatency?.Record(latencyMs);
+        BotMetricsEventSource.Log.Handler(latencyMs, success);
+    }
+
+    /// <summary>
+    ///     Увеличить счётчик потерянных обновлений.
+    /// </summary>
+    public void MarkDroppedUpdate()
+    {
+        _droppedCounter?.Add(1);
+        BotMetricsEventSource.Log.MarkDroppedUpdate();
+        Interlocked.Increment(ref _droppedUpdates);
+    }
+
+    /// <summary>
+    ///     Увеличить счётчик ограниченных обновлений.
+    /// </summary>
+    public void MarkRateLimited()
+    {
+        _rateLimitedCounter?.Add(1);
+        BotMetricsEventSource.Log.MarkRateLimited();
+        Interlocked.Increment(ref _rateLimited);
+    }
+
+    /// <summary>
+    ///     Установить текущую глубину очереди.
+    /// </summary>
+    public void SetQueueDepth(int depth)
+    {
+        Volatile.Write(ref _queueDepth, depth);
+        BotMetricsEventSource.Log.SetQueueDepth(depth);
     }
 
     /// <summary>
@@ -45,7 +119,11 @@ public sealed class StatsCollector
             }
         }
 
-        return new Snapshot(dict);
+        return new Snapshot(
+            dict,
+            Interlocked.Read(ref _droppedUpdates),
+            Interlocked.Read(ref _rateLimited),
+            Volatile.Read(ref _queueDepth));
     }
 
     private static double Percentile(double[] sorted, double percentile)

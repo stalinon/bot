@@ -1,32 +1,59 @@
+using System.Collections.Generic;
+using System.Diagnostics;
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 
 namespace Bot.Core.Middlewares;
 
 /// <summary>
 ///     Логирование
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Добавляет идентификаторы обновления в scope</item>
+///         <item>Замеряет длительность работы обработчика и ошибки</item>
+///     </list>
+/// </remarks>
 public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpdateMiddleware
 {
+    private const int TextLimit = 128;
+
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
+        var updateType = ctx.GetItem<string>(UpdateItems.UpdateType) ?? "unknown";
+        var messageId = ctx.GetItem<int?>(UpdateItems.MessageId);
+        var text = ctx.Text;
+        if (text is not null && text.Length > TextLimit)
+        {
+            text = text[..TextLimit];
+        }
+
         using var scope = logger.BeginScope(new Dictionary<string, object?>
         {
-            ["UpdateId"] = ctx.UpdateId
+            ["UpdateId"] = ctx.UpdateId,
+            ["ChatId"] = ctx.Chat.Id,
+            ["UserId"] = ctx.User.Id,
+            ["MessageId"] = messageId,
+            ["UpdateType"] = updateType,
+            ["Text"] = text
         });
 
-        var updateType = ctx.GetItem<string>("UpdateType") ?? "unknown";
-        var messageId = ctx.GetItem<int?>("MessageId");
-        logger.LogInformation(
-            "update {UpdateType} {UpdateId} message {MessageId} from {UserId} text='{Text}'",
-            updateType,
-            ctx.UpdateId,
-            messageId,
-            ctx.User.Id,
-            ctx.Text);
-        await next(ctx);
+        logger.LogInformation("update");
+
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            await next(ctx);
+            var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
+            logger.LogInformation("handler {Handler} finished in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
+        }
+        catch (Exception ex)
+        {
+            var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
+            logger.LogError(ex, "handler {Handler} failed in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
+            throw;
+        }
     }
 }

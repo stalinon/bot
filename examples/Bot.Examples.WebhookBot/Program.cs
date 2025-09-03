@@ -1,7 +1,6 @@
 ﻿using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Hosting;
-using Bot.Hosting.Options;
 using Bot.Telegram;
 using Bot.Examples.WebhookBot.Services;
 using Microsoft.Extensions.Configuration;
@@ -19,13 +18,7 @@ builder.Services
     .AddBot(o =>
     {
         o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
-        o.Transport = new TransportOptions
-        {
-            Mode = TransportMode.Webhook,
-            PublicUrl = cfg["PUBLIC_URL"] ?? throw new InvalidOperationException("PUBLIC_URL is required"),
-            Secret = cfg["WEBHOOK_SECRET"] ?? "secret"
-        };
-        o.Parallelism = 8;
+        cfg.GetSection("Transport").Bind(o.Transport);
         o.RateLimits = new RateLimitOptions { PerUserPerMinute = 20, PerChatPerMinute = 60, Mode = RateLimitMode.Soft };
     })
     .AddTelegramTransport()
