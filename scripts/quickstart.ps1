@@ -31,10 +31,39 @@ $startStatus = try {
     (Invoke-WebRequest -Uri 'http://localhost:5000/tg/secret' -Method Post -Body $body -ContentType 'application/json').StatusCode.value__
 } catch { 0 }
 
-# Проверка Mini App
-$webappStatus = try {
-    (Invoke-WebRequest -Uri 'http://localhost:5000/webapp/auth?initData=test').StatusCode.value__
-} catch { $_.Exception.Response.StatusCode.value__ }
+# Подготовка initData для Mini App
+function New-InitData {
+    param([string]$token)
+    $fields = [ordered]@{
+        auth_date = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds().ToString()
+        query_id = '1'
+        user = '{"id":1}'
+    }
+    $dataCheckString = ($fields.GetEnumerator() | Sort-Object Name | ForEach-Object {"$($_.Name)=$($_.Value)"}) -join "`n"
+    $secretHmac = [System.Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes('WebAppData'))
+    $secret = $secretHmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($token))
+    $hmac = [System.Security.Cryptography.HMACSHA256]::new($secret)
+    $hashBytes = $hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($dataCheckString))
+    $hash = ($hashBytes | ForEach-Object { "{0:x2}" -f $_ }) -join ''
+    $userEncoded = [System.Net.WebUtility]::UrlEncode($fields.user)
+    return "auth_date=$($fields.auth_date)&query_id=1&user=$userEncoded&hash=$hash"
+}
+$initData = New-InitData $env:BOT_TOKEN
+
+# Получение JWT
+$authResp = Invoke-WebRequest -Uri 'https://localhost:5001/webapp/auth' -Method Post -Body (@{ initData = $initData } | ConvertTo-Json) -ContentType 'application/json' -SkipCertificateCheck
+$authStatus = $authResp.StatusCode.value__
+$token = (ConvertFrom-Json $authResp.Content).token
+
+# Проверка профиля
+$headers = @{ Authorization = "Bearer $token" }
+$meStatus = (Invoke-WebRequest -Uri 'https://localhost:5001/webapp/me' -Headers $headers -SkipCertificateCheck).StatusCode.value__
+
+# Отправка web_app_data
+$dataBody = '{"update_id":2,"message":{"message_id":2,"date":0,"chat":{"id":1,"type":"private"},"from":{"id":1},"web_app_data":{"data":"42"}}}'
+$dataStatus = try {
+    (Invoke-WebRequest -Uri 'http://localhost:5000/tg/secret' -Method Post -Body $dataBody -ContentType 'application/json').StatusCode.value__
+} catch { 0 }
 
 # Завершение процесса
 Stop-Process $proc.Id
@@ -43,9 +72,9 @@ Set-Location ..
 Remove-Item -Recurse -Force $project
 
 # Итог
-if ($startStatus -eq 200 -and ($webappStatus -eq 401 -or $webappStatus -eq 400)) {
+if ($startStatus -eq 200 -and $authStatus -eq 200 -and $meStatus -eq 200 -and $dataStatus -eq 200) {
     Write-Host 'Быстрый старт выполнен успешно'
 } else {
-    Write-Error "Ошибка: /start=$startStatus webapp=$webappStatus"
+    Write-Error "Ошибка: /start=$startStatus auth=$authStatus me=$meStatus sendData=$dataStatus"
     exit 1
 }
