@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Bot.Telegram;
 
@@ -34,8 +35,8 @@ public static class EndpointRouteBuilderExtensions
     /// </summary>
     public static IEndpointRouteBuilder MapWebAppAuth(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/webapp/auth", (
-            string initData,
+        endpoints.MapPost("/webapp/auth", (
+            AuthRequest body,
             IWebAppInitDataValidator validator,
             IOptions<WebAppAuthOptions> options,
             HttpRequest req,
@@ -63,6 +64,8 @@ public static class EndpointRouteBuilderExtensions
                 return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
 
+            var initData = body.InitData;
+
             if (!validator.TryValidate(initData, out _))
             {
                 return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
@@ -73,7 +76,8 @@ public static class EndpointRouteBuilderExtensions
                 .Where(p => p.Length == 2)
                 .ToDictionary(p => p[0], p => p[1]);
 
-            if (!dict.TryGetValue("user", out var userRaw))
+            if (!dict.TryGetValue("user", out var userRaw) ||
+                !dict.TryGetValue("auth_date", out var authDate))
             {
                 return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
@@ -89,18 +93,19 @@ public static class EndpointRouteBuilderExtensions
             var now = DateTimeOffset.UtcNow;
             var claims = new[]
             {
-                new Claim("user_id", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim("username", user.Username ?? string.Empty),
-                new Claim(JwtRegisteredClaimNames.Iat, now.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+                new Claim("language_code", user.LanguageCode ?? string.Empty),
+                new Claim("auth_date", authDate)
             };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: now.AddMinutes(5).UtcDateTime,
+                expires: now.Add(options.Value.Lifetime).UtcDateTime,
                 signingCredentials: creds);
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return LogAndReturn(Results.Text(jwt));
+            return LogAndReturn(Results.Json(new { token = jwt }));
         });
 
         return endpoints;
@@ -141,7 +146,7 @@ public static class EndpointRouteBuilderExtensions
             }
 
             var tokenRaw = auth["Bearer ".Length..].Trim();
-            var handler = new JwtSecurityTokenHandler();
+            var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             var parameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
@@ -154,20 +159,20 @@ public static class EndpointRouteBuilderExtensions
             try
             {
                 var principal = handler.ValidateToken(tokenRaw, parameters, out _);
-                var id = principal.FindFirst("id")?.Value;
+                var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
                 var username = principal.FindFirst("username")?.Value;
                 var languageCode = principal.FindFirst("language_code")?.Value;
                 var authDate = principal.FindFirst("auth_date")?.Value;
 
-                if (id is null || authDate is null)
+                if (sub is null || authDate is null)
                 {
                     return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
                 }
 
-                userId = long.Parse(id);
+                userId = long.Parse(sub);
                 return LogAndReturn(Results.Json(new
                 {
-                    id = userId,
+                    sub = userId,
                     username,
                     language_code = languageCode,
                     auth_date = long.Parse(authDate)
@@ -182,7 +187,9 @@ public static class EndpointRouteBuilderExtensions
         return endpoints;
     }
 
-    private sealed record UserPayload(long Id, string? Username);
+    private sealed record UserPayload(long Id, string? Username, [property: JsonPropertyName("language_code")] string? LanguageCode);
+
+    private sealed record AuthRequest(string InitData);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

@@ -50,7 +50,11 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
             builder.ConfigureServices(services =>
             {
                 services.AddSingleton<IWebAppInitDataValidator, StubValidator>();
-                services.Configure<WebAppAuthOptions>(o => o.Secret = "0123456789ABCDEF0123456789ABCDEF");
+                services.Configure<WebAppAuthOptions>(o =>
+                {
+                    o.Secret = "0123456789ABCDEF0123456789ABCDEF";
+                    o.Lifetime = TimeSpan.FromMinutes(5);
+                });
             });
         });
 
@@ -75,7 +79,11 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
             builder.ConfigureServices(services =>
             {
                 services.AddSingleton<IWebAppInitDataValidator, StubValidator>();
-                services.Configure<WebAppAuthOptions>(o => o.Secret = secret);
+                services.Configure<WebAppAuthOptions>(o =>
+                {
+                    o.Secret = secret;
+                    o.Lifetime = TimeSpan.FromMinutes(5);
+                });
             });
         });
 
@@ -90,7 +98,7 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
         var token = handler.WriteToken(new JwtSecurityToken(
             claims: new[]
             {
-                new Claim("id", "1"),
+                new Claim(JwtRegisteredClaimNames.Sub, "1"),
                 new Claim("username", "test"),
                 new Claim("language_code", "ru"),
                 new Claim("auth_date", "1")
@@ -104,7 +112,7 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
         json.Should().NotBeNull();
-        json!["id"].GetInt64().Should().Be(1);
+        json!["sub"].GetInt64().Should().Be(1);
         json["username"].GetString().Should().Be("test");
         json["language_code"].GetString().Should().Be("ru");
         json["auth_date"].GetInt64().Should().Be(1);

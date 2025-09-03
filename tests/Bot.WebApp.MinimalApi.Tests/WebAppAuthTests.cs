@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 using Bot.Telegram;
@@ -44,7 +47,11 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             builder.ConfigureServices(services =>
             {
                 services.AddSingleton<IWebAppInitDataValidator>(new StubValidator(true));
-                services.Configure<WebAppAuthOptions>(o => o.Secret = "0123456789ABCDEF0123456789ABCDEF");
+                services.Configure<WebAppAuthOptions>(o =>
+                {
+                    o.Secret = "0123456789ABCDEF0123456789ABCDEF";
+                    o.Lifetime = TimeSpan.FromMinutes(5);
+                });
             });
         });
 
@@ -53,14 +60,18 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             BaseAddress = new Uri("https://localhost")
         });
 
-        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%7D&auth_date=1&hash=abc";
-        var resp = await client.GetAsync($"/webapp/auth?initData={initData}");
+        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
+        var resp = await client.PostAsJsonAsync("/webapp/auth", new { initData });
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
-        var token = await resp.Content.ReadAsStringAsync();
+        var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+        json.Should().NotBeNull();
+        var token = json!["token"].GetString();
         token.Should().NotBeNullOrEmpty();
         var handler = new JwtSecurityTokenHandler();
         var jwt = handler.ReadJwtToken(token);
-        jwt.Claims.Should().Contain(c => c.Type == "user_id" && c.Value == "1");
+        jwt.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Sub && c.Value == "1");
+        jwt.Claims.Should().Contain(c => c.Type == "language_code" && c.Value == "ru");
+        jwt.Claims.Should().Contain(c => c.Type == "auth_date" && c.Value == "1");
     }
 
     /// <summary>
@@ -74,7 +85,11 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             builder.ConfigureServices(services =>
             {
                 services.AddSingleton<IWebAppInitDataValidator>(new StubValidator(false));
-                services.Configure<WebAppAuthOptions>(o => o.Secret = "0123456789ABCDEF0123456789ABCDEF");
+                services.Configure<WebAppAuthOptions>(o =>
+                {
+                    o.Secret = "0123456789ABCDEF0123456789ABCDEF";
+                    o.Lifetime = TimeSpan.FromMinutes(5);
+                });
             });
         });
 
@@ -83,8 +98,8 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             BaseAddress = new Uri("https://localhost")
         });
 
-        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%7D&auth_date=1&hash=abc";
-        var resp = await client.GetAsync($"/webapp/auth?initData={initData}");
+        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
+        var resp = await client.PostAsJsonAsync("/webapp/auth", new { initData });
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
