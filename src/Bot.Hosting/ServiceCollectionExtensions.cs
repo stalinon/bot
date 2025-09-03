@@ -12,21 +12,20 @@ using Bot.Storage.EFCore;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 using Bot.Storage.Redis;
+using Bot.WebApp.MinimalApi;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 using OpenTelemetry.Metrics;
 
 using StackExchange.Redis;
-
-using Microsoft.Extensions.Options;
-using Bot.Abstractions.Contracts;
 
 namespace Bot.Hosting;
 

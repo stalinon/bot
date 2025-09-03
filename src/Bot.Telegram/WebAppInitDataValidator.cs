@@ -32,7 +32,10 @@ public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
     /// <summary>
     ///     Создать экземпляр.
     /// </summary>
-    public WebAppInitDataValidator(IOptions<BotOptions> options, IOptions<WebAppOptions> webOptions)
+    public WebAppInitDataValidator(
+        IOptions<BotOptions> options,
+        IOptions<WebAppOptions> webOptions,
+        ILogger<WebAppInitDataValidator> logger)
     {
         _token = options.Value.Token;
         _ttl = TimeSpan.FromSeconds(webOptions.Value.InitDataTtlSeconds);
