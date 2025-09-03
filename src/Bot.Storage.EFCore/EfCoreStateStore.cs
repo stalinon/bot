@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Bot.Abstractions.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -141,6 +142,12 @@ public sealed class EfCoreStateStore : IStateStore
         {
             _db.States.Remove(entity);
             await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return false;
+        }
+
+        var current = JsonSerializer.Deserialize<T>(entity.Value, Json);
+        if (!EqualityComparer<T>.Default.Equals(current, expected))
+        {
             return false;
         }
 
