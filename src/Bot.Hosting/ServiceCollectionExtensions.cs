@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<BotHostedService>();
         services.AddMetrics();
         services.AddSingleton<StatsCollector>();
+        services.AddSingleton<WebAppStatsCollector>();
 
         if (metrics is not null)
         {

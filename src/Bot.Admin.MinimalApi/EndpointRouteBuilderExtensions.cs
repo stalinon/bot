@@ -63,7 +63,7 @@ public static class EndpointRouteBuilderExtensions
     /// </summary>
     public static IEndpointRouteBuilder MapAdminStats(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/admin/stats", (StatsCollector stats, HttpRequest req, IOptions<AdminOptions> options) =>
+        endpoints.MapGet("/admin/stats", (StatsCollector stats, WebAppStatsCollector webStats, HttpRequest req, IOptions<AdminOptions> options) =>
         {
             if (!req.Headers.TryGetValue("X-Admin-Token", out var token) ||
                 token != options.Value.AdminToken)
@@ -72,6 +72,7 @@ public static class EndpointRouteBuilderExtensions
             }
 
             var snapshot = stats.GetSnapshot();
+            var web = webStats.GetSnapshot();
             return Results.Json(new
             {
                 dropped = snapshot.DroppedUpdates,
@@ -82,7 +83,12 @@ public static class EndpointRouteBuilderExtensions
                 p99 = snapshot.P99,
                 rps = snapshot.Rps,
                 errorRate = snapshot.ErrorRate,
-                handlers = snapshot.Handlers
+                handlers = snapshot.Handlers,
+                webappAuth = web.AuthTotal,
+                webappMe = web.MeTotal,
+                webappLatencyP50 = web.P50,
+                webappLatencyP95 = web.P95,
+                webappLatencyP99 = web.P99
             });
         });
         return endpoints;

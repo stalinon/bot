@@ -31,6 +31,7 @@ public class AdminAuthTests
             {
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
+                services.AddSingleton<WebAppStatsCollector>();
                 services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"
@@ -60,6 +61,7 @@ public class AdminAuthTests
             {
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
+                services.AddSingleton<WebAppStatsCollector>();
                 services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"

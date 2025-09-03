@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
+using Bot.Core.Stats;
 using Bot.Telegram;
 
 using Microsoft.AspNetCore.Builder;
@@ -39,7 +40,8 @@ public static class EndpointRouteBuilderExtensions
             IWebAppInitDataValidator validator,
             IOptions<WebAppAuthOptions> options,
             HttpRequest req,
-            ILoggerFactory loggerFactory) =>
+            ILoggerFactory loggerFactory,
+            WebAppStatsCollector stats) =>
         {
             var logger = loggerFactory.CreateLogger("WebAppAuth");
             var sw = Stopwatch.StartNew();
@@ -47,13 +49,16 @@ public static class EndpointRouteBuilderExtensions
 
             IResult LogAndReturn(IResult result)
             {
+                stats.MarkAuth(sw.ElapsedMilliseconds);
+                var status = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
                 logger.LogInformation(
                     "webapp auth",
                     new Dictionary<string, object?>
                     {
                         ["webapp_user_id"] = userId,
                         ["source"] = "miniapp",
-                        ["latency"] = sw.ElapsedMilliseconds
+                        ["latency_ms"] = sw.ElapsedMilliseconds,
+                        ["result"] = status
                     });
                 return result;
             }
@@ -114,7 +119,8 @@ public static class EndpointRouteBuilderExtensions
         endpoints.MapGet("/webapp/me", (
             IOptions<WebAppAuthOptions> options,
             HttpRequest req,
-            ILoggerFactory loggerFactory) =>
+            ILoggerFactory loggerFactory,
+            WebAppStatsCollector stats) =>
         {
             var logger = loggerFactory.CreateLogger("WebAppMe");
             var sw = Stopwatch.StartNew();
@@ -122,13 +128,16 @@ public static class EndpointRouteBuilderExtensions
 
             IResult LogAndReturn(IResult result)
             {
+                stats.MarkMe(sw.ElapsedMilliseconds);
+                var status = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
                 logger.LogInformation(
                     "webapp me",
                     new Dictionary<string, object?>
                     {
                         ["webapp_user_id"] = userId,
                         ["source"] = "miniapp",
-                        ["latency"] = sw.ElapsedMilliseconds
+                        ["latency_ms"] = sw.ElapsedMilliseconds,
+                        ["result"] = status
                     });
                 return result;
             }
