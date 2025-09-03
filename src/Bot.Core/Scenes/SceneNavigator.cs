@@ -12,22 +12,25 @@ public sealed class SceneNavigator : ISceneNavigator
 {
     private const string Scope = "scene";
     private readonly IStateStorage _store;
+    private readonly TimeSpan _ttl;
 
     /// <summary>
     ///     Создаёт навигатор.
     /// </summary>
     /// <param name="store">Хранилище состояний.</param>
-    public SceneNavigator(IStateStorage store)
+    /// <param name="stepTtl">Время жизни шага.</param>
+    public SceneNavigator(IStateStorage store, TimeSpan? stepTtl = null)
     {
         _store = store;
+        _ttl = stepTtl ?? TimeSpan.FromMinutes(5);
     }
 
     /// <inheritdoc />
     public async Task EnterAsync(UpdateContext ctx, IScene scene)
     {
         var state = new SceneState(ctx.User, ctx.Chat, scene.Name, 0);
-        await _store.SetAsync(Scope, Key(ctx), state, null, ctx.CancellationToken);
-        await _store.SetAsync(Scope, StepKey(ctx), 0L, null, ctx.CancellationToken);
+        await _store.SetAsync(Scope, Key(ctx), state, _ttl, ctx.CancellationToken);
+        await _store.SetAsync(Scope, StepKey(ctx), 0L, _ttl, ctx.CancellationToken);
         await scene.OnEnter(ctx);
     }
 
@@ -47,10 +50,10 @@ public sealed class SceneNavigator : ISceneNavigator
     /// <inheritdoc />
     public async Task<int> NextStepAsync(UpdateContext ctx)
     {
-        var step = await _store.IncrementAsync(Scope, StepKey(ctx), 1, null, ctx.CancellationToken);
+        var step = await _store.IncrementAsync(Scope, StepKey(ctx), 1, _ttl, ctx.CancellationToken);
         var state = await GetStateAsync(ctx) ?? throw new InvalidOperationException("No active scene");
         var next = state with { Step = (int)step };
-        await _store.SetAsync(Scope, Key(ctx), next, null, ctx.CancellationToken);
+        await _store.SetAsync(Scope, Key(ctx), next, _ttl, ctx.CancellationToken);
         return next.Step;
     }
 
