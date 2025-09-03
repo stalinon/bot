@@ -191,9 +191,9 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
     }
 
     /// <summary>
-    ///     Тест 11: Статистика содержит агрегированные метрики.
+    ///     Тест 11: Статистика содержит агрегированные метрики, включая <c>web_app_data</c>.
     /// </summary>
-    [Fact(DisplayName = "Тест 11: Статистика содержит агрегированные метрики")]
+    [Fact(DisplayName = "Тест 11: Статистика содержит агрегированные метрики, включая web_app_data")]
     public async Task Should_ContainAggregatedMetrics_When_StatsRequestedWithToken()
     {
         var client = _factory.CreateClient();
@@ -202,7 +202,7 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         var resp = await client.SendAsync(request);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
-        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate", "webappAuth", "webappMe", "webappLatencyP50", "webappLatencyP95", "webappLatencyP99");
+        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate", "webappAuth", "webappMe", "webappSendData", "webappSendDataSuccess", "webappSendDataError", "webappLatencyP50", "webappLatencyP95", "webappLatencyP99");
     }
 
     private sealed class DummyStateStore : IStateStore
