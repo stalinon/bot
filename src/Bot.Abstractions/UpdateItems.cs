@@ -25,4 +25,9 @@ public static class UpdateItems
     ///     Имя обработчика
     /// </summary>
     public const string Handler = nameof(Handler);
+
+    /// <summary>
+    ///     Признак данных веб-приложения
+    /// </summary>
+    public const string WebAppData = nameof(WebAppData);
 }

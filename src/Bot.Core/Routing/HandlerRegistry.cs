@@ -54,17 +54,33 @@ public sealed class HandlerRegistry
     {
         if (!string.IsNullOrEmpty(ctx.Command) && _commands.TryGetValue(ctx.Command!, out var t))
         {
-            return t;
+            if (MatchesFilter(t, ctx)) return t;
         }
 
         if (!string.IsNullOrEmpty(ctx.Text))
         {
             foreach (var (p, type) in _regexHandlers)
             {
-                if (p.IsMatch(ctx.Text!)) return type;
+                if (p.IsMatch(ctx.Text!) && MatchesFilter(type, ctx)) return type;
             }
         }
-        
+
         return null;
+    }
+
+    private static bool MatchesFilter(Type t, UpdateContext ctx)
+    {
+        var f = t.GetCustomAttribute<UpdateFilterAttribute>();
+        if (f is null)
+        {
+            return true;
+        }
+
+        if (f.WebAppData && ctx.GetItem<bool>(UpdateItems.WebAppData) != true)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

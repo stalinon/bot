@@ -25,6 +25,12 @@ internal static class TelegramUpdateMapper
                 [UpdateItems.UpdateType] = u.Type.ToString(),
                 [UpdateItems.MessageId] = m.MessageId
             };
+            var payload = m.WebAppData?.Data;
+            if (m.WebAppData is not null)
+            {
+                items[UpdateItems.WebAppData] = true;
+            }
+
             return new UpdateContext(
                 Transport: "telegram",
                 UpdateId: u.Id.ToString(),
@@ -33,7 +39,7 @@ internal static class TelegramUpdateMapper
                 Text: text,
                 Command: null,
                 Args: null,
-                Payload: null,
+                Payload: payload,
                 Items: items,
                 Services: null!,
                 CancellationToken: default);
