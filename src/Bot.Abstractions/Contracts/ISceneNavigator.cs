@@ -1,5 +1,7 @@
 namespace Bot.Abstractions.Contracts;
 
+using System;
+
 /// <summary>
 ///     Навигатор по сценам.
 /// </summary>
@@ -28,5 +30,7 @@ public interface ISceneNavigator
     ///     Перейти к следующему шагу.
     /// </summary>
     /// <param name="ctx">Контекст обновления.</param>
-    Task<int> NextStepAsync(UpdateContext ctx);
+    /// <param name="data">Произвольные данные шага.</param>
+    /// <param name="ttl">Время жизни шага.</param>
+    Task<int> NextStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null);
 }

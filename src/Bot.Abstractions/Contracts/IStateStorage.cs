@@ -16,6 +16,18 @@ public interface IStateStorage
     Task SetAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct);
 
     /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <param name="scope">Область</param>
+    /// <param name="key">Ключ</param>
+    /// <param name="expected">Ожидаемое значение</param>
+    /// <param name="value">Новое значение</param>
+    /// <param name="ct">Токен отмены</param>
+    /// <typeparam name="T">Тип значения</typeparam>
+    /// <returns>Возвращает <c>true</c>, если значение обновлено</returns>
+    Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct);
+
+    /// <summary>
     ///     Удалить
     /// </summary>
     Task<bool> RemoveAsync(string scope, string key, CancellationToken ct);

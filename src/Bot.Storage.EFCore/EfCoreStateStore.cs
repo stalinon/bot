@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Bot.Abstractions.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -107,6 +109,37 @@ public sealed class EfCoreStateStore : IStateStorage
         }
         entity.Value = JsonSerializer.Serialize(value, Json);
         entity.ExpiresAt = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        return true;
+    }
+
+    /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <inheritdoc />
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        if (entity.ExpiresAt is { } exp && exp <= DateTimeOffset.UtcNow)
+        {
+            _db.States.Remove(entity);
+            await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+            return false;
+        }
+
+        var current = JsonSerializer.Deserialize<T>(entity.Value, Json);
+        if (!EqualityComparer<T>.Default.Equals(current, expected))
+        {
+            return false;
+        }
+
+        entity.Value = JsonSerializer.Serialize(value, Json);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
     }

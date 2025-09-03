@@ -82,5 +82,26 @@ return 0";
         return (int)result == 1;
     }
 
+    /// <summary>
+    ///     Установить значение, если текущее совпадает с ожидаемым.
+    /// </summary>
+    /// <inheritdoc />
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        const string script = @"local cur = redis.call('GET', KEYS[1])
+if cur == ARGV[1] then
+    redis.call('SET', KEYS[1], ARGV[2])
+    return 1
+end
+return 0";
+        var jsonExpected = JsonSerializer.Serialize(expected, Json);
+        var jsonValue = JsonSerializer.Serialize(value, Json);
+        var keys = new RedisKey[] { MakeKey(scope, key) };
+        var args = new RedisValue[] { jsonExpected, jsonValue };
+        var result = await _db.ScriptEvaluateAsync(script, keys, args).ConfigureAwait(false);
+        return (int)result == 1;
+    }
+
     private static string MakeKey(string scope, string key) => $"{scope}:{key}";
 }
