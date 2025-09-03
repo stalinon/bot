@@ -64,17 +64,16 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-    
+
     /// <summary>
     ///     Добавить пайплайн
     /// </summary>
-    public static IServiceCollection UsePipeline(this IServiceCollection services, Action<IUpdatePipeline> use)
+    public static IServiceCollection UsePipeline(this IServiceCollection services)
     {
-        services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<BotHostedService>());
-        services.AddSingleton(use);
+        services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         return services;
     }
-    
+
     /// <summary>
     ///     Добавить обработчики
     /// </summary>
@@ -102,7 +101,7 @@ public static class ServiceCollectionExtensions
         }
 
         services.AddSingleton(registryConfigured);
-        
+
         services.AddScoped<ExceptionHandlingMiddleware>()
             .AddScoped<MetricsMiddleware>()
             .AddScoped<LoggingMiddleware>()
@@ -110,10 +109,10 @@ public static class ServiceCollectionExtensions
             .AddScoped<RateLimitMiddleware>()
             .AddScoped<CommandParsingMiddleware>()
             .AddScoped<RouterMiddleware>();
-        
+
         return services;
     }
-    
+
     /// <summary>
     ///     Использовать хранилище состояний.
     /// </summary>

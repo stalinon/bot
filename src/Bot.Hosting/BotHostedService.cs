@@ -29,7 +29,6 @@ public sealed class BotHostedService(
     private Task? _processing;
     private Task? _writing;
     private CancellationTokenSource? _cts;
-    private readonly StatsCollector _stats = stats;
     private readonly BotOptions _options = options.Value;
 
     /// <inheritdoc />
@@ -58,7 +57,7 @@ public sealed class BotHostedService(
             {
                 FullMode = BoundedChannelFullMode.Wait
             });
-        _stats.SetQueueDepth(_channel.Reader.Count);
+        stats.SetQueueDepth(_channel.Reader.Count);
 
         _processing = Parallel.ForEachAsync(
             _channel.Reader.ReadAllAsync(_cts.Token),
@@ -70,14 +69,14 @@ public sealed class BotHostedService(
             async (ctx, ct) =>
             {
                 await _app(ctx);
-                _stats.SetQueueDepth(_channel.Reader.Count);
+                stats.SetQueueDepth(_channel.Reader.Count);
             });
 
         _writing = source.StartAsync(
             async ctx =>
             {
                 await _channel.Writer.WriteAsync(ctx, _cts.Token);
-                _stats.SetQueueDepth(_channel.Reader.Count);
+                stats.SetQueueDepth(_channel.Reader.Count);
             },
             _cts.Token);
 

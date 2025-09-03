@@ -34,14 +34,7 @@ builder.Services
             sp.GetRequiredService<IStateStore>(),
             TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
     .AddScoped<PhoneScene>()
-    .UsePipeline(p => p
-        .Use<ExceptionHandlingMiddleware>()
-        .Use<MetricsMiddleware>()
-        .Use<LoggingMiddleware>()
-        .Use<DedupMiddleware>()
-        .Use<RateLimitMiddleware>()
-        .Use<CommandParsingMiddleware>()
-        .Use<RouterMiddleware>())
+    .UsePipeline()
     .UseConfiguredStateStorage(cfg);
 
 var host = builder.Build();
