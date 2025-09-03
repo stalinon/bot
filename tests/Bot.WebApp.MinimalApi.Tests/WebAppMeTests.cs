@@ -112,7 +112,7 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
         json.Should().NotBeNull();
-        json!["sub"].GetInt64().Should().Be(1);
+        json!["id"].GetInt64().Should().Be(1);
         json["username"].GetString().Should().Be("test");
         json["language_code"].GetString().Should().Be("ru");
         json["auth_date"].GetInt64().Should().Be(1);

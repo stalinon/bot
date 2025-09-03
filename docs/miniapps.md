@@ -51,6 +51,17 @@ await botUi.SendMenuWebAppAsync(chat, "Открыть", "https://example.com", c
 1. Клиент получает `initData` из Telegram.
 2. **Авторизация** — `POST /webapp/auth` с телом `{ "initData": "<...>" }` возвращает короткий JWT.
 3. **Профиль** — `GET /webapp/me` с заголовком `Authorization: Bearer <jwt>`.
+
+   Пример ответа:
+
+   ```json
+   {
+     "id": 1,
+     "username": "test",
+     "language_code": "ru",
+     "auth_date": 1
+   }
+   ```
 4. **Отправка в бот** — `Telegram.WebApp.sendData("{...}")`.
 
 Базовый поток: `auth → me → sendData`.

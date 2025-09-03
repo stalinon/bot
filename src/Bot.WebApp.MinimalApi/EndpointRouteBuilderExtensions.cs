@@ -182,7 +182,7 @@ public static class EndpointRouteBuilderExtensions
                 userId = long.Parse(sub);
                 return LogAndReturn(Results.Json(new
                 {
-                    sub = userId,
+                    id = userId,
                     username,
                     language_code = languageCode,
                     auth_date = long.Parse(authDate)
