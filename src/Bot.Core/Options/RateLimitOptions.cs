@@ -1,5 +1,6 @@
-namespace Bot.Core.Options;
+using System;
 
+namespace Bot.Core.Options;
 /// <summary>
 ///     Опции ограничения ддоса
 /// </summary>
@@ -19,4 +20,15 @@ public sealed class RateLimitOptions
     ///     Режим ограничения
     /// </summary>
     public RateLimitMode Mode { get; set; } = RateLimitMode.Hard;
+
+    /// <summary>
+    ///     Использовать распределённое хранилище состояний.
+    /// </summary>
+    public bool UseStateStore { get; set; }
+        = false;
+
+    /// <summary>
+    ///     Окно времени для подсчёта запросов.
+    /// </summary>
+    public TimeSpan Window { get; set; } = TimeSpan.FromMinutes(1);
 }
