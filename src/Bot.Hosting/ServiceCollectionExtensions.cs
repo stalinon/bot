@@ -8,6 +8,7 @@ using Bot.Core.Routing;
 using Bot.Core.Stats;
 using Bot.Core.Utils;
 using Bot.Hosting.Options;
+using Bot.Scheduler;
 using Bot.Storage.EFCore;
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
@@ -180,6 +181,28 @@ public static class ServiceCollectionExtensions
                 break;
         }
 
+        return services;
+    }
+
+    /// <summary>
+    ///     Добавить планировщик задач.
+    /// </summary>
+    public static IServiceCollection AddJobScheduler(this IServiceCollection services)
+    {
+        services.AddHostedService<JobScheduler>();
+        return services;
+    }
+
+    /// <summary>
+    ///     Зарегистрировать задачу.
+    /// </summary>
+    /// <param name="cron">Cron-выражение.</param>
+    /// <param name="interval">Интервал выполнения.</param>
+    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string? cron = null, TimeSpan? interval = null)
+        where TJob : class, IJob
+    {
+        services.TryAddTransient<TJob>();
+        services.AddSingleton(new JobDescriptor(typeof(TJob), cron, interval));
         return services;
     }
 
