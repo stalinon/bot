@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
+    <ProjectReference Include="..\Bot.Core\Bot.Core.csproj" />
+    <ProjectReference Include="..\Bot.Scheduler\Bot.Scheduler.csproj" />
   </ItemGroup>
 
 </Project>
