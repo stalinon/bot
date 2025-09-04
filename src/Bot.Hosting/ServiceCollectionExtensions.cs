@@ -123,6 +123,16 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    ///     Использовать распределённые локи.
+    /// </summary>
+    /// <param name="provider">Провайдер локов.</param>
+    public static IServiceCollection UseDistributedLock(this IServiceCollection services, IDistributedLock provider)
+    {
+        services.AddSingleton<IDistributedLock>(provider);
+        return services;
+    }
+
+    /// <summary>
     ///     Использовать хранилище состояний.
     /// </summary>
     public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStore store)
