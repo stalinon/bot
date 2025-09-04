@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +18,10 @@ public sealed class CollectingLoggerProvider : ILoggerProvider, ISupportExternal
     public IEnumerable<LogEntry> Logs => _logs;
 
     /// <inheritdoc />
-    public ILogger CreateLogger(string categoryName) => new Logger(_logs, _scopeProvider);
+    public ILogger CreateLogger(string categoryName)
+    {
+        return new Logger(_logs, _scopeProvider);
+    }
 
     /// <inheritdoc />
     public void Dispose()
@@ -27,7 +29,10 @@ public sealed class CollectingLoggerProvider : ILoggerProvider, ISupportExternal
     }
 
     /// <inheritdoc />
-    public void SetScopeProvider(IExternalScopeProvider scopeProvider) => _scopeProvider = scopeProvider;
+    public void SetScopeProvider(IExternalScopeProvider scopeProvider)
+    {
+        _scopeProvider = scopeProvider;
+    }
 
     private sealed class Logger : ILogger
     {
@@ -41,13 +46,20 @@ public sealed class CollectingLoggerProvider : ILoggerProvider, ISupportExternal
         }
 
         /// <inheritdoc />
-        public IDisposable BeginScope<TState>(TState state) where TState : notnull => _scopes.Push(state);
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        {
+            return _scopes.Push(state);
+        }
 
         /// <inheritdoc />
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
 
         /// <inheritdoc />
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
         {
             var scopeValues = new Dictionary<string, object?>();
             _scopes.ForEachScope((scope, dict) =>

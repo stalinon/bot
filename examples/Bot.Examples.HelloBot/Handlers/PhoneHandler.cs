@@ -16,7 +16,8 @@ namespace Bot.Examples.HelloBot.Handlers;
 /// </remarks>
 [Command("/phone")]
 [TextMatch("^.+$")]
-public sealed class PhoneHandler(ISceneNavigator navigator, PhoneScene scene, IFallbackHandler fallback) : IUpdateHandler
+public sealed class PhoneHandler(ISceneNavigator navigator, PhoneScene scene, IFallbackHandler fallback)
+    : IUpdateHandler
 {
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)

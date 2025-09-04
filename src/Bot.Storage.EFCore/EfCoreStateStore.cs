@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 
 using Bot.Abstractions.Contracts;
@@ -19,8 +17,8 @@ namespace Bot.Storage.EFCore;
 /// </remarks>
 public sealed class EfCoreStateStore : IStateStore
 {
-    private readonly StateContext _db;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private readonly StateContext _db;
 
     /// <summary>
     ///     Создаёт EF Core хранилище
@@ -41,12 +39,14 @@ public sealed class EfCoreStateStore : IStateStore
         {
             return default;
         }
+
         if (entity.TtlUtc is { } exp && exp <= DateTimeOffset.UtcNow)
         {
             _db.States.Remove(entity);
             await _db.SaveChangesAsync(ct).ConfigureAwait(false);
             return default;
         }
+
         return JsonSerializer.Deserialize<T>(entity.Value, Json);
     }
 
@@ -60,6 +60,7 @@ public sealed class EfCoreStateStore : IStateStore
             entity = new StateEntry { Scope = scope, Key = key, Value = string.Empty };
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
+
         entity.Value = JsonSerializer.Serialize(value, Json);
         entity.UpdatedUtc = DateTimeOffset.UtcNow;
         entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
@@ -76,6 +77,7 @@ public sealed class EfCoreStateStore : IStateStore
         {
             return false;
         }
+
         _db.States.Remove(entity);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
@@ -96,6 +98,7 @@ public sealed class EfCoreStateStore : IStateStore
         {
             entity.Value = "0";
         }
+
         current = long.Parse(entity.Value) + value;
         entity.Value = current.ToString();
         entity.UpdatedUtc = DateTimeOffset.UtcNow;
@@ -106,7 +109,8 @@ public sealed class EfCoreStateStore : IStateStore
     }
 
     /// <inheritdoc />
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);
@@ -114,11 +118,13 @@ public sealed class EfCoreStateStore : IStateStore
         {
             return false;
         }
+
         if (entity is null)
         {
             entity = new StateEntry { Scope = scope, Key = key, Value = string.Empty };
             await _db.States.AddAsync(entity, ct).ConfigureAwait(false);
         }
+
         entity.Value = JsonSerializer.Serialize(value, Json);
         entity.UpdatedUtc = DateTimeOffset.UtcNow;
         entity.TtlUtc = ttl.HasValue ? DateTimeOffset.UtcNow.Add(ttl.Value) : null;
@@ -131,7 +137,8 @@ public sealed class EfCoreStateStore : IStateStore
     ///     Установить значение, если текущее совпадает с ожидаемым.
     /// </summary>
     /// <inheritdoc />
-    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var entity = await _db.States.FindAsync(new object?[] { scope, key }, ct).ConfigureAwait(false);

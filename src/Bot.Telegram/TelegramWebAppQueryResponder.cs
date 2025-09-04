@@ -20,8 +20,8 @@ namespace Bot.Telegram;
 /// </remarks>
 public sealed class TelegramWebAppQueryResponder : IWebAppQueryResponder
 {
-    private readonly ITelegramBotClient _client;
     private readonly IMemoryCache _cache;
+    private readonly ITelegramBotClient _client;
     private readonly ILogger<TelegramWebAppQueryResponder> _logger;
     private readonly TimeSpan _ttl;
 
@@ -50,7 +50,7 @@ public sealed class TelegramWebAppQueryResponder : IWebAppQueryResponder
             ct.ThrowIfCancellationRequested();
             var content = new InputTextMessageContent(text);
             var article = new InlineQueryResultArticle(queryId, text, content);
-            await _client.AnswerWebAppQuery(queryId, article, cancellationToken: ct);
+            await _client.AnswerWebAppQuery(queryId, article, ct);
             _cache.Set(queryId, true, _ttl);
             return true;
         }
@@ -78,7 +78,7 @@ public sealed class TelegramWebAppQueryResponder : IWebAppQueryResponder
         {
             ct.ThrowIfCancellationRequested();
             var photo = new InlineQueryResultPhoto(queryId, url, url);
-            await _client.AnswerWebAppQuery(queryId, photo, cancellationToken: ct);
+            await _client.AnswerWebAppQuery(queryId, photo, ct);
             _cache.Set(queryId, true, _ttl);
             return true;
         }
@@ -95,7 +95,8 @@ public sealed class TelegramWebAppQueryResponder : IWebAppQueryResponder
     }
 
     /// <inheritdoc />
-    public async Task<bool> RespondWithButtonAsync(string queryId, string text, string buttonText, string buttonUrl, CancellationToken ct)
+    public async Task<bool> RespondWithButtonAsync(string queryId, string text, string buttonText, string buttonUrl,
+        CancellationToken ct)
     {
         if (_cache.TryGetValue(queryId, out _))
         {
@@ -109,9 +110,9 @@ public sealed class TelegramWebAppQueryResponder : IWebAppQueryResponder
             var markup = new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(buttonText, buttonUrl));
             var article = new InlineQueryResultArticle(queryId, text, content)
             {
-                ReplyMarkup = markup,
+                ReplyMarkup = markup
             };
-            await _client.AnswerWebAppQuery(queryId, article, cancellationToken: ct);
+            await _client.AnswerWebAppQuery(queryId, article, ct);
             _cache.Set(queryId, true, _ttl);
             return true;
         }

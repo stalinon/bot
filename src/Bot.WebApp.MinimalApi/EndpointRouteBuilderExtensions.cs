@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -10,12 +7,7 @@ using System.Text.Json.Serialization;
 
 using Bot.Abstractions.Contracts;
 using Bot.Core.Stats;
-using Bot.Telegram;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -32,6 +24,11 @@ namespace Bot.WebApp.MinimalApi;
 /// </remarks>
 public static class EndpointRouteBuilderExtensions
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
     /// <summary>
     ///     Подключить эндпоинт авторизации Web App.
     /// </summary>
@@ -47,21 +44,13 @@ public static class EndpointRouteBuilderExtensions
         {
             var logger = loggerFactory.CreateLogger("WebAppAuth");
             var sw = Stopwatch.StartNew();
-            long userId = 0;
 
             IResult LogAndReturn(IResult result)
             {
                 stats.MarkAuth(sw.ElapsedMilliseconds);
-                var status = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
+                _ = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
                 logger.LogInformation(
-                    "webapp auth",
-                    new Dictionary<string, object?>
-                    {
-                        ["webapp_user_id"] = userId,
-                        ["source"] = "miniapp",
-                        ["latency_ms"] = sw.ElapsedMilliseconds,
-                        ["result"] = status
-                    });
+                    "webapp auth");
                 return result;
             }
 
@@ -95,7 +84,6 @@ public static class EndpointRouteBuilderExtensions
                 return LogAndReturn(Results.StatusCode(StatusCodes.Status400BadRequest));
             }
 
-            userId = user.Id;
             var now = DateTimeOffset.UtcNow;
             var claims = new[]
             {
@@ -130,21 +118,13 @@ public static class EndpointRouteBuilderExtensions
         {
             var logger = loggerFactory.CreateLogger("WebAppMe");
             var sw = Stopwatch.StartNew();
-            long userId = 0;
 
             IResult LogAndReturn(IResult result)
             {
                 stats.MarkMe(sw.ElapsedMilliseconds);
-                var status = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
+                _ = result is IStatusCodeHttpResult sc ? sc.StatusCode : StatusCodes.Status200OK;
                 logger.LogInformation(
-                    "webapp me",
-                    new Dictionary<string, object?>
-                    {
-                        ["webapp_user_id"] = userId,
-                        ["source"] = "miniapp",
-                        ["latency_ms"] = sw.ElapsedMilliseconds,
-                        ["result"] = status
-                    });
+                    "webapp me");
                 return result;
             }
 
@@ -184,7 +164,7 @@ public static class EndpointRouteBuilderExtensions
                     return LogAndReturn(Results.StatusCode(StatusCodes.Status401Unauthorized));
                 }
 
-                userId = long.Parse(sub);
+                var userId = long.Parse(sub);
                 return LogAndReturn(Results.Json(new
                 {
                     id = userId,
@@ -202,12 +182,11 @@ public static class EndpointRouteBuilderExtensions
         return endpoints;
     }
 
-    private sealed record UserPayload(long Id, string? Username, [property: JsonPropertyName("language_code")] string? LanguageCode);
+    private sealed record UserPayload(
+        long Id,
+        string? Username,
+        [property: JsonPropertyName("language_code")]
+        string? LanguageCode);
 
     private sealed record AuthRequest(string InitData);
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
 }

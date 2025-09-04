@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions.Contracts;
 
 using StackExchange.Redis;
@@ -46,6 +42,8 @@ public sealed class RedisDistributedLock : IDistributedLock
         await _db.KeyDeleteAsync(MakeKey(key)).ConfigureAwait(false);
     }
 
-    private string MakeKey(string key) => string.IsNullOrEmpty(_prefix) ? key : $"{_prefix}:{key}";
+    private string MakeKey(string key)
+    {
+        return string.IsNullOrEmpty(_prefix) ? key : $"{_prefix}:{key}";
+    }
 }
-

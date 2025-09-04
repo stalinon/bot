@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.IO;
-using System.Threading.Tasks;
 
 using Bot.Abstractions;
-using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
@@ -19,7 +14,6 @@ using Bot.Hosting.Options;
 using Bot.TestKit;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
@@ -49,7 +43,8 @@ public class PipelineIntegrationTests
         services.AddLogging();
         services.AddSingleton<IMeterFactory, DummyMeterFactory>();
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
-        services.AddSingleton(new RateLimitOptions { PerUserPerMinute = 100, PerChatPerMinute = 100, Mode = RateLimitMode.Soft });
+        services.AddSingleton(new RateLimitOptions
+            { PerUserPerMinute = 100, PerChatPerMinute = 100, Mode = RateLimitMode.Soft });
         services.AddSingleton<ITransportClient, FakeTransportClient>();
         services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();
@@ -67,7 +62,8 @@ public class PipelineIntegrationTests
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(Array.Empty<Action<IUpdatePipeline>>());
         services.AddSingleton<IUpdateSource>(new JsonUpdateSource(updatePath));
-        services.AddSingleton<ILogger<BotHostedService>>(sp => sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
+        services.AddSingleton<ILogger<BotHostedService>>(sp =>
+            sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
         services.AddOptions<BotOptions>();
 
         var sp = services.BuildServiceProvider();
@@ -99,14 +95,20 @@ public class PipelineIntegrationTests
     private sealed class DummyMeterFactory : IMeterFactory
     {
         /// <inheritdoc />
-        public Meter Create(string name, string? version = null) => this.Create(new MeterOptions(name) { Version = version });
-
-        /// <inheritdoc />
-        public Meter Create(MeterOptions options) => new(options.Name, options.Version);
+        public Meter Create(MeterOptions options)
+        {
+            return new Meter(options.Name, options.Version);
+        }
 
         /// <inheritdoc />
         public void Dispose()
         {
+        }
+
+        /// <inheritdoc />
+        public Meter Create(string name, string? version = null)
+        {
+            return Create(new MeterOptions(name) { Version = version });
         }
     }
 }

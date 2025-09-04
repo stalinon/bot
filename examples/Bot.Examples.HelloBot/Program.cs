@@ -1,7 +1,4 @@
-using System;
-
 using Bot.Abstractions.Contracts;
-using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Scenes;
 using Bot.Examples.HelloBot.Scenes;
@@ -16,7 +13,7 @@ using Microsoft.Extensions.Hosting;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.json", false)
     .AddEnvironmentVariables();
 
 var cfg = builder.Configuration;

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Bot.Core.Stats;
 
 /// <summary>
@@ -23,4 +21,3 @@ public sealed record Snapshot(
     long DroppedUpdates,
     long RateLimited,
     int QueueDepth);
-

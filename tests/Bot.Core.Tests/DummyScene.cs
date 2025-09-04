@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 
@@ -23,11 +21,20 @@ public sealed class DummyScene : IScene
     public string Name { get; }
 
     /// <inheritdoc />
-    public Task<bool> CanEnter(UpdateContext ctx) => Task.FromResult(true);
+    public Task<bool> CanEnter(UpdateContext ctx)
+    {
+        return Task.FromResult(true);
+    }
 
     /// <inheritdoc />
-    public Task OnEnter(UpdateContext ctx) => Task.CompletedTask;
+    public Task OnEnter(UpdateContext ctx)
+    {
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
-    public Task OnUpdate(UpdateContext ctx) => Task.CompletedTask;
+    public Task OnUpdate(UpdateContext ctx)
+    {
+        return Task.CompletedTask;
+    }
 }

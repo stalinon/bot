@@ -1,8 +1,5 @@
 using Bot.Core.Stats;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Bot.Admin.MinimalApi;
 
 /// <summary>
@@ -25,4 +22,3 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
-

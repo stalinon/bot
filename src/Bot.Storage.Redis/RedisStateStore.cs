@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 using Bot.Abstractions.Contracts;
@@ -19,8 +18,8 @@ namespace Bot.Storage.Redis;
 public sealed class RedisStateStore : IStateStore
 {
     private readonly IDatabase _db;
-    private readonly string _prefix;
     private readonly JsonSerializerOptions _json;
+    private readonly string _prefix;
 
     /// <summary>
     ///     Создаёт хранилище Redis.
@@ -42,6 +41,7 @@ public sealed class RedisStateStore : IStateStore
         {
             return default;
         }
+
         return JsonSerializer.Deserialize<T>(val!, _json);
     }
 
@@ -76,7 +76,8 @@ return val";
     }
 
     /// <inheritdoc />
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         const string script = @"if redis.call('EXISTS', KEYS[1]) == 0 then
@@ -98,7 +99,8 @@ return 0";
     ///     Установить значение, если текущее совпадает с ожидаемым.
     /// </summary>
     /// <inheritdoc />
-    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         const string script = @"local cur = redis.call('GET', KEYS[1])
@@ -118,7 +120,10 @@ return 0";
         return (int)result == 1;
     }
 
-    private string MakeKey(string scope, string key) => string.IsNullOrEmpty(_prefix)
-        ? $"{scope}:{key}"
-        : $"{_prefix}:{scope}:{key}";
+    private string MakeKey(string scope, string key)
+    {
+        return string.IsNullOrEmpty(_prefix)
+            ? $"{scope}:{key}"
+            : $"{_prefix}:{scope}:{key}";
+    }
 }

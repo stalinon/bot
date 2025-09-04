@@ -24,7 +24,7 @@ public sealed class TelegramBotUi(ITelegramBotClient client) : IBotUi
     {
         ct.ThrowIfCancellationRequested();
         var button = new MenuButtonWebApp { Text = text, WebApp = new WebAppInfo { Url = url } };
-        return client.SetChatMenuButton(chat.Id, button, cancellationToken: ct);
+        return client.SetChatMenuButton(chat.Id, button, ct);
     }
 
     /// <inheritdoc />
@@ -41,7 +41,7 @@ public sealed class TelegramBotUi(ITelegramBotClient client) : IBotUi
         ct.ThrowIfCancellationRequested();
         var markup = new ReplyKeyboardMarkup(KeyboardButton.WithWebApp(text, new WebAppInfo { Url = url }))
         {
-            ResizeKeyboard = true,
+            ResizeKeyboard = true
         };
         return client.SendMessage(chat.Id, text, replyMarkup: markup, cancellationToken: ct);
     }

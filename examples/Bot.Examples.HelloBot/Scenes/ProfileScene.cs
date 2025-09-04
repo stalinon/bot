@@ -1,5 +1,3 @@
-using System;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Scenes;
@@ -42,11 +40,20 @@ public sealed class ProfileScene : IScene
     public string Name => _scene.Name;
 
     /// <inheritdoc />
-    public Task<bool> CanEnter(UpdateContext ctx) => _scene.CanEnter(ctx);
+    public Task<bool> CanEnter(UpdateContext ctx)
+    {
+        return _scene.CanEnter(ctx);
+    }
 
     /// <inheritdoc />
-    public Task OnEnter(UpdateContext ctx) => _scene.OnEnter(ctx);
+    public Task OnEnter(UpdateContext ctx)
+    {
+        return _scene.OnEnter(ctx);
+    }
 
     /// <inheritdoc />
-    public Task OnUpdate(UpdateContext ctx) => _scene.OnUpdate(ctx);
+    public Task OnUpdate(UpdateContext ctx)
+    {
+        return _scene.OnUpdate(ctx);
+    }
 }

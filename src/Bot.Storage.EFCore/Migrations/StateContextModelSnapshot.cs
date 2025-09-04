@@ -1,8 +1,5 @@
-using System;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Bot.Storage.EFCore.Migrations;
 
@@ -10,7 +7,7 @@ namespace Bot.Storage.EFCore.Migrations;
 ///     Снимок модели для миграций
 /// </summary>
 [DbContext(typeof(StateContext))]
-public partial class StateContextModelSnapshot : ModelSnapshot
+public class StateContextModelSnapshot : ModelSnapshot
 {
     /// <inheritdoc />
     protected override void BuildModel(ModelBuilder modelBuilder)

@@ -8,13 +8,13 @@ using Telegram.Bot.Types;
 namespace Bot.Telegram;
 
 /// <summary>
-///	Сервис управления меню чата.
+///     Сервис управления меню чата.
 /// </summary>
 /// <remarks>
-///	<list type="number">
-///	    <item>Кэширует текущие настройки.</item>
-///	    <item>Устанавливает или обновляет кнопку Web App через API Telegram.</item>
-///	</list>
+///     <list type="number">
+///         <item>Кэширует текущие настройки.</item>
+///         <item>Устанавливает или обновляет кнопку Web App через API Telegram.</item>
+///     </list>
 /// </remarks>
 public sealed class ChatMenuService(ITelegramBotClient client) : IChatMenuService
 {
@@ -31,8 +31,7 @@ public sealed class ChatMenuService(ITelegramBotClient client) : IChatMenuServic
         }
 
         var button = new MenuButtonWebApp { Text = text, WebApp = new WebAppInfo { Url = url } };
-        await client.SetChatMenuButton(chat.Id, button, cancellationToken: ct);
+        await client.SetChatMenuButton(chat.Id, button, ct);
         _cache[chat.Id] = desired;
     }
 }
-

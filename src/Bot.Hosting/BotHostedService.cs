@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Channels;
 
 using Bot.Abstractions;
@@ -26,12 +24,12 @@ public sealed class BotHostedService(
     IOptions<BotOptions> options)
     : IHostedService
 {
+    private readonly BotOptions _options = options.Value;
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
+    private CancellationTokenSource? _cts;
     private Task? _processing;
     private Task? _writing;
-    private CancellationTokenSource? _cts;
-    private readonly BotOptions _options = options.Value;
 
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)

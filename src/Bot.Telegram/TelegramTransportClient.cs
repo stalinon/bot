@@ -51,22 +51,25 @@ public sealed class TelegramTransportClient(ITelegramBotClient client) : ITransp
     public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        return client.DeleteMessage(chat.Id, (int)messageId, cancellationToken: ct);
+        return client.DeleteMessage(chat.Id, (int)messageId, ct);
     }
 
-    private static global::Telegram.Bot.Types.Enums.ChatAction Map(ChatAction action) => action switch
+    private static global::Telegram.Bot.Types.Enums.ChatAction Map(ChatAction action)
     {
-        ChatAction.Typing => global::Telegram.Bot.Types.Enums.ChatAction.Typing,
-        ChatAction.UploadPhoto => global::Telegram.Bot.Types.Enums.ChatAction.UploadPhoto,
-        ChatAction.RecordVideo => global::Telegram.Bot.Types.Enums.ChatAction.RecordVideo,
-        ChatAction.UploadVideo => global::Telegram.Bot.Types.Enums.ChatAction.UploadVideo,
-        ChatAction.RecordVoice => global::Telegram.Bot.Types.Enums.ChatAction.RecordVoice,
-        ChatAction.UploadVoice => global::Telegram.Bot.Types.Enums.ChatAction.UploadVoice,
-        ChatAction.UploadDocument => global::Telegram.Bot.Types.Enums.ChatAction.UploadDocument,
-        ChatAction.FindLocation => global::Telegram.Bot.Types.Enums.ChatAction.FindLocation,
-        ChatAction.RecordVideoNote => global::Telegram.Bot.Types.Enums.ChatAction.RecordVideoNote,
-        ChatAction.UploadVideoNote => global::Telegram.Bot.Types.Enums.ChatAction.UploadVideoNote,
-        ChatAction.ChooseSticker => global::Telegram.Bot.Types.Enums.ChatAction.ChooseSticker,
-        _ => global::Telegram.Bot.Types.Enums.ChatAction.Typing,
-    };
+        return action switch
+        {
+            ChatAction.Typing => global::Telegram.Bot.Types.Enums.ChatAction.Typing,
+            ChatAction.UploadPhoto => global::Telegram.Bot.Types.Enums.ChatAction.UploadPhoto,
+            ChatAction.RecordVideo => global::Telegram.Bot.Types.Enums.ChatAction.RecordVideo,
+            ChatAction.UploadVideo => global::Telegram.Bot.Types.Enums.ChatAction.UploadVideo,
+            ChatAction.RecordVoice => global::Telegram.Bot.Types.Enums.ChatAction.RecordVoice,
+            ChatAction.UploadVoice => global::Telegram.Bot.Types.Enums.ChatAction.UploadVoice,
+            ChatAction.UploadDocument => global::Telegram.Bot.Types.Enums.ChatAction.UploadDocument,
+            ChatAction.FindLocation => global::Telegram.Bot.Types.Enums.ChatAction.FindLocation,
+            ChatAction.RecordVideoNote => global::Telegram.Bot.Types.Enums.ChatAction.RecordVideoNote,
+            ChatAction.UploadVideoNote => global::Telegram.Bot.Types.Enums.ChatAction.UploadVideoNote,
+            ChatAction.ChooseSticker => global::Telegram.Bot.Types.Enums.ChatAction.ChooseSticker,
+            _ => global::Telegram.Bot.Types.Enums.ChatAction.Typing
+        };
+    }
 }

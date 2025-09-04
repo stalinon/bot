@@ -2,8 +2,13 @@
   {
     "Transport": "test",
     "UpdateId": "1",
-    "Chat": { "Id": 1, "Type": "private" },
-    "User": { "Id": 1 },
+    "Chat": {
+      "Id": 1,
+      "Type": "private"
+    },
+    "User": {
+      "Id": 1
+    },
     "Text": "/ping"
   }
 ]

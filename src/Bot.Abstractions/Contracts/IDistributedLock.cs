@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Bot.Abstractions.Contracts;
 
 /// <summary>
@@ -30,4 +26,3 @@ public interface IDistributedLock
     /// <param name="ct">Токен отмены.</param>
     Task ReleaseAsync(string key, CancellationToken ct);
 }
-

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 
 using Bot.Abstractions;
@@ -18,18 +17,24 @@ namespace Bot.Core.Middlewares;
 ///         <item>Учитывает ограниченные обновления в статистике.</item>
 ///     </list>
 /// </remarks>
-public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClient tx, StatsCollector stats, IStateStore? store = null) : IUpdateMiddleware
+public sealed class RateLimitMiddleware(
+    RateLimitOptions options,
+    ITransportClient tx,
+    StatsCollector stats,
+    IStateStore? store = null) : IUpdateMiddleware
 {
-    private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _chat = new();
     private readonly IStateStore? _store = store;
+    private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
 
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var now = DateTimeOffset.UtcNow;
-        if (!await CheckAsync(_user, ctx.User.Id, options.PerUserPerMinute, now, "ratelimit:user", ctx.CancellationToken) ||
-            !await CheckAsync(_chat, ctx.Chat.Id, options.PerChatPerMinute, now, "ratelimit:chat", ctx.CancellationToken))
+        if (!await CheckAsync(_user, ctx.User.Id, options.PerUserPerMinute, now, "ratelimit:user",
+                ctx.CancellationToken) ||
+            !await CheckAsync(_chat, ctx.Chat.Id, options.PerChatPerMinute, now, "ratelimit:chat",
+                ctx.CancellationToken))
         {
             stats.MarkRateLimited();
             if (options.Mode == RateLimitMode.Soft)
@@ -43,7 +48,8 @@ public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClie
         await next(ctx);
     }
 
-    private async Task<bool> CheckAsync(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit, DateTimeOffset now, string scope, CancellationToken ct)
+    private async Task<bool> CheckAsync(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
+        DateTimeOffset now, string scope, CancellationToken ct)
     {
         if (options.UseStateStore && _store is not null)
         {
@@ -54,7 +60,8 @@ public sealed class RateLimitMiddleware(RateLimitOptions options, ITransportClie
         return Check(dict, key, limit, now, options.Window);
     }
 
-    private static bool Check(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit, DateTimeOffset now, TimeSpan window)
+    private static bool Check(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
+        DateTimeOffset now, TimeSpan window)
     {
         var q = dict.GetOrAdd(key, _ => new Queue<DateTimeOffset>());
         lock (q)

@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -72,6 +69,9 @@ public sealed class RouterMiddlewareTests
     [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
     }
 }

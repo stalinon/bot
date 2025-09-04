@@ -28,29 +28,13 @@ public sealed class TelegramWebhookSource(
     StatsCollector stats)
     : IUpdateSource
 {
+    private readonly BotOptions _options = options.Value;
+
     private readonly Channel<Update> _updates = Channel.CreateBounded<Update>(
         new BoundedChannelOptions(options.Value.Transport.Webhook.QueueCapacity)
         {
             FullMode = BoundedChannelFullMode.Wait
         });
-
-    private readonly BotOptions _options = options.Value;
-
-    /// <summary>
-    ///     Попытаться поместить обновление в очередь
-    /// </summary>
-    /// <returns><c>true</c>, если помещено успешно</returns>
-    public bool TryEnqueue(Update update)
-    {
-        var written = _updates.Writer.TryWrite(update);
-        stats.SetQueueDepth(_updates.Reader.Count);
-        if (!written)
-        {
-            stats.MarkDroppedUpdate();
-        }
-
-        return written;
-    }
 
     /// <summary>
     ///     Читает очередь и передает обновления в обработчик
@@ -73,5 +57,21 @@ public sealed class TelegramWebhookSource(
 
             stats.SetQueueDepth(_updates.Reader.Count);
         }
+    }
+
+    /// <summary>
+    ///     Попытаться поместить обновление в очередь
+    /// </summary>
+    /// <returns><c>true</c>, если помещено успешно</returns>
+    public bool TryEnqueue(Update update)
+    {
+        var written = _updates.Writer.TryWrite(update);
+        stats.SetQueueDepth(_updates.Reader.Count);
+        if (!written)
+        {
+            stats.MarkDroppedUpdate();
+        }
+
+        return written;
     }
 }

@@ -1,8 +1,4 @@
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
@@ -31,31 +27,31 @@ public sealed class JsonUpdateSource(string path) : IUpdateSource
         {
             ct.ThrowIfCancellationRequested();
             var ctx = new UpdateContext(
-                Transport: u.Transport ?? "test",
-                UpdateId: u.UpdateId ?? string.Empty,
-                Chat: u.Chat ?? new ChatAddress(0),
-                User: u.User ?? new UserAddress(0),
-                Text: u.Text,
-                Command: u.Command,
-                Args: u.Args,
-                Payload: u.Payload,
-                Items: u.Items ?? new Dictionary<string, object>(),
-                Services: null!,
-                CancellationToken: default);
+                u.Transport ?? "test",
+                u.UpdateId ?? string.Empty,
+                u.Chat ?? new ChatAddress(0),
+                u.User ?? new UserAddress(0),
+                u.Text,
+                u.Command,
+                u.Args,
+                u.Payload,
+                u.Items ?? new Dictionary<string, object>(),
+                null!,
+                default);
             await onUpdate(ctx);
         }
     }
 
     private sealed class JsonUpdate
     {
-        public string? Transport { get; set; }
-        public string? UpdateId { get; set; }
-        public ChatAddress? Chat { get; set; }
-        public UserAddress? User { get; set; }
-        public string? Text { get; set; }
-        public string? Command { get; set; }
-        public string[]? Args { get; set; }
-        public string? Payload { get; set; }
-        public Dictionary<string, object>? Items { get; set; }
+        public string? Transport { get; }
+        public string? UpdateId { get; }
+        public ChatAddress? Chat { get; }
+        public UserAddress? User { get; }
+        public string? Text { get; }
+        public string? Command { get; }
+        public string[]? Args { get; }
+        public string? Payload { get; }
+        public Dictionary<string, object>? Items { get; }
     }
 }

@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 
 using Bot.Core.Metrics;
 using Bot.Core.Middlewares;
-
-using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Stats;
 
@@ -22,10 +18,10 @@ namespace Bot.Core.Stats;
 /// </remarks>
 public sealed class CustomStats
 {
-    private readonly ConcurrentDictionary<string, long> _counters = new();
-    private readonly ConcurrentDictionary<string, List<double>> _histograms = new();
     private readonly ConcurrentDictionary<string, Counter<long>> _counterInstruments = new();
+    private readonly ConcurrentDictionary<string, long> _counters = new();
     private readonly ConcurrentDictionary<string, Histogram<double>> _histogramInstruments = new();
+    private readonly ConcurrentDictionary<string, List<double>> _histograms = new();
     private readonly Meter? _meter;
 
     /// <summary>
@@ -49,7 +45,7 @@ public sealed class CustomStats
     {
         if (_meter is not null)
         {
-            var counter = _counterInstruments.GetOrAdd(name, n => _meter.CreateCounter<long>(n, unit: "count"));
+            var counter = _counterInstruments.GetOrAdd(name, n => _meter.CreateCounter<long>(n, "count"));
             counter.Add(value);
         }
 
@@ -144,4 +140,3 @@ public sealed record CustomStatsSnapshot(
 ///     Перцентили гистограммы.
 /// </summary>
 public sealed record HistogramStat(double P50, double P95, double P99);
-

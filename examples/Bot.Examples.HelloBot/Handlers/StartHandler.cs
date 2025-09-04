@@ -12,5 +12,7 @@ public sealed class StartHandler(ITransportClient tx) : IUpdateHandler
 {
     /// <inheritdoc />
     public Task HandleAsync(UpdateContext ctx)
-        => tx.SendTextAsync(ctx.Chat, "привет. я живой. напиши /ping", ctx.CancellationToken);
+    {
+        return tx.SendTextAsync(ctx.Chat, "привет. я живой. напиши /ping", ctx.CancellationToken);
+    }
 }

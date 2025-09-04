@@ -4,10 +4,10 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj" />
-    <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj" />
+    <ProjectReference Include="..\Bot.Telegram\Bot.Telegram.csproj"/>
+    <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1"/>
   </ItemGroup>
 </Project>

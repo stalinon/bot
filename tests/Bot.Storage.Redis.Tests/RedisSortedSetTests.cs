@@ -1,8 +1,7 @@
-using System.Threading;
-using System.Threading.Tasks;
-
 using FluentAssertions;
+
 using StackExchange.Redis;
+
 using Xunit;
 
 namespace Bot.Storage.Redis.Tests;
@@ -102,4 +101,3 @@ public sealed class RedisSortedSetTests
         removed.Should().BeFalse();
     }
 }
-

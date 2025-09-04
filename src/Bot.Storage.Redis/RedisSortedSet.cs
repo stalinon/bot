@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 using StackExchange.Redis;
 
@@ -19,8 +16,8 @@ namespace Bot.Storage.Redis;
 public sealed class RedisSortedSet<T>
 {
     private readonly IDatabase _db;
-    private readonly string _prefix;
     private readonly JsonSerializerOptions _json;
+    private readonly string _prefix;
 
     /// <summary>
     ///     Создаёт отсортированное множество Redis.
@@ -78,6 +75,8 @@ public sealed class RedisSortedSet<T>
         return result;
     }
 
-    private string MakeKey(string key) => string.IsNullOrEmpty(_prefix) ? key : $"{_prefix}:{key}";
+    private string MakeKey(string key)
+    {
+        return string.IsNullOrEmpty(_prefix) ? key : $"{_prefix}:{key}";
+    }
 }
-

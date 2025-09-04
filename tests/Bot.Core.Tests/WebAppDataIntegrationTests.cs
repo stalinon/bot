@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -40,17 +37,17 @@ public sealed class WebAppDataIntegrationTests
             [UpdateItems.WebAppData] = true
         };
         var ctx = new UpdateContext(
-            Transport: "telegram",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(3),
-            Text: "btn",
-            Command: null,
-            Args: null,
-            Payload: "42",
-            Items: items,
-            Services: null!,
-            CancellationToken: default);
+            "telegram",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(3),
+            "btn",
+            null,
+            null,
+            "42",
+            items,
+            null!,
+            default);
         var handled = false;
         var services = new ServiceCollection();
         services.AddSingleton(new StatsCollector());

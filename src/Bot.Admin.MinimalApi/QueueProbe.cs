@@ -29,4 +29,3 @@ internal sealed class QueueProbe(StatsCollector stats) : IHealthProbe
         return Task.CompletedTask;
     }
 }
-

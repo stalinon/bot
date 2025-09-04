@@ -75,7 +75,7 @@ public sealed class WebhookIntegrationTests
         var resp = await client.PostAsJsonAsync("/tg/s", new Update
         {
             Id = 1,
-            Message = new()
+            Message = new Message
             {
                 Chat = new Chat { Id = 1, Type = ChatType.Private },
                 From = new User { Username = "", LanguageCode = "" }
@@ -89,4 +89,3 @@ public sealed class WebhookIntegrationTests
         cts.Cancel();
     }
 }
-

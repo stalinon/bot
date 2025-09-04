@@ -1,4 +1,3 @@
-using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 
 namespace Bot.Abstractions.Contracts;

@@ -1,12 +1,9 @@
-namespace Bot.Core.Scenes;
-
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+
+namespace Bot.Core.Scenes;
 
 /// <summary>
 ///     Построитель сценариев пошагового мастера.
@@ -74,8 +71,8 @@ public sealed class WizardSceneBuilder
     {
         private readonly ITransportClient _client;
         private readonly ISceneNavigator _navigator;
-        private readonly IReadOnlyList<WizardStep> _steps;
         private readonly Func<UpdateContext, IReadOnlyDictionary<int, string>, Task> _onFinish;
+        private readonly IReadOnlyList<WizardStep> _steps;
 
         public WizardScene(
             string name,
@@ -95,7 +92,10 @@ public sealed class WizardSceneBuilder
         public string Name { get; }
 
         /// <inheritdoc />
-        public Task<bool> CanEnter(UpdateContext ctx) => Task.FromResult(true);
+        public Task<bool> CanEnter(UpdateContext ctx)
+        {
+            return Task.FromResult(true);
+        }
 
         /// <inheritdoc />
         public async Task OnEnter(UpdateContext ctx)

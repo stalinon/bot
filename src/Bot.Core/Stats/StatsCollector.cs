@@ -1,14 +1,9 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Threading;
 
 using Bot.Core.Metrics;
 using Bot.Core.Middlewares;
-
-using Microsoft.Extensions.Diagnostics;
 
 namespace Bot.Core.Stats;
 
@@ -26,12 +21,12 @@ public sealed class StatsCollector
 {
     private readonly ConcurrentDictionary<string, HandlerData> _data = new();
     private readonly Counter<long>? _droppedCounter;
-    private readonly Counter<long>? _rateLimitedCounter;
     private readonly Histogram<double>? _handlerLatency;
     private readonly ObservableGauge<long>? _queueGauge;
+    private readonly Counter<long>? _rateLimitedCounter;
     private readonly DateTime _startTime = DateTime.UtcNow;
-    private int _queueDepth;
     private long _droppedUpdates;
+    private int _queueDepth;
     private long _rateLimited;
 
     /// <summary>
@@ -43,9 +38,9 @@ public sealed class StatsCollector
         if (meterFactory is not null)
         {
             var meter = meterFactory.Create(MetricsMiddleware.MeterName);
-            _droppedCounter = meter.CreateCounter<long>("tgbot_dropped_updates_total", unit: "count");
-            _rateLimitedCounter = meter.CreateCounter<long>("tgbot_rate_limited_total", unit: "count");
-            _handlerLatency = meter.CreateHistogram<double>("tgbot_handler_latency_ms", unit: "ms");
+            _droppedCounter = meter.CreateCounter<long>("tgbot_dropped_updates_total", "count");
+            _rateLimitedCounter = meter.CreateCounter<long>("tgbot_rate_limited_total", "count");
+            _handlerLatency = meter.CreateHistogram<double>("tgbot_handler_latency_ms", "ms");
             _queueGauge = meter.CreateObservableGauge<long>("tgbot_queue_depth", () => Volatile.Read(ref _queueDepth));
         }
     }
@@ -153,14 +148,24 @@ public sealed class StatsCollector
 
     private static double Percentile(double[] sorted, double percentile)
     {
-        if (sorted.Length == 0) return 0;
+        if (sorted.Length == 0)
+        {
+            return 0;
+        }
+
         var position = percentile * (sorted.Length + 1);
         var index = (int)Math.Floor(position) - 1;
-        if (index < 0) return sorted[0];
-        if (index >= sorted.Length - 1) return sorted[^1];
+        if (index < 0)
+        {
+            return sorted[0];
+        }
+
+        if (index >= sorted.Length - 1)
+        {
+            return sorted[^1];
+        }
+
         var fraction = position - Math.Floor(position);
         return sorted[index] + fraction * (sorted[index + 1] - sorted[index]);
     }
-
 }
-

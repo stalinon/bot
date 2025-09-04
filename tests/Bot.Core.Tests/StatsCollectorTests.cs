@@ -1,25 +1,22 @@
 using System.Diagnostics.Metrics;
-using System.Threading;
 
 using Bot.Core.Middlewares;
 using Bot.Core.Stats;
 
 using FluentAssertions;
 
-using Microsoft.Extensions.Diagnostics;
-
 using Xunit;
 
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="StatsCollector"/>.
+///     Тесты для <see cref="StatsCollector" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
 ///         <item>Проверяются перцентили и агрегированные метрики.</item>
 ///         <item>Учитываются потерянные и ограниченные обновления.</item>
-///         <item>Экспортируются метрики через <see cref="Meter"/>.</item>
+///         <item>Экспортируются метрики через <see cref="Meter" />.</item>
 ///     </list>
 /// </remarks>
 public class StatsCollectorTests
@@ -121,6 +118,7 @@ public class StatsCollectorTests
         {
             Thread.Sleep(1);
         }
+
         stats.SetQueueDepth(7);
         listener.RecordObservableInstruments();
 
@@ -134,14 +132,23 @@ public class StatsCollectorTests
     {
         private readonly Meter _meter;
 
-        public TestMeterFactory(Meter meter) => _meter = meter;
+        public TestMeterFactory(Meter meter)
+        {
+            _meter = meter;
+        }
 
-        public Meter Create(string name, string? version = null) => _meter;
-
-        public Meter Create(MeterOptions options) => _meter;
+        public Meter Create(MeterOptions options)
+        {
+            return _meter;
+        }
 
         public void Dispose()
         {
+        }
+
+        public Meter Create(string name, string? version = null)
+        {
+            return _meter;
         }
     }
 }

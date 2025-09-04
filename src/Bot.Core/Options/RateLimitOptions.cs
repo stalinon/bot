@@ -1,6 +1,5 @@
-using System;
-
 namespace Bot.Core.Options;
+
 /// <summary>
 ///     Опции ограничения ддоса
 /// </summary>

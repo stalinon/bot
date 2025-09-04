@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions.Contracts;
 
 using Cronos;
@@ -23,8 +18,8 @@ namespace Bot.Scheduler;
 /// </remarks>
 public sealed class JobScheduler : BackgroundService
 {
-    private readonly IServiceProvider _provider;
     private readonly IEnumerable<JobDescriptor> _jobs;
+    private readonly IServiceProvider _provider;
     private readonly IStateStore _store;
 
     /// <summary>

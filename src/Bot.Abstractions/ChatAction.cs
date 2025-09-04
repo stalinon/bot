@@ -58,6 +58,5 @@ public enum ChatAction
     /// <summary>
     ///     Выбирает стикер.
     /// </summary>
-    ChooseSticker,
+    ChooseSticker
 }
-

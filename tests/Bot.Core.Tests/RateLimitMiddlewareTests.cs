@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -17,7 +13,7 @@ using Xunit;
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="RateLimitMiddleware"/>.
+///     Тесты для <see cref="RateLimitMiddleware" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -45,17 +41,17 @@ public class RateLimitMiddlewareTests
         var stats = new StatsCollector();
         var mw = new RateLimitMiddleware(options, tx, stats);
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var calls = 0;
         UpdateDelegate next = _ =>
         {
@@ -87,17 +83,17 @@ public class RateLimitMiddlewareTests
         var stats = new StatsCollector();
         var mw = new RateLimitMiddleware(options, tx, stats);
         var ctx1 = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var ctx2 = ctx1 with { UpdateId = "2", User = new UserAddress(2) };
         var calls = 0;
         UpdateDelegate next = _ =>
@@ -130,17 +126,17 @@ public class RateLimitMiddlewareTests
         var stats = new StatsCollector();
         var mw = new RateLimitMiddleware(options, new DummyTransportClient(), stats);
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
 
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
@@ -167,17 +163,17 @@ public class RateLimitMiddlewareTests
         var mw1 = new RateLimitMiddleware(options, new DummyTransportClient(), stats1, store);
         var mw2 = new RateLimitMiddleware(options, new DummyTransportClient(), stats2, store);
         var ctx1 = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var ctx2 = ctx1 with { UpdateId = "2" };
         var calls = 0;
         UpdateDelegate next = _ =>
@@ -195,6 +191,9 @@ public class RateLimitMiddlewareTests
 
     private sealed class DummyServiceProvider : IServiceProvider
     {
-        public object? GetService(Type serviceType) => null;
+        public object? GetService(Type serviceType)
+        {
+            return null;
+        }
     }
 }

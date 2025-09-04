@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -13,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace Bot.Telegram;
 
 /// <summary>
-///     Реализация <see cref="IWebAppInitDataValidator"/> для Telegram Web App.
+///     Реализация <see cref="IWebAppInitDataValidator" /> для Telegram Web App.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -25,9 +22,9 @@ namespace Bot.Telegram;
 public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
 {
     private const string SecretKeyName = "WebAppData";
-    private readonly TimeSpan _ttl;
     private readonly ILogger<WebAppInitDataValidator> _logger;
     private readonly string _token;
+    private readonly TimeSpan _ttl;
 
     /// <summary>
     ///     Создать экземпляр.
@@ -65,12 +62,14 @@ public sealed class WebAppInitDataValidator : IWebAppInitDataValidator
         {
             return Fail("missing_field", "отсутствует hash", out error);
         }
+
         dict.Remove("hash");
 
         if (!dict.TryGetValue("auth_date", out var authDateRaw) || !long.TryParse(authDateRaw, out var authDateVal))
         {
             return Fail("missing_field", "отсутствует auth_date", out error);
         }
+
         var authDate = DateTimeOffset.FromUnixTimeSeconds(authDateVal);
         if (DateTimeOffset.UtcNow - authDate > _ttl)
         {

@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
 
 using Bot.Admin.MinimalApi;
 using Bot.Core.Stats;
@@ -9,7 +7,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -32,7 +29,7 @@ public class AdminAuthTests
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
                 services.AddSingleton<WebAppStatsCollector>();
-                services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
+                services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"
                 }));
@@ -62,7 +59,7 @@ public class AdminAuthTests
                 services.AddRouting();
                 services.AddSingleton<StatsCollector>();
                 services.AddSingleton<WebAppStatsCollector>();
-                services.AddSingleton<IOptions<AdminOptions>>(Microsoft.Extensions.Options.Options.Create(new AdminOptions
+                services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new AdminOptions
                 {
                     AdminToken = "secret"
                 }));

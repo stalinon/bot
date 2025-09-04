@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
+using System.Net.Http.Json;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
@@ -13,7 +9,6 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
-using Bot.Telegram;
 
 using FluentAssertions;
 
@@ -87,17 +82,17 @@ public sealed class WebAppFlowTests : IClassFixture<WebAppApiFactory>
             [UpdateItems.WebAppData] = true
         };
         var ctx = new UpdateContext(
-            Transport: "telegram",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(3),
-            Text: "btn",
-            Command: null,
-            Args: null,
-            Payload: "42",
-            Items: items,
-            Services: null!,
-            CancellationToken: default);
+            "telegram",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(3),
+            "btn",
+            null,
+            null,
+            "42",
+            items,
+            null!,
+            default);
         var handled = false;
         var services = new ServiceCollection();
         services.AddSingleton(new StatsCollector());
@@ -118,7 +113,12 @@ public sealed class WebAppFlowTests : IClassFixture<WebAppApiFactory>
     private sealed class StubValidator : IWebAppInitDataValidator
     {
         private readonly bool _result;
-        public StubValidator(bool result) => _result = result;
+
+        public StubValidator(bool result)
+        {
+            _result = result;
+        }
+
         public bool TryValidate(string initData, out string? error)
         {
             error = _result ? null : "err";
@@ -131,6 +131,7 @@ public sealed class WebAppFlowTests : IClassFixture<WebAppApiFactory>
     private sealed class TestHandler(Action onHandled) : IUpdateHandler
     {
         private readonly Action _onHandled = onHandled;
+
         public Task HandleAsync(UpdateContext ctx)
         {
             _onHandled();

@@ -1,8 +1,6 @@
-namespace Bot.Abstractions.Contracts;
-
-using System;
-
 using Bot.Abstractions.Addresses;
+
+namespace Bot.Abstractions.Contracts;
 
 /// <summary>
 ///     Состояние сцены.

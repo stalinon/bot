@@ -1,9 +1,4 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Scheduler;
-using Bot.TestKit;
 
 using FluentAssertions;
 
@@ -67,6 +62,7 @@ public sealed class FakeComponentsTests
     {
         private int _counter;
         public int Counter => _counter;
+
         public Task ExecuteAsync(CancellationToken ct)
         {
             Interlocked.Increment(ref _counter);

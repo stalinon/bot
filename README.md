@@ -25,7 +25,9 @@ For development or deployment you can adjust settings in `appsettings.json` or v
 
 ### Quickstart scripts
 
-Use `scripts/quickstart.sh` or `scripts/quickstart.ps1` to validate the template automatically. The script installs the template, runs a generated bot and checks `/start`, obtains a JWT via `/webapp/auth`, requests `/webapp/me` and sends `web_app_data` to ensure the handler responds.
+Use `scripts/quickstart.sh` or `scripts/quickstart.ps1` to validate the template automatically. The script installs the
+template, runs a generated bot and checks `/start`, obtains a JWT via `/webapp/auth`, requests `/webapp/me` and sends
+`web_app_data` to ensure the handler responds.
 
 ### Переключение хранилища
 

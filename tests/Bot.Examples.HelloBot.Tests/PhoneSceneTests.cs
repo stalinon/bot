@@ -1,5 +1,3 @@
-using System.Linq;
-
 using Bot.Core.Scenes;
 using Bot.Examples.HelloBot.Handlers;
 using Bot.Examples.HelloBot.Scenes;
@@ -22,9 +20,9 @@ namespace Bot.Examples.HelloBot.Tests;
 /// </remarks>
 public sealed class PhoneSceneTests
 {
+    private readonly FakeTransportClient _client;
     private readonly PhoneHandler _handler;
     private readonly SceneNavigator _navigator;
-    private readonly FakeTransportClient _client;
 
     /// <inheritdoc />
     public PhoneSceneTests()
@@ -72,5 +70,4 @@ public sealed class PhoneSceneTests
         var state = await _navigator.GetStateAsync(ctx);
         state.Should().BeNull();
     }
-
 }

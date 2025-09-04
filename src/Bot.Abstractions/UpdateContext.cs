@@ -21,10 +21,16 @@ public sealed record UpdateContext(
     /// <summary>
     ///     Получить
     /// </summary>
-    public T? GetItem<T>(string key) => Items.TryGetValue(key, out var v) ? (T?)v : default;
+    public T? GetItem<T>(string key)
+    {
+        return Items.TryGetValue(key, out var v) ? (T?)v : default;
+    }
 
     /// <summary>
     ///     Установить
     /// </summary>
-    public void SetItem(string key, object value) => Items[key] = value;
+    public void SetItem(string key, object value)
+    {
+        Items[key] = value;
+    }
 }

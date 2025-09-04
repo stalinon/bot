@@ -1,5 +1,3 @@
-using System;
-
 namespace Bot.WebApp.MinimalApi;
 
 /// <summary>
@@ -23,4 +21,3 @@ public sealed class WebAppAuthOptions
     /// </summary>
     public TimeSpan Lifetime { get; set; } = TimeSpan.FromMinutes(5);
 }
-

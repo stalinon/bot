@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading;
 
 using Bot.Abstractions.Contracts;
 using Bot.Storage.File.Options;
@@ -20,13 +17,13 @@ namespace Bot.Storage.File;
 /// </remarks>
 public sealed class FileStateStore : IStateStore, IAsyncDisposable
 {
-    private readonly string _basePath;
-    private readonly string[] _prefix;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private readonly string _basePath;
     private readonly ConcurrentDictionary<string, byte[]>? _buffer;
-    private readonly Timer? _flushTimer;
     private readonly Timer _cleaner;
+    private readonly Timer? _flushTimer;
     private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
+    private readonly string[] _prefix;
 
     /// <summary>
     ///     Создаёт файловое хранилище
@@ -39,11 +36,23 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
         Directory.CreateDirectory(Path.Combine(new[] { _basePath }.Concat(_prefix).ToArray()));
         if (options.BufferHotKeys)
         {
-            _buffer = new();
+            _buffer = new ConcurrentDictionary<string, byte[]>();
             _flushTimer = new Timer(Flush, null, options.FlushPeriod, options.FlushPeriod);
         }
+
         var period = options.CleanUpPeriod;
         _cleaner = new Timer(_ => CleanUpExpired(), null, period, period);
+    }
+
+    /// <summary>
+    ///     Освободить ресурсы и сбросить буфер
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Flush(null);
+        _cleaner.Dispose();
+        _flushTimer?.Dispose();
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
@@ -129,7 +138,8 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     ///     Установить значение, если текущее совпадает с ожидаемым.
     /// </summary>
     /// <inheritdoc />
-    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         var sem = _locks.GetOrAdd(PathFor(scope, key), _ => new SemaphoreSlim(1, 1));
         await sem.WaitAsync(ct);
@@ -185,7 +195,8 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     /// <summary>
     ///     Установить значение, если ключ отсутствует
     /// </summary>
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var existing = await GetAsync<T>(scope, key, ct).ConfigureAwait(false);
@@ -193,6 +204,7 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
         {
             return false;
         }
+
         await SetAsync(scope, key, value, ttl, ct).ConfigureAwait(false);
         return true;
     }
@@ -286,19 +298,24 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
         }
     }
 
-    /// <summary>
-    ///     Освободить ресурсы и сбросить буфер
-    /// </summary>
-    public ValueTask DisposeAsync()
+    private static string SanLast(string s)
     {
-        Flush(null);
-        _cleaner.Dispose();
-        _flushTimer?.Dispose();
-        return ValueTask.CompletedTask;
+        return Norm(s).Last();
     }
 
-    private static string SanLast(string s) => Norm(s).Last();
-    private static string[] Norm(string s) => s.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(San).ToArray();
-    private string MetaPathFor(string scope, string key) => Path.Combine(DirFor(scope), $"{San(key)}.meta");
-    private static string San(string s) => string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_'));
+    private static string[] Norm(string s)
+    {
+        return s.Split(':', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(San)
+            .ToArray();
+    }
+
+    private string MetaPathFor(string scope, string key)
+    {
+        return Path.Combine(DirFor(scope), $"{San(key)}.meta");
+    }
+
+    private static string San(string s)
+    {
+        return string.Concat(s.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_'));
+    }
 }

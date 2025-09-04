@@ -1,23 +1,20 @@
-namespace Bot.Core.Scenes;
-
-using System;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 
 using Microsoft.Extensions.DependencyInjection;
+
+namespace Bot.Core.Scenes;
 
 /// <summary>
 ///     Простая сцена: задаёт вопрос, ждёт ответ и проверяет его валидатором.
 /// </summary>
 public sealed class PromptScene : IScene
 {
+    private readonly string _error;
     private readonly ISceneNavigator _navigator;
+    private readonly Func<UpdateContext, string, Task> _onSuccess;
     private readonly string _prompt;
     private readonly Func<string, bool> _validator;
-    private readonly Func<UpdateContext, string, Task> _onSuccess;
-    private readonly string _error;
 
     /// <summary>
     ///     Создаёт сцену.
@@ -48,7 +45,10 @@ public sealed class PromptScene : IScene
     public string Name { get; }
 
     /// <inheritdoc />
-    public Task<bool> CanEnter(UpdateContext ctx) => Task.FromResult(true);
+    public Task<bool> CanEnter(UpdateContext ctx)
+    {
+        return Task.FromResult(true);
+    }
 
     /// <inheritdoc />
     public async Task OnEnter(UpdateContext ctx)

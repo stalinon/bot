@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Bot.Core.Stats;
 
 /// <summary>
@@ -8,10 +5,9 @@ namespace Bot.Core.Stats;
 /// </summary>
 internal sealed class HandlerData
 {
-    public long TotalRequests;
     public long ErrorRequests;
+    public long TotalRequests;
     public List<double> Latencies { get; } = new();
     public DateTime StartTime { get; } = DateTime.UtcNow;
     public object SyncRoot { get; } = new();
 }
-

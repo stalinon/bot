@@ -1,16 +1,12 @@
-using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Examples.WebhookBot.Services;
 using Bot.Hosting;
 using Bot.Telegram;
 
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.json", false)
     .AddEnvironmentVariables();
 
 var cfg = builder.Configuration;

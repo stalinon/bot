@@ -18,4 +18,3 @@ public sealed class TypingHandler(ITransportClient tx) : IUpdateHandler
         await tx.SendTextAsync(ctx.Chat, "готово", ctx.CancellationToken);
     }
 }
-

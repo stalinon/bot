@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 using Bot.Abstractions.Contracts;
 
@@ -60,7 +57,8 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             BaseAddress = new Uri("https://localhost")
         });
 
-        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
+        var initData =
+            "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
         var resp = await client.PostAsJsonAsync("/webapp/auth", new { initData });
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
@@ -98,7 +96,8 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
             BaseAddress = new Uri("https://localhost")
         });
 
-        var initData = "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
+        var initData =
+            "user=%7B%22id%22%3A1%2C%22username%22%3A%22test%22%2C%22language_code%22%3A%22ru%22%7D&auth_date=1&hash=abc";
         var resp = await client.PostAsJsonAsync("/webapp/auth", new { initData });
         resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -106,7 +105,12 @@ public sealed class WebAppAuthTests : IClassFixture<WebAppApiFactory>
     private sealed class StubValidator : IWebAppInitDataValidator
     {
         private readonly bool _result;
-        public StubValidator(bool result) => _result = result;
+
+        public StubValidator(bool result)
+        {
+            _result = result;
+        }
+
         public bool TryValidate(string initData, out string? error)
         {
             error = _result ? null : "err";

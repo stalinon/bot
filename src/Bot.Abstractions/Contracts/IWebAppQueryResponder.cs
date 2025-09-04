@@ -24,6 +24,6 @@ public interface IWebAppQueryResponder
     /// <summary>
     ///     Ответить на запрос Web App текстом с кнопкой.
     /// </summary>
-    Task<bool> RespondWithButtonAsync(string queryId, string text, string buttonText, string buttonUrl, CancellationToken ct);
+    Task<bool> RespondWithButtonAsync(string queryId, string text, string buttonText, string buttonUrl,
+        CancellationToken ct);
 }
-

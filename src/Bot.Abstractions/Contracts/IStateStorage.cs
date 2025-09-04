@@ -1,14 +1,12 @@
 namespace Bot.Abstractions.Contracts;
 
-using System;
-
 /// <summary>
 ///     Хранилище состояний.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
 ///         <item>Старое имя интерфейса, оставлено для совместимости</item>
-///         <item>Используйте <see cref="IStateStore"/></item>
+///         <item>Используйте <see cref="IStateStore" /></item>
 ///     </list>
 /// </remarks>
 public interface IStateStorage

@@ -1,8 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Bot.Scheduler;
 using Bot.TestKit;
 
 using FluentAssertions;
@@ -24,7 +19,7 @@ namespace Bot.Scheduler.Tests;
 /// </remarks>
 public sealed class JobSchedulerTests
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public JobSchedulerTests()
     {
     }

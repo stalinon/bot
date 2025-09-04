@@ -1,14 +1,12 @@
-using System;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Bot.Telegram;
 using FluentAssertions;
+
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+
 using Telegram.Bot;
+
 using Xunit;
 
 namespace Bot.Telegram.Tests;
@@ -26,7 +24,7 @@ namespace Bot.Telegram.Tests;
 /// </remarks>
 public sealed class TelegramWebAppQueryResponderTests
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public TelegramWebAppQueryResponderTests()
     {
     }
@@ -126,14 +124,16 @@ public sealed class TelegramWebAppQueryResponderTests
         handler.Calls.Should().Be(2);
     }
 
-    private static (TelegramWebAppQueryResponder responder, TestHandler handler, CollectingLoggerProvider logger) CreateResponder(TimeSpan? ttl = null)
+    private static (TelegramWebAppQueryResponder responder, TestHandler handler, CollectingLoggerProvider logger)
+        CreateResponder(TimeSpan? ttl = null)
     {
         var handler = new TestHandler();
         var client = new TelegramBotClient("123:token", new HttpClient(handler));
         var cache = new MemoryCache(new MemoryCacheOptions());
         var provider = new CollectingLoggerProvider();
         var factory = LoggerFactory.Create(b => b.AddProvider(provider));
-        var responder = new TelegramWebAppQueryResponder(client, cache, factory.CreateLogger<TelegramWebAppQueryResponder>(), ttl);
+        var responder =
+            new TelegramWebAppQueryResponder(client, cache, factory.CreateLogger<TelegramWebAppQueryResponder>(), ttl);
         return (responder, handler, provider);
     }
 
@@ -143,7 +143,8 @@ public sealed class TelegramWebAppQueryResponderTests
         public bool Throw { get; set; }
         public bool Timeout { get; set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             Calls++;
             if (Timeout)

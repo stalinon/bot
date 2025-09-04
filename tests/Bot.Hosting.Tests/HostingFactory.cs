@@ -1,5 +1,3 @@
-using System.IO;
-
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
 
@@ -19,4 +17,3 @@ public sealed class HostingFactory : WebApplicationFactory<Program>
         return base.CreateHost(builder);
     }
 }
-

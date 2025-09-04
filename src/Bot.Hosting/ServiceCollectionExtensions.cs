@@ -19,10 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 using OpenTelemetry.Metrics;
 
@@ -31,7 +28,7 @@ using StackExchange.Redis;
 namespace Bot.Hosting;
 
 /// <summary>
-///     Расширения <see cref="IServiceCollection"/>.
+///     Расширения <see cref="IServiceCollection" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -45,16 +42,17 @@ public static class ServiceCollectionExtensions
     ///     Добавить бота.
     /// </summary>
     /// <param name="configure">Настройка параметров бота.</param>
-    /// <param name="metrics">Дополнительная настройка <see cref="MeterProviderBuilder"/>.</param>
-    public static IServiceCollection AddBot(this IServiceCollection services, Action<BotOptions> configure, Action<MeterProviderBuilder>? metrics = null)
+    /// <param name="metrics">Дополнительная настройка <see cref="MeterProviderBuilder" />.</param>
+    public static IServiceCollection AddBot(this IServiceCollection services, Action<BotOptions> configure,
+        Action<MeterProviderBuilder>? metrics = null)
     {
         services.AddOptions<BotOptions>().Configure(configure);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<RateLimitOptions>(sp =>
-            sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
+            sp.GetRequiredService<IOptions<BotOptions>>()
                 .Value.RateLimits);
         services.AddSingleton(sp => new TtlCache<string>(sp
-            .GetRequiredService<Microsoft.Extensions.Options.IOptions<BotOptions>>()
+            .GetRequiredService<IOptions<BotOptions>>()
             .Value.DeduplicationTtl));
         services.AddSingleton<BotHostedService>();
         services.AddHostedService<BotHostedService>();
@@ -129,7 +127,7 @@ public static class ServiceCollectionExtensions
     /// <param name="provider">Провайдер локов.</param>
     public static IServiceCollection UseDistributedLock(this IServiceCollection services, IDistributedLock provider)
     {
-        services.AddSingleton<IDistributedLock>(provider);
+        services.AddSingleton(provider);
         return services;
     }
 
@@ -138,7 +136,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStore store)
     {
-        services.AddSingleton<IStateStore>(store);
+        services.AddSingleton(store);
         services.AddSingleton<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
         return services;
     }
@@ -147,7 +145,8 @@ public static class ServiceCollectionExtensions
     ///     Использовать хранилище состояний из конфигурации.
     /// </summary>
     /// <param name="configuration">Конфигурация приложения.</param>
-    public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services,
+        IConfiguration configuration)
     {
         var section = configuration.GetSection("Storage");
         var provider = (section["Provider"] ?? "file").ToLowerInvariant();
@@ -163,7 +162,7 @@ public static class ServiceCollectionExtensions
                 {
                     Connection = mux,
                     Database = db,
-                    Prefix = prefix,
+                    Prefix = prefix
                 };
                 services.UseStateStorage(new RedisStateStore(options));
                 break;
@@ -183,7 +182,7 @@ public static class ServiceCollectionExtensions
                     }
                 });
                 services.AddScoped<IStateStore, EfCoreStateStore>();
-                services.AddScoped<IStateStorage>(sp => (IStateStorage)sp.GetRequiredService<IStateStore>());
+                services.AddScoped<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
                 break;
             default:
                 var file = section.GetSection("File");
@@ -209,7 +208,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="cron">Cron-выражение.</param>
     /// <param name="interval">Интервал выполнения.</param>
-    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string? cron = null, TimeSpan? interval = null)
+    public static IServiceCollection AddJob<TJob>(this IServiceCollection services, string? cron = null,
+        TimeSpan? interval = null)
         where TJob : class, IJob
     {
         services.TryAddTransient<TJob>();
@@ -243,7 +243,8 @@ public static class ServiceCollectionExtensions
         {
             services.TryAddSingleton(typeof(IWebAppQueryResponder), sp =>
             {
-                var ttl = TimeSpan.FromSeconds(sp.GetRequiredService<IOptions<WebAppOptions>>().Value.InitDataTtlSeconds);
+                var ttl = TimeSpan.FromSeconds(
+                    sp.GetRequiredService<IOptions<WebAppOptions>>().Value.InitDataTtlSeconds);
                 return ActivatorUtilities.CreateInstance(sp, responderType, ttl);
             });
         }

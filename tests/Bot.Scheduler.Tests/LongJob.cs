@@ -1,9 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Bot.Scheduler;
-
 namespace Bot.Scheduler.Tests;
 
 /// <summary>

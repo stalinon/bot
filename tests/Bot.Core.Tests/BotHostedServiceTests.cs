@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
@@ -17,7 +13,6 @@ using Bot.Hosting;
 using Bot.Hosting.Options;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 using Xunit;
@@ -25,7 +20,7 @@ using Xunit;
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты параллельной обработки в <see cref="BotHostedService"/>.
+///     Тесты параллельной обработки в <see cref="BotHostedService" />.
 /// </summary>
 public class BotHostedServiceTests
 {
@@ -43,7 +38,8 @@ public class BotHostedServiceTests
         services.AddLogging();
         services.AddSingleton<IMeterFactory, DummyMeterFactory>();
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
-        services.AddSingleton<RateLimitOptions>(new RateLimitOptions { PerUserPerMinute = int.MaxValue, PerChatPerMinute = int.MaxValue, Mode = RateLimitMode.Soft });
+        services.AddSingleton(new RateLimitOptions
+            { PerUserPerMinute = int.MaxValue, PerChatPerMinute = int.MaxValue, Mode = RateLimitMode.Soft });
         services.AddSingleton<ITransportClient, DummyTransportClient>();
         services.AddSingleton(new HandlerRegistry());
         services.AddScoped<ExceptionHandlingMiddleware>();
@@ -55,9 +51,11 @@ public class BotHostedServiceTests
         services.AddScoped<RouterMiddleware>();
         services.AddSingleton<StatsCollector>();
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
-        services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(new[] { (Action<IUpdatePipeline>)(p => p.Use(tracker.Middleware)) });
+        services.AddSingleton<IEnumerable<Action<IUpdatePipeline>>>(new[]
+            { (Action<IUpdatePipeline>)(p => p.Use(tracker.Middleware)) });
         services.AddSingleton<IUpdateSource>(new TestUpdateSource(updates));
-        services.AddSingleton<ILogger<BotHostedService>>(sp => sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
+        services.AddSingleton<ILogger<BotHostedService>>(sp =>
+            sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
         services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = parallelism);
 
         var sp = services.BuildServiceProvider();
@@ -79,17 +77,17 @@ public class BotHostedServiceTests
             for (var i = 0; i < count; i++)
             {
                 var ctx = new UpdateContext(
-                    Transport: "test",
-                    UpdateId: i.ToString(),
-                    Chat: new ChatAddress(1),
-                    User: new UserAddress(1),
-                    Text: null,
-                    Command: null,
-                    Args: null,
-                    Payload: null,
-                    Items: new Dictionary<string, object>(),
-                    Services: null!,
-                    CancellationToken: ct);
+                    "test",
+                    i.ToString(),
+                    new ChatAddress(1),
+                    new UserAddress(1),
+                    null,
+                    null,
+                    null,
+                    null,
+                    new Dictionary<string, object>(),
+                    null!,
+                    ct);
                 await onUpdate(ctx);
             }
 
@@ -97,16 +95,26 @@ public class BotHostedServiceTests
             {
                 await Task.Delay(Timeout.Infinite, ct);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException)
+            {
+            }
         }
     }
 
     private sealed class DummyMeterFactory : IMeterFactory
     {
-        public Meter Create(string name, string? version = null) => this.Create(new MeterOptions(name) { Version = version });
-        public Meter Create(MeterOptions options) => new(options.Name, options.Version);
+        public Meter Create(MeterOptions options)
+        {
+            return new Meter(options.Name, options.Version);
+        }
+
         public void Dispose()
         {
+        }
+
+        public Meter Create(string name, string? version = null)
+        {
+            return Create(new MeterOptions(name) { Version = version });
         }
     }
 
@@ -117,22 +125,25 @@ public class BotHostedServiceTests
 
         public int MaxActive => _max;
 
-        public UpdateDelegate Middleware(UpdateDelegate next) => async ctx =>
+        public UpdateDelegate Middleware(UpdateDelegate next)
         {
-            var current = Interlocked.Increment(ref _active);
-            int prev;
-            do
+            return async ctx =>
             {
-                prev = _max;
-                if (current <= prev)
+                var current = Interlocked.Increment(ref _active);
+                int prev;
+                do
                 {
-                    break;
-                }
-            } while (Interlocked.CompareExchange(ref _max, current, prev) != prev);
+                    prev = _max;
+                    if (current <= prev)
+                    {
+                        break;
+                    }
+                } while (Interlocked.CompareExchange(ref _max, current, prev) != prev);
 
-            await Task.Delay(50);
-            await next(ctx);
-            Interlocked.Decrement(ref _active);
-        };
+                await Task.Delay(50);
+                await next(ctx);
+                Interlocked.Decrement(ref _active);
+            };
+        }
     }
 }

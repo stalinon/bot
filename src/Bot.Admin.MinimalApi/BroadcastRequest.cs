@@ -10,4 +10,3 @@ internal sealed class BroadcastRequest
     /// </summary>
     public long[] ChatIds { get; init; } = Array.Empty<long>();
 }
-

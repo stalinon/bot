@@ -11,8 +11,8 @@
    ```bash
     ngrok http 5000
     ```
-    Скопируйте выданный HTTPS‑адрес и задайте его в переменной `Transport__Webhook__PublicUrl`.
- 4. При необходимости задайте свой секрет в `Transport__Webhook__Secret` (по умолчанию `secret`).
+   Скопируйте выданный HTTPS‑адрес и задайте его в переменной `Transport__Webhook__PublicUrl`.
+4. При необходимости задайте свой секрет в `Transport__Webhook__Secret` (по умолчанию `secret`).
 5. Установите вебхук:
    ```bash
    dotnet run --project examples/Bot.Examples.WebhookBot -- set-webhook

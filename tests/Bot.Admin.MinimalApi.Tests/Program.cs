@@ -1,7 +1,6 @@
 using Bot.Admin.MinimalApi;
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +15,7 @@ namespace Bot.Admin.MinimalApi.Tests
     /// <summary>
     ///     Точка входа для тестового хоста административного API.
     /// </summary>
-    public partial class Program
+    public class Program
     {
     }
 }
-

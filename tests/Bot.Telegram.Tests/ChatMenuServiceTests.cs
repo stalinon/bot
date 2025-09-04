@@ -1,10 +1,6 @@
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bot.Abstractions.Addresses;
-using Bot.Telegram;
 
 using FluentAssertions;
 
@@ -15,21 +11,21 @@ using Xunit;
 namespace Bot.Telegram.Tests;
 
 /// <summary>
-///	Тесты сервиса меню чата.
+///     Тесты сервиса меню чата.
 /// </summary>
 /// <remarks>
-///	<list type="number">
-///	    <item>Проверяется вызов API при новых настройках.</item>
-///	    <item>Проверяется отсутствие вызова при повторных одинаковых настройках.</item>
-///	    <item>Проверяется вызов при изменении настроек.</item>
-///	</list>
+///     <list type="number">
+///         <item>Проверяется вызов API при новых настройках.</item>
+///         <item>Проверяется отсутствие вызова при повторных одинаковых настройках.</item>
+///         <item>Проверяется вызов при изменении настроек.</item>
+///     </list>
 /// </remarks>
 public sealed class ChatMenuServiceTests
 {
     private readonly TestHandler _handler;
     private readonly ChatMenuService _service;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public ChatMenuServiceTests()
     {
         _handler = new TestHandler();
@@ -38,7 +34,7 @@ public sealed class ChatMenuServiceTests
     }
 
     /// <summary>
-    ///	Тест 1: Вызывает API при установке новых настроек.
+    ///     Тест 1: Вызывает API при установке новых настроек.
     /// </summary>
     [Fact(DisplayName = "Тест 1: Вызывает API при установке новых настроек.")]
     public async Task Should_CallApi_OnNewSettings()
@@ -51,7 +47,7 @@ public sealed class ChatMenuServiceTests
     }
 
     /// <summary>
-    ///	Тест 2: Не вызывает API при повторном вызове с теми же настройками.
+    ///     Тест 2: Не вызывает API при повторном вызове с теми же настройками.
     /// </summary>
     [Fact(DisplayName = "Тест 2: Не вызывает API при повторном вызове с теми же настройками.")]
     public async Task Should_NotCallApi_OnSameSettings()
@@ -65,7 +61,7 @@ public sealed class ChatMenuServiceTests
     }
 
     /// <summary>
-    ///	Тест 3: Вызывает API при изменении настроек.
+    ///     Тест 3: Вызывает API при изменении настроек.
     /// </summary>
     [Fact(DisplayName = "Тест 3: Вызывает API при изменении настроек.")]
     public async Task Should_CallApi_OnSettingsChange()
@@ -82,7 +78,8 @@ public sealed class ChatMenuServiceTests
     {
         public int Calls { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+            CancellationToken cancellationToken)
         {
             Calls++;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
@@ -92,4 +89,3 @@ public sealed class ChatMenuServiceTests
         }
     }
 }
-

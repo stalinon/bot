@@ -14,19 +14,20 @@ public sealed class BotMetricsEventSource : EventSource
     /// </summary>
     public static readonly BotMetricsEventSource Log = new();
 
-    private readonly IncrementingEventCounter _updates;
-    private readonly IncrementingEventCounter _errors;
-    private readonly IncrementingEventCounter _dropped;
-    private readonly IncrementingEventCounter _rateLimited;
-    private readonly EventCounter _updateLatency;
-    private readonly EventCounter _handlerLatency;
-    private readonly EventCounter _queueDepth;
-    private readonly IncrementingEventCounter _webAppAuth;
-    private readonly IncrementingEventCounter _webAppMe;
-    private readonly IncrementingEventCounter _webAppSendData;
-    private readonly EventCounter _webAppLatency;
     private readonly ConcurrentDictionary<string, IncrementingEventCounter> _customCounters = new();
     private readonly ConcurrentDictionary<string, EventCounter> _customHistograms = new();
+    private readonly IncrementingEventCounter _dropped;
+    private readonly IncrementingEventCounter _errors;
+    private readonly EventCounter _handlerLatency;
+    private readonly EventCounter _queueDepth;
+    private readonly IncrementingEventCounter _rateLimited;
+    private readonly EventCounter _updateLatency;
+
+    private readonly IncrementingEventCounter _updates;
+    private readonly IncrementingEventCounter _webAppAuth;
+    private readonly EventCounter _webAppLatency;
+    private readonly IncrementingEventCounter _webAppMe;
+    private readonly IncrementingEventCounter _webAppSendData;
 
     private BotMetricsEventSource()
     {
@@ -220,4 +221,3 @@ public sealed class BotMetricsEventSource : EventSource
         base.Dispose(disposing);
     }
 }
-

@@ -9,4 +9,3 @@ namespace Bot.Storage.Redis.Tests;
 ///     </list>
 /// </remarks>
 public sealed record Player(string Name);
-

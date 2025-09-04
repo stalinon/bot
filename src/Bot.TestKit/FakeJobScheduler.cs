@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions.Contracts;
 using Bot.Scheduler;
 
@@ -21,9 +16,9 @@ namespace Bot.TestKit;
 /// </remarks>
 public sealed class FakeJobScheduler
 {
-    private readonly IServiceProvider _provider;
     private readonly IEnumerable<JobDescriptor> _jobs;
     private readonly IDistributedLock _lock;
+    private readonly IServiceProvider _provider;
 
     /// <summary>
     ///     Создать планировщик.

@@ -1,16 +1,14 @@
-using System;
+using System.Reflection;
 using System.Threading.Channels;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Stats;
-using Bot.Hosting;
 using Bot.Hosting.Options;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Bot.Hosting.Tests;
 
@@ -43,7 +41,8 @@ public class Program
             {
                 Transport = new TransportOptions { Parallelism = 1 }
             }));
-        typeof(BotHostedService).GetField("_channel", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(hosted, channel);
+        typeof(BotHostedService).GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(hosted,
+            channel);
 
         builder.Services.AddSingleton<IUpdateSource, DummyUpdateSource>();
         builder.Services.AddSingleton<IStateStore, DummyStateStore>();
@@ -56,4 +55,3 @@ public class Program
         app.Run();
     }
 }
-

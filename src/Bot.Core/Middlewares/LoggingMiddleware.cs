@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Diagnostics;
 
 using Bot.Abstractions;
@@ -64,7 +63,7 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
 
         void LogWebAppData(long latency, bool success)
         {
-            if (ctx.GetItem<bool>(UpdateItems.WebAppData) == true)
+            if (ctx.GetItem<bool>(UpdateItems.WebAppData))
             {
                 logger.LogInformation(
                     "web_app_data handled for {webapp_user_id} from {source} in {latency}ms",

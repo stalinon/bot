@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 
 namespace Bot.Core.Stats;
@@ -8,9 +7,9 @@ namespace Bot.Core.Stats;
 /// </summary>
 public sealed class Measurement : IDisposable
 {
+    private readonly StatsCollector _collector;
     private readonly HandlerData _info;
     private readonly Stopwatch _sw;
-    private readonly StatsCollector _collector;
     private bool _error;
 
     internal Measurement(HandlerData info, Stopwatch sw, StatsCollector collector)
@@ -19,11 +18,6 @@ public sealed class Measurement : IDisposable
         _sw = sw;
         _collector = collector;
     }
-
-    /// <summary>
-    ///     Отметить ошибку обработки.
-    /// </summary>
-    public void MarkError() => _error = true;
 
     /// <inheritdoc />
     public void Dispose()
@@ -39,5 +33,12 @@ public sealed class Measurement : IDisposable
             }
         }
     }
-}
 
+    /// <summary>
+    ///     Отметить ошибку обработки.
+    /// </summary>
+    public void MarkError()
+    {
+        _error = true;
+    }
+}

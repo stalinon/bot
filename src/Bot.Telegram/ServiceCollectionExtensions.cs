@@ -9,7 +9,7 @@ using Telegram.Bot;
 namespace Bot.Telegram;
 
 /// <summary>
-///     Расширения <see cref="IServiceCollection"/>
+///     Расширения <see cref="IServiceCollection" />
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -31,7 +31,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ITelegramBotClient>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<BotOptions>>().Value;
-            return new TelegramBotClient(opts.Token, sp.GetRequiredService<IHttpClientFactory>().CreateClient(telegram));
+            return new TelegramBotClient(opts.Token,
+                sp.GetRequiredService<IHttpClientFactory>().CreateClient(telegram));
         });
         services.AddSingleton<TelegramPollingSource>();
         services.AddSingleton<TelegramWebhookSource>();

@@ -1,5 +1,3 @@
-using System;
-
 namespace Bot.Hosting.Options;
 
 /// <summary>
@@ -35,4 +33,3 @@ public sealed class WebAppOptions
     /// </summary>
     public WebAppCspOptions Csp { get; set; } = new();
 }
-

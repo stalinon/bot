@@ -37,7 +37,7 @@ public static class CommandParser
         var args = new List<string>();
         var current = new StringBuilder();
         var state = ParserState.None;
-        char quote = '\0';
+        var quote = '\0';
 
         foreach (var c in payload)
         {
@@ -57,6 +57,7 @@ public static class CommandParser
                     {
                         current.Append(c);
                     }
+
                     break;
                 case ParserState.Quoted:
                     if (c == '\\')
@@ -71,6 +72,7 @@ public static class CommandParser
                     {
                         current.Append(c);
                     }
+
                     break;
                 case ParserState.Escape:
                     current.Append(c);

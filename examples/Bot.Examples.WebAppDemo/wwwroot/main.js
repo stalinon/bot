@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const resp = await fetch('/webapp/auth', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData: tg.initData })
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({initData: tg.initData})
         });
         if (resp.ok) {
             const json = await resp.json();
@@ -24,6 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('data-input');
     form.addEventListener('submit', (ev) => {
         ev.preventDefault();
-        tg.sendData(JSON.stringify({ text: input.value }));
+        tg.sendData(JSON.stringify({text: input.value}));
     });
 });

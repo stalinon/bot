@@ -3,9 +3,9 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj" />
+    <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="StackExchange.Redis" Version="2.6.122" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.122"/>
   </ItemGroup>
 </Project>

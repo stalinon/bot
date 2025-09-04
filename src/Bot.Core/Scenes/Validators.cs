@@ -16,12 +16,18 @@ public static class Validators
     /// </summary>
     /// <param name="text">Текст ответа.</param>
     /// <returns><c>true</c>, если строка непуста.</returns>
-    public static bool NotEmpty(string text) => !string.IsNullOrWhiteSpace(text);
+    public static bool NotEmpty(string text)
+    {
+        return !string.IsNullOrWhiteSpace(text);
+    }
 
     /// <summary>
     ///     Проверить, что строка представляет целое число.
     /// </summary>
     /// <param name="text">Текст ответа.</param>
     /// <returns><c>true</c>, если текст — целое число.</returns>
-    public static bool IsInt(string text) => int.TryParse(text, out _);
+    public static bool IsInt(string text)
+    {
+        return int.TryParse(text, out _);
+    }
 }

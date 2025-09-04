@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -20,7 +15,7 @@ using Xunit;
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="DedupMiddleware"/>.
+///     Тесты для <see cref="DedupMiddleware" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -43,17 +38,17 @@ public class DedupMiddlewareTests
         var stats = new StatsCollector();
         var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "42",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "42",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var calls = 0;
         UpdateDelegate next = _ =>
         {
@@ -81,17 +76,17 @@ public class DedupMiddlewareTests
         var stats = new StatsCollector();
         var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
         var ctx1 = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var ctx2 = ctx1 with { UpdateId = "2" };
         var calls = 0;
         UpdateDelegate next = _ =>
@@ -116,17 +111,17 @@ public class DedupMiddlewareTests
         var stats = new StatsCollector();
         var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
 
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
@@ -149,17 +144,17 @@ public class DedupMiddlewareTests
         var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache1, stats1, store);
         var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache2, stats2, store);
         var ctx = new UpdateContext(
-            Transport: "test",
-            UpdateId: "1",
-            Chat: new ChatAddress(1),
-            User: new UserAddress(1),
-            Text: null,
-            Command: null,
-            Args: null,
-            Payload: null,
-            Items: new Dictionary<string, object>(),
-            Services: new DummyServiceProvider(),
-            CancellationToken: CancellationToken.None);
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
         var calls = 0;
         UpdateDelegate next = _ =>
         {
@@ -176,6 +171,9 @@ public class DedupMiddlewareTests
 
     private sealed class DummyServiceProvider : IServiceProvider
     {
-        public object? GetService(Type serviceType) => null;
+        public object? GetService(Type serviceType)
+        {
+            return null;
+        }
     }
 }

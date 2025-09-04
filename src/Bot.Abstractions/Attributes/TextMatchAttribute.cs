@@ -11,5 +11,6 @@ public sealed class TextMatchAttribute(string regex) : Attribute
     /// <summary>
     ///     Реджекс
     /// </summary>
-    public Regex Pattern { get; } = new(regex, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+    public Regex Pattern { get; } =
+        new(regex, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 }

@@ -26,4 +26,3 @@ internal sealed class TransportProbe(ITransportClient client) : IHealthProbe
         await client.SendChatActionAsync(ProbeChat, ChatAction.Typing, linked.Token);
     }
 }
-

@@ -21,4 +21,3 @@ internal sealed class StorageProbe(IStateStore store) : IHealthProbe
         await store.GetAsync<int>("health", "probe", ct);
     }
 }
-

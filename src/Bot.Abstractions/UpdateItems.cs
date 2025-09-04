@@ -1,7 +1,7 @@
 namespace Bot.Abstractions;
 
 /// <summary>
-///     Ключи элементов <see cref="UpdateContext"/>
+///     Ключи элементов <see cref="UpdateContext" />
 /// </summary>
 /// <remarks>
 ///     <list type="number">

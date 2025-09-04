@@ -1,14 +1,9 @@
-using System;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Telegram;
-
-using Microsoft.Extensions.Options;
 
 using Moq;
 
@@ -33,7 +28,8 @@ public class TelegramWebhookSourceTests
     public async Task EnqueuedUpdate_Reaches_Handler()
     {
         var bot = Mock.Of<ITelegramBotClient>();
-        var options = Microsoft.Extensions.Options.Options.Create(new BotOptions { Transport = new TransportOptions() });
+        var options =
+            Microsoft.Extensions.Options.Options.Create(new BotOptions { Transport = new TransportOptions() });
         var source = new TelegramWebhookSource(bot, options, new StatsCollector());
         var tcs = new TaskCompletionSource<UpdateContext>();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));

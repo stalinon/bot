@@ -1,15 +1,12 @@
-namespace Bot.Core.Scenes;
-
-using System;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 
 using Microsoft.Extensions.DependencyInjection;
 
+namespace Bot.Core.Scenes;
+
 /// <summary>
-///     Расширения для <see cref="ISceneNavigator"/>.
+///     Расширения для <see cref="ISceneNavigator" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
@@ -36,7 +33,7 @@ public static class SceneNavigatorExtensions
         string error = "Некорректное значение")
     {
         var state = await navigator.GetStateAsync(ctx).ConfigureAwait(false)
-                     ?? throw new InvalidOperationException("No active scene");
+                    ?? throw new InvalidOperationException("No active scene");
         var client = ctx.Services.GetRequiredService<ITransportClient>();
 
         if (state.Step == 0)

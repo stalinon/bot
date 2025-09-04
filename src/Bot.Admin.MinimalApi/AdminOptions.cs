@@ -10,4 +10,3 @@ public sealed class AdminOptions
     /// </summary>
     public string AdminToken { get; set; } = string.Empty;
 }
-

@@ -17,7 +17,10 @@ public sealed class CollectingLoggerProvider : ILoggerProvider
     public IEnumerable<LogEntry> Logs => _logs;
 
     /// <inheritdoc />
-    public ILogger CreateLogger(string categoryName) => new Logger(_logs);
+    public ILogger CreateLogger(string categoryName)
+    {
+        return new Logger(_logs);
+    }
 
     /// <inheritdoc />
     public void Dispose()
@@ -34,13 +37,20 @@ public sealed class CollectingLoggerProvider : ILoggerProvider
         }
 
         /// <inheritdoc />
-        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        {
+            return NullScope.Instance;
+        }
 
         /// <inheritdoc />
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
 
         /// <inheritdoc />
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
         {
             _logs.Add(new LogEntry(logLevel, formatter(state, exception)));
         }

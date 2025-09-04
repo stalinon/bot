@@ -1,4 +1,3 @@
-using System.IO;
 using System.Reflection;
 
 using Bot.Abstractions;
@@ -11,7 +10,7 @@ using Telegram.Bot;
 
 using Xunit;
 
-using TelegramChatAction = global::Telegram.Bot.Types.Enums.ChatAction;
+using TelegramChatAction = Telegram.Bot.Types.Enums.ChatAction;
 
 namespace Bot.Core.Tests;
 
@@ -122,4 +121,3 @@ public class TelegramTransportClientTests
             () => tx.DeleteMessageAsync(new ChatAddress(1), 1, cts.Token));
     }
 }
-

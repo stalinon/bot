@@ -1,5 +1,3 @@
-using System.IO;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -18,4 +16,3 @@ public sealed class AdminApiFactory : WebApplicationFactory<Program>
         builder.UseContentRoot(path);
     }
 }
-

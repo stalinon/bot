@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using Moq;
 
@@ -36,14 +35,14 @@ public class WebhookBackpressureTests
             .ConfigureServices(services =>
             {
                 services.AddRouting();
-                services.AddSingleton<IOptions<BotOptions>>(Microsoft.Extensions.Options.Options.Create(new BotOptions
+                services.AddSingleton(Microsoft.Extensions.Options.Options.Create(new BotOptions
                 {
                     Transport = new TransportOptions
                     {
                         Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 1 }
                     }
                 }));
-                services.AddSingleton<ITelegramBotClient>(Mock.Of<ITelegramBotClient>());
+                services.AddSingleton(Mock.Of<ITelegramBotClient>());
                 services.AddSingleton<StatsCollector>();
                 services.AddSingleton<TelegramWebhookSource>();
                 services.AddLogging(b => b.AddProvider(provider));

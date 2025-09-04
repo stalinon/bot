@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -32,7 +27,8 @@ public class DedupAndRateLimitIntegrationTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(1)));
-        services.AddSingleton(new RateLimitOptions { PerUserPerMinute = 3, PerChatPerMinute = 3, Mode = RateLimitMode.Soft });
+        services.AddSingleton(new RateLimitOptions
+            { PerUserPerMinute = 3, PerChatPerMinute = 3, Mode = RateLimitMode.Soft });
         services.AddScoped<DedupMiddleware>();
         services.AddSingleton<RateLimitMiddleware>();
         services.AddSingleton<ITransportClient, DummyTransportClient>();
@@ -55,17 +51,17 @@ public class DedupAndRateLimitIntegrationTests
         foreach (var id in new[] { "1", "1", "2", "3", "4" })
         {
             var ctx = new UpdateContext(
-                Transport: "test",
-                UpdateId: id,
-                Chat: new ChatAddress(1),
-                User: new UserAddress(1),
-                Text: null,
-                Command: null,
-                Args: null,
-                Payload: null,
-                Items: new Dictionary<string, object>(),
-                Services: sp,
-                CancellationToken: CancellationToken.None);
+                "test",
+                id,
+                new ChatAddress(1),
+                new UserAddress(1),
+                null,
+                null,
+                null,
+                null,
+                new Dictionary<string, object>(),
+                sp,
+                CancellationToken.None);
 
             await app(ctx);
         }

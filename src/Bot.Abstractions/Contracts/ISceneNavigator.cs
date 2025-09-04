@@ -1,7 +1,5 @@
 namespace Bot.Abstractions.Contracts;
 
-using System;
-
 /// <summary>
 ///     Навигатор по сценам.
 /// </summary>

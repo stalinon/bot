@@ -1,4 +1,3 @@
-using System;
 using System.Reflection;
 using System.Threading.Channels;
 
@@ -12,6 +11,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 
 namespace Bot.Hosting;
+
 /// <summary>
 ///     Расширения для подключения проб готовности.
 /// </summary>
@@ -66,4 +66,3 @@ public static class EndpointRouteBuilderExtensions
         return endpoints;
     }
 }
-

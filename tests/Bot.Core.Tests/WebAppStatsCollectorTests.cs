@@ -5,19 +5,17 @@ using Bot.Core.Stats;
 
 using FluentAssertions;
 
-using Microsoft.Extensions.Diagnostics;
-
 using Xunit;
 
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="WebAppStatsCollector"/>.
+///     Тесты для <see cref="WebAppStatsCollector" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
 ///         <item>Проверяется подсчёт авторизации, профиля и передачи данных.</item>
-///         <item>Проверяется экспорт метрик через <see cref="Meter"/>.</item>
+///         <item>Проверяется экспорт метрик через <see cref="Meter" />.</item>
 ///     </list>
 /// </remarks>
 public sealed class WebAppStatsCollectorTests
@@ -122,15 +120,23 @@ public sealed class WebAppStatsCollectorTests
     {
         private readonly Meter _meter;
 
-        public TestMeterFactory(Meter meter) => _meter = meter;
+        public TestMeterFactory(Meter meter)
+        {
+            _meter = meter;
+        }
 
-        public Meter Create(string name, string? version = null) => _meter;
-
-        public Meter Create(MeterOptions options) => _meter;
+        public Meter Create(MeterOptions options)
+        {
+            return _meter;
+        }
 
         public void Dispose()
         {
         }
+
+        public Meter Create(string name, string? version = null)
+        {
+            return _meter;
+        }
     }
 }
-

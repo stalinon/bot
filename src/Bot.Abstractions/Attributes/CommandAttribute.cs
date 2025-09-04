@@ -1,5 +1,3 @@
-using System;
-
 namespace Bot.Abstractions.Attributes;
 
 /// <summary>

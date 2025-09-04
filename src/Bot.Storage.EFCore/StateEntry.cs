@@ -1,5 +1,3 @@
-using System;
-
 namespace Bot.Storage.EFCore;
 
 /// <summary>

@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
@@ -10,6 +8,7 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Routing;
 
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
@@ -21,32 +20,6 @@ namespace Bot.Core.Tests;
 /// </summary>
 public class HandlerRegistryTests
 {
-    [Command("cmd")]
-    private sealed class CmdHandler : IUpdateHandler
-    {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
-    }
-
-    [TextMatch(".*")]
-    private sealed class FirstRegexHandler : IUpdateHandler
-    {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
-    }
-
-    [TextMatch(".*")]
-    private sealed class SecondRegexHandler : IUpdateHandler
-    {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
-    }
-
-    [Command("vote tax", typeof(VoteArgs))]
-    private sealed class VoteHandler : IUpdateHandler
-    {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
-    }
-
-    private sealed record VoteArgs(string Target, [Range(1,10)] int Value);
-
     private static UpdateContext CreateContext(string? text, string? command, string[]? args = null)
     {
         var services = new ServiceCollection().BuildServiceProvider();
@@ -101,7 +74,7 @@ public class HandlerRegistryTests
         var registry = new HandlerRegistry();
         registry.Register(typeof(VoteHandler));
 
-        var ctx = CreateContext("/vote tax 5", "vote", new[] { "tax", "5" });
+        var ctx = CreateContext("/vote tax 5", "vote", ["tax", "5"]);
         registry.FindFor(ctx).Should().Be(typeof(VoteHandler));
         ctx.GetItem<VoteArgs>(UpdateItems.CommandArgs)!.Should().Be(new VoteArgs("tax", 5));
     }
@@ -115,7 +88,46 @@ public class HandlerRegistryTests
         var registry = new HandlerRegistry();
         registry.Register(typeof(VoteHandler));
 
-        var ctx = CreateContext("/vote tax 50", "vote", new[] { "tax", "50" });
+        var ctx = CreateContext("/vote tax 50", "vote", ["tax", "50"]);
         registry.FindFor(ctx).Should().BeNull();
     }
+
+    [Command("cmd")]
+    private sealed class CmdHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [TextMatch(".*")]
+    private sealed class FirstRegexHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [TextMatch(".*")]
+    private sealed class SecondRegexHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [Command("vote tax", typeof(VoteArgs))]
+    private sealed class VoteHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
+    [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Local")]
+    private sealed record VoteArgs(string Target, [Range(1, 10)] int Value);
 }

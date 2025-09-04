@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
 using Bot.Hosting.Options;
-using Bot.Telegram;
 
 using FluentAssertions;
 

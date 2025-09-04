@@ -5,8 +5,6 @@ using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Metrics;
 
-using Microsoft.Extensions.Diagnostics;
-
 namespace Bot.Core.Middlewares;
 
 /// <summary>
@@ -15,14 +13,15 @@ namespace Bot.Core.Middlewares;
 public sealed class MetricsMiddleware : IUpdateMiddleware
 {
     /// <summary>
-    ///     Имя <see cref="Meter"/> для метрик.
+    ///     Имя <see cref="Meter" /> для метрик.
     /// </summary>
     public const string MeterName = "Bot.Core.Metrics";
 
-    private readonly Counter<long> _updates;
     private readonly Counter<long> _errors;
-    private readonly Histogram<double> _updateLatency;
     private readonly BotMetricsEventSource _eventSource;
+    private readonly Histogram<double> _updateLatency;
+
+    private readonly Counter<long> _updates;
 
     /// <summary>
     ///     Инициализировать middleware.
@@ -31,9 +30,9 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
     public MetricsMiddleware(IMeterFactory meterFactory)
     {
         var meter = meterFactory.Create(MeterName);
-        _updates = meter.CreateCounter<long>("tgbot_updates_total", unit: "count");
-        _errors = meter.CreateCounter<long>("tgbot_errors_total", unit: "count");
-        _updateLatency = meter.CreateHistogram<double>("tgbot_update_latency_ms", unit: "ms");
+        _updates = meter.CreateCounter<long>("tgbot_updates_total", "count");
+        _errors = meter.CreateCounter<long>("tgbot_errors_total", "count");
+        _updateLatency = meter.CreateHistogram<double>("tgbot_update_latency_ms", "ms");
         _eventSource = BotMetricsEventSource.Log;
     }
 
@@ -65,4 +64,3 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
         }
     }
 }
-

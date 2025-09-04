@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -31,7 +27,6 @@ namespace Bot.Core.Tests;
 /// </remarks>
 public sealed class LoggingMiddlewareTests
 {
-
     /// <summary>
     ///     Тест 1: Лог содержит идентификаторы, усечённый текст и имя обработчика
     /// </summary>
@@ -116,14 +111,12 @@ public sealed class LoggingMiddlewareTests
             sp,
             default);
 
-        var act = async () =>
-        {
-            await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => Task.CompletedTask));
-        };
+        var act = async () => { await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => Task.CompletedTask)); };
 
         await act.Should().ThrowAsync<InvalidOperationException>();
 
-        provider.Logs.Should().Contain(e => e.Level == LogLevel.Error && e.Message.StartsWith("handler FailingHandler failed"));
+        provider.Logs.Should().Contain(e =>
+            e.Level == LogLevel.Error && e.Message.StartsWith("handler FailingHandler failed"));
     }
 
     /// <summary>
@@ -167,12 +160,18 @@ public sealed class LoggingMiddlewareTests
     [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
-        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     [Command("fail")]
     private sealed class FailingHandler : IUpdateHandler
     {
-        public Task HandleAsync(UpdateContext ctx) => throw new InvalidOperationException("fail");
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            throw new InvalidOperationException("fail");
+        }
     }
 }

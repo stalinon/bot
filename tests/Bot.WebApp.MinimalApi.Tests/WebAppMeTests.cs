@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 using Bot.Abstractions.Contracts;
 
@@ -108,7 +106,7 @@ public sealed class WebAppMeTests : IClassFixture<WebAppApiFactory>
             signingCredentials: creds));
 
         var request = new HttpRequestMessage(HttpMethod.Get, "/webapp/me");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         var resp = await client.SendAsync(request);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();

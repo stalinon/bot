@@ -1,8 +1,3 @@
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
 using Bot.Storage.File;
 using Bot.Storage.File.Options;
 
@@ -26,7 +21,7 @@ public sealed class FileStateStoreTests
         var ct = CancellationToken.None;
         await store.SetAsync("user", "ping:42", 1, null, ct);
         var expected = Path.Combine(temp, "tenant", "user", "ping", "42.json");
-        Assert.True(System.IO.File.Exists(expected));
+        Assert.True(File.Exists(expected));
         var value = await store.GetAsync<int>("user", "ping:42", ct);
         Assert.Equal(1, value);
     }

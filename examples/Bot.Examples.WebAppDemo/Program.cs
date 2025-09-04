@@ -1,11 +1,7 @@
-using Bot.Hosting.Options;
 using Bot.Abstractions.Contracts;
+using Bot.Hosting.Options;
 using Bot.Telegram;
 using Bot.WebApp.MinimalApi;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Bot.Examples.WebAppDemo;
 
@@ -14,9 +10,9 @@ namespace Bot.Examples.WebAppDemo;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///             <item>Настраивает HTTP-сервер.</item>
-///             <item>Добавляет middleware безопасности.</item>
-///             <item>Отдаёт статические файлы и эндпоинт авторизации.</item>
+///         <item>Настраивает HTTP-сервер.</item>
+///         <item>Добавляет middleware безопасности.</item>
+///         <item>Отдаёт статические файлы и эндпоинт авторизации.</item>
 ///     </list>
 /// </remarks>
 public static class Program

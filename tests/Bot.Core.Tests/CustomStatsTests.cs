@@ -5,19 +5,17 @@ using Bot.Core.Stats;
 
 using FluentAssertions;
 
-using Microsoft.Extensions.Diagnostics;
-
 using Xunit;
 
 namespace Bot.Core.Tests;
 
 /// <summary>
-///     Тесты для <see cref="CustomStats"/>.
+///     Тесты для <see cref="CustomStats" />.
 /// </summary>
 /// <remarks>
 ///     <list type="number">
 ///         <item>Проверяется регистрация и снимок пользовательских метрик.</item>
-///         <item>Проверяется экспорт через <see cref="Meter"/>.</item>
+///         <item>Проверяется экспорт через <see cref="Meter" />.</item>
 ///     </list>
 /// </remarks>
 public sealed class CustomStatsTests
@@ -89,15 +87,23 @@ public sealed class CustomStatsTests
     {
         private readonly Meter _meter;
 
-        public TestMeterFactory(Meter meter) => _meter = meter;
+        public TestMeterFactory(Meter meter)
+        {
+            _meter = meter;
+        }
 
-        public Meter Create(string name, string? version = null) => _meter;
-
-        public Meter Create(MeterOptions options) => _meter;
+        public Meter Create(MeterOptions options)
+        {
+            return _meter;
+        }
 
         public void Dispose()
         {
         }
+
+        public Meter Create(string name, string? version = null)
+        {
+            return _meter;
+        }
     }
 }
-

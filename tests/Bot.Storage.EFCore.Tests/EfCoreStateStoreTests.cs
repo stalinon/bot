@@ -1,5 +1,3 @@
-using System.IO;
-
 using FluentAssertions;
 
 using Microsoft.EntityFrameworkCore;
@@ -107,4 +105,3 @@ public sealed class EfCoreStateStoreTests
         value.Should().Be(1);
     }
 }
-

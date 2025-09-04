@@ -13,8 +13,8 @@ namespace Bot.Telegram;
 public sealed class WebhookService
 {
     private readonly ITelegramBotClient _client;
-    private readonly BotOptions _options;
     private readonly ILogger<WebhookService> _logger;
+    private readonly BotOptions _options;
 
     /// <summary>
     ///     Инициализировать сервис.

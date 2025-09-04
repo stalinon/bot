@@ -10,5 +10,7 @@ public sealed class FallbackHandler(ITransportClient tx) : IFallbackHandler
 {
     /// <inheritdoc />
     public Task HandleAsync(UpdateContext ctx)
-        => tx.SendTextAsync(ctx.Chat, "не понимаю :(", ctx.CancellationToken);
+    {
+        return tx.SendTextAsync(ctx.Chat, "не понимаю :(", ctx.CancellationToken);
+    }
 }

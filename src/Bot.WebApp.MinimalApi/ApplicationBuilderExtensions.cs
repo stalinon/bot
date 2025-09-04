@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-
-using Microsoft.AspNetCore.Builder;
-
 namespace Bot.WebApp.MinimalApi;
 
 /// <summary>
@@ -16,7 +11,8 @@ namespace Bot.WebApp.MinimalApi;
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
-    ///     Подключить строгую политику безопасности для Mini App и полностью запретить фреймы для предотвращения атак clickjacking.
+    ///     Подключить строгую политику безопасности для Mini App и полностью запретить фреймы для предотвращения атак
+    ///     clickjacking.
     /// </summary>
     /// <param name="app">Построитель приложения.</param>
     /// <param name="allowedOrigins">Дополнительные origin'ы, разрешённые в Content-Security-Policy.</param>
@@ -41,4 +37,3 @@ public static class ApplicationBuilderExtensions
         return app;
     }
 }
-

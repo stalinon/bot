@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
-using Bot.Core.Scenes;
 
 namespace Bot.Examples.HelloBot.Scenes;
 
@@ -38,7 +37,10 @@ public sealed class PhoneScene : IScene
     public string Name => "phone";
 
     /// <inheritdoc />
-    public Task<bool> CanEnter(UpdateContext ctx) => Task.FromResult(true);
+    public Task<bool> CanEnter(UpdateContext ctx)
+    {
+        return Task.FromResult(true);
+    }
 
     /// <inheritdoc />
     public async Task OnEnter(UpdateContext ctx)

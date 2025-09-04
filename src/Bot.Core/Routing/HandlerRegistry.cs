@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
@@ -22,7 +20,7 @@ namespace Bot.Core.Routing;
 public sealed class HandlerRegistry
 {
     private readonly List<(string[] Path, Type Handler, Type? ArgsType)> _commands = [];
-    private readonly List<(System.Text.RegularExpressions.Regex Pattern, Type Type)> _regexHandlers = [];
+    private readonly List<(Regex Pattern, Type Type)> _regexHandlers = [];
 
     /// <summary>
     ///     Зарегистрировать обработчики из сборки
@@ -116,7 +114,7 @@ public sealed class HandlerRegistry
         return null;
     }
 
-    private static object? BindArgs(Type t, IReadOnlyList<string> tokens)
+    private static object? BindArgs(Type t, string[] tokens)
     {
         var ctor = t.GetConstructors().SingleOrDefault();
         if (ctor is null)
@@ -125,7 +123,7 @@ public sealed class HandlerRegistry
         }
 
         var parameters = ctor.GetParameters();
-        if (parameters.Length != tokens.Count)
+        if (parameters.Length != tokens.Length)
         {
             return null;
         }

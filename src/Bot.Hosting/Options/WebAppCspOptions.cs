@@ -15,4 +15,3 @@ public sealed class WebAppCspOptions
     /// </summary>
     public string[] AllowedOrigins { get; set; } = [];
 }
-

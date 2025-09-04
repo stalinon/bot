@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Channels;
 
 using Bot.Abstractions;
@@ -28,7 +26,7 @@ public sealed class HealthEndpointTests : IClassFixture<HostingFactory>
 {
     private readonly HostingFactory _factory;
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public HealthEndpointTests(HostingFactory factory)
     {
         _factory = factory;
@@ -52,7 +50,8 @@ public sealed class HealthEndpointTests : IClassFixture<HostingFactory>
     public async Task Should_ReturnServiceUnavailable_WhenQueueIsFull()
     {
         var hosted = _factory.Services.GetRequiredService<BotHostedService>();
-        var channelField = typeof(BotHostedService).GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var channelField =
+            typeof(BotHostedService).GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance)!;
         var channel = (Channel<UpdateContext>)channelField.GetValue(hosted)!;
         for (var i = 0; i < 16; i++)
         {
@@ -76,4 +75,3 @@ public sealed class HealthEndpointTests : IClassFixture<HostingFactory>
         resp.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 }
-

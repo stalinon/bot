@@ -1,10 +1,7 @@
-namespace Bot.Core.Scenes;
-
-using System;
-using System.Threading.Tasks;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+
+namespace Bot.Core.Scenes;
 
 /// <summary>
 ///     Навигатор по сценам.
@@ -111,5 +108,8 @@ public sealed class SceneNavigator : ISceneNavigator
         }
     }
 
-    private static string Key(UpdateContext ctx) => $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";
+    private static string Key(UpdateContext ctx)
+    {
+        return $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";
+    }
 }

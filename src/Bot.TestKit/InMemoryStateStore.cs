@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Bot.Abstractions.Contracts;
 
@@ -13,13 +9,14 @@ namespace Bot.TestKit;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///         <item>Использует <see cref="ConcurrentDictionary{TKey, TValue}"/></item>
+///         <item>Использует <see cref="ConcurrentDictionary{TKey,TValue}" /></item>
 ///         <item>Поддерживает TTL для записей</item>
 ///     </list>
 /// </remarks>
 public sealed class InMemoryStateStore : IStateStore
 {
-    private readonly ConcurrentDictionary<(string scope, string key), (object value, DateTimeOffset? expires)> _store = new();
+    private readonly ConcurrentDictionary<(string scope, string key), (object value, DateTimeOffset? expires)> _store =
+        new();
 
     /// <inheritdoc />
     public Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct)
@@ -49,7 +46,8 @@ public sealed class InMemoryStateStore : IStateStore
     }
 
     /// <inheritdoc />
-    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl, CancellationToken ct)
+    public Task<bool> TrySetIfAsync<T>(string scope, string key, T expected, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var k = (scope, key);
@@ -98,7 +96,8 @@ public sealed class InMemoryStateStore : IStateStore
     /// <summary>
     ///     Установить значение, если ключ отсутствует
     /// </summary>
-    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl, CancellationToken ct)
+    public async Task<bool> SetIfNotExistsAsync<T>(string scope, string key, T value, TimeSpan? ttl,
+        CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var existing = await GetAsync<T>(scope, key, ct).ConfigureAwait(false);
@@ -106,6 +105,7 @@ public sealed class InMemoryStateStore : IStateStore
         {
             return false;
         }
+
         await SetAsync(scope, key, value, ttl, ct).ConfigureAwait(false);
         return true;
     }

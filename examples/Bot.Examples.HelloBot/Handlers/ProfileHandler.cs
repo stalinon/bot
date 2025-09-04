@@ -1,5 +1,3 @@
-using System;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
