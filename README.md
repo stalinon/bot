@@ -69,3 +69,5 @@ var top = await board.RangeByScoreAsync("game", 0, double.MaxValue, ct);
 ```csharp
 public sealed record Player(string Name);
 ```
+
+Значения сериализуются в JSON и сохраняются с указанным префиксом ключей.
