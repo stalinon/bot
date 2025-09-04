@@ -17,19 +17,32 @@ namespace Bot.Core.Middlewares;
 ///         <item>Учитывает пропуски в статистике.</item>
 ///     </list>
 /// </remarks>
-public sealed class DedupMiddleware(ILogger<DedupMiddleware> logger, TtlCache<string> cache, StatsCollector stats) : IUpdateMiddleware
+public sealed class DedupMiddleware(ILogger<DedupMiddleware> logger, TtlCache<string> cache, StatsCollector stats, IStateStore? store = null) : IUpdateMiddleware
 {
     /// <inheritdoc />
-    public Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
-        var added = cache.TryAdd(ctx.UpdateId);
-        if (!added)
+        if (store is not null)
         {
-            logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
-            stats.MarkDroppedUpdate();
-            return Task.CompletedTask;
+            var added = await store.SetIfNotExistsAsync("dedup", ctx.UpdateId, 1, cache.Ttl, ctx.CancellationToken).ConfigureAwait(false);
+            if (!added)
+            {
+                logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                stats.MarkDroppedUpdate();
+                return;
+            }
+        }
+        else
+        {
+            var added = cache.TryAdd(ctx.UpdateId);
+            if (!added)
+            {
+                logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                stats.MarkDroppedUpdate();
+                return;
+            }
         }
 
-        return next(ctx);
+        await next(ctx);
     }
 }
