@@ -36,6 +36,7 @@ builder.Services
             sp.GetRequiredService<IStateStore>(),
             TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
     .AddScoped<PhoneScene>()
+    .AddScoped<ProfileScene>()
     .UsePipeline()
     .UseConfiguredStateStorage(cfg);
 

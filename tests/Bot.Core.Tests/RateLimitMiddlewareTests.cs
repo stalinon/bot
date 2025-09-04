@@ -8,6 +8,7 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Stats;
+using Bot.TestKit;
 
 using FluentAssertions;
 
@@ -23,6 +24,7 @@ namespace Bot.Core.Tests;
 ///         <item>Блокировка при превышении лимита.</item>
 ///         <item>Мягкий режим с предупреждением.</item>
 ///         <item>Учёт ограниченных обновлений в статистике.</item>
+///         <item>Работа в нескольких инстансах при использовании хранилища.</item>
 ///     </list>
 /// </remarks>
 public class RateLimitMiddlewareTests
@@ -144,6 +146,51 @@ public class RateLimitMiddlewareTests
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
 
         stats.GetSnapshot().RateLimited.Should().Be(1);
+    }
+
+    /// <summary>
+    ///     Тест 4: Ограничение действует между несколькими инстансами при использовании хранилища.
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Ограничение действует между несколькими инстансами при использовании хранилища")]
+    public async Task Limit_is_shared_across_instances_with_store()
+    {
+        var options = new RateLimitOptions
+        {
+            PerUserPerMinute = 1,
+            PerChatPerMinute = int.MaxValue,
+            Mode = RateLimitMode.Hard,
+            UseStateStore = true
+        };
+        var store = new InMemoryStateStore();
+        var stats1 = new StatsCollector();
+        var stats2 = new StatsCollector();
+        var mw1 = new RateLimitMiddleware(options, new DummyTransportClient(), stats1, store);
+        var mw2 = new RateLimitMiddleware(options, new DummyTransportClient(), stats2, store);
+        var ctx1 = new UpdateContext(
+            Transport: "test",
+            UpdateId: "1",
+            Chat: new ChatAddress(1),
+            User: new UserAddress(1),
+            Text: null,
+            Command: null,
+            Args: null,
+            Payload: null,
+            Items: new Dictionary<string, object>(),
+            Services: new DummyServiceProvider(),
+            CancellationToken: CancellationToken.None);
+        var ctx2 = ctx1 with { UpdateId = "2" };
+        var calls = 0;
+        UpdateDelegate next = _ =>
+        {
+            calls++;
+            return Task.CompletedTask;
+        };
+
+        await mw1.InvokeAsync(ctx1, next);
+        await mw2.InvokeAsync(ctx2, next);
+
+        calls.Should().Be(1);
+        stats2.GetSnapshot().RateLimited.Should().Be(1);
     }
 
     private sealed class DummyServiceProvider : IServiceProvider

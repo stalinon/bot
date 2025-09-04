@@ -29,6 +29,7 @@ public static class EndpointRouteBuilderExtensions
     {
         endpoints.MapAdminHealth();
         endpoints.MapAdminStats();
+        endpoints.MapAdminCustomStats();
         endpoints.MapAdminBroadcast();
         return endpoints;
     }
@@ -54,6 +55,29 @@ public static class EndpointRouteBuilderExtensions
             }
 
             return Results.Ok();
+        });
+        return endpoints;
+    }
+
+    /// <summary>
+    ///     Подключить эндпоинт пользовательских метрик.
+    /// </summary>
+    public static IEndpointRouteBuilder MapAdminCustomStats(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/admin/stats/custom", (CustomStats stats, HttpRequest req, IOptions<AdminOptions> options) =>
+        {
+            if (!req.Headers.TryGetValue("X-Admin-Token", out var token) ||
+                token != options.Value.AdminToken)
+            {
+                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            var snapshot = stats.GetSnapshot();
+            return Results.Json(new
+            {
+                counters = snapshot.Counters,
+                histograms = snapshot.Histograms
+            });
         });
         return endpoints;
     }
@@ -86,6 +110,9 @@ public static class EndpointRouteBuilderExtensions
                 handlers = snapshot.Handlers,
                 webappAuth = web.AuthTotal,
                 webappMe = web.MeTotal,
+                webappSendData = web.SendDataTotal,
+                webappSendDataSuccess = web.SendDataSuccess,
+                webappSendDataError = web.SendDataError,
                 webappLatencyP50 = web.P50,
                 webappLatencyP95 = web.P95,
                 webappLatencyP99 = web.P99

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.Tracing;
 
 namespace Bot.Core.Metrics;
@@ -22,7 +23,10 @@ public sealed class BotMetricsEventSource : EventSource
     private readonly EventCounter _queueDepth;
     private readonly IncrementingEventCounter _webAppAuth;
     private readonly IncrementingEventCounter _webAppMe;
+    private readonly IncrementingEventCounter _webAppSendData;
     private readonly EventCounter _webAppLatency;
+    private readonly ConcurrentDictionary<string, IncrementingEventCounter> _customCounters = new();
+    private readonly ConcurrentDictionary<string, EventCounter> _customHistograms = new();
 
     private BotMetricsEventSource()
     {
@@ -61,6 +65,10 @@ public sealed class BotMetricsEventSource : EventSource
         _webAppMe = new IncrementingEventCounter("tgbot_webapp_me_total", this)
         {
             DisplayName = "Профиль Web App"
+        };
+        _webAppSendData = new IncrementingEventCounter("tgbot_webapp_senddata_total", this)
+        {
+            DisplayName = "Передача данных Web App"
         };
         _webAppLatency = new EventCounter("tgbot_webapp_request_latency_ms", this)
         {
@@ -144,6 +152,42 @@ public sealed class BotMetricsEventSource : EventSource
     }
 
     /// <summary>
+    ///     Отметить получение данных Web App.
+    /// </summary>
+    /// <param name="latencyMs">Задержка обработки в миллисекундах.</param>
+    public void WebAppSendData(double latencyMs)
+    {
+        _webAppSendData.Increment();
+        _webAppLatency.WriteMetric(latencyMs);
+    }
+
+    /// <summary>
+    ///     Увеличить пользовательский счётчик.
+    /// </summary>
+    /// <param name="name">Имя счётчика.</param>
+    /// <param name="value">Величина увеличения.</param>
+    public void CustomCounter(string name, long value)
+    {
+        var counter = _customCounters.GetOrAdd(name, n =>
+            new IncrementingEventCounter(n, this) { DisplayName = name });
+        counter.Increment(value);
+    }
+
+    /// <summary>
+    ///     Записать значение пользовательской гистограммы.
+    /// </summary>
+    /// <param name="name">Имя гистограммы.</param>
+    /// <param name="value">Значение.</param>
+    public void CustomHistogram(string name, double value)
+    {
+        var hist = _customHistograms.GetOrAdd(name, n => new EventCounter(n, this)
+        {
+            DisplayName = name
+        });
+        hist.WriteMetric(value);
+    }
+
+    /// <summary>
     ///     Освободить ресурсы.
     /// </summary>
     /// <param name="disposing">Признак явной очистки.</param>
@@ -160,7 +204,17 @@ public sealed class BotMetricsEventSource : EventSource
             _queueDepth.Dispose();
             _webAppAuth.Dispose();
             _webAppMe.Dispose();
+            _webAppSendData.Dispose();
             _webAppLatency.Dispose();
+            foreach (var c in _customCounters.Values)
+            {
+                c.Dispose();
+            }
+
+            foreach (var h in _customHistograms.Values)
+            {
+                h.Dispose();
+            }
         }
 
         base.Dispose(disposing);

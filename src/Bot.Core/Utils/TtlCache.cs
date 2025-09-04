@@ -20,6 +20,11 @@ public sealed class TtlCache<TKey> : IDisposable where TKey : notnull
     }
 
     /// <summary>
+    ///     Время жизни записей в кеше.
+    /// </summary>
+    public TimeSpan Ttl => _ttl;
+
+    /// <summary>
     ///     Пытается добавить ключ в кеш.
     /// </summary>
     /// <param name="key">Ключ для добавления.</param>

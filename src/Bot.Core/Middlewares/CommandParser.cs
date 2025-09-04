@@ -21,6 +21,7 @@ public static class CommandParser
         var cmdPart = spaceIndex < 0 ? text : text[..spaceIndex];
         var atIndex = cmdPart.IndexOf('@');
         var cmd = atIndex < 0 ? cmdPart : cmdPart[..atIndex];
+        cmd = cmd.TrimStart('/');
 
         var payload = spaceIndex < 0 ? null : text[(spaceIndex + 1)..].Trim();
         var args = payload is null ? Array.Empty<string>() : SplitArguments(payload);

@@ -49,3 +49,25 @@ Use `scripts/quickstart.sh` or `scripts/quickstart.ps1` to validate the template
 * `WebApp__AuthTtlSeconds` — срок жизни JWT в секундах.
 * `WebApp__InitDataTtlSeconds` — время жизни параметра `initData` в секундах.
 * `WebApp__Csp__AllowedOrigins__0` — дополнительный origin для Content-Security-Policy.
+
+### Лидерборды на Redis
+
+Для хранения рейтингов можно использовать отсортированные множества:
+
+```csharp
+using Bot.Storage.Redis;
+
+var options = new RedisOptions { Connection = mux, Database = 0, Prefix = "lb" };
+var board = new RedisSortedSet<Player>(options);
+
+await board.AddAsync("game", new Player("Alice"), 1200, ct);
+await board.AddAsync("game", new Player("Bob"), 1500, ct);
+
+var top = await board.RangeByScoreAsync("game", 0, double.MaxValue, ct);
+```
+
+```csharp
+public sealed record Player(string Name);
+```
+
+Значения сериализуются в JSON и сохраняются с указанным префиксом ключей.

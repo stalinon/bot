@@ -26,6 +26,7 @@ namespace Bot.Core.Tests;
 ///     <list type="number">
 ///         <item>Проверяется добавление идентификаторов, усечение текста и логирование имени обработчика</item>
 ///         <item>Проверяется логирование ошибок обработчика с именем</item>
+///         <item>Проверяется учёт <c>web_app_data</c>.</item>
 ///     </list>
 /// </remarks>
 public sealed class LoggingMiddlewareTests
@@ -56,7 +57,7 @@ public sealed class LoggingMiddlewareTests
             new ChatAddress(1),
             new UserAddress(2),
             longText,
-            "/test",
+            "test",
             null,
             null,
             new Dictionary<string, object>
@@ -104,7 +105,7 @@ public sealed class LoggingMiddlewareTests
             new ChatAddress(1),
             new UserAddress(2),
             "hi",
-            "/fail",
+            "fail",
             null,
             null,
             new Dictionary<string, object>
@@ -125,13 +126,51 @@ public sealed class LoggingMiddlewareTests
         provider.Logs.Should().Contain(e => e.Level == LogLevel.Error && e.Message.StartsWith("handler FailingHandler failed"));
     }
 
-    [Command("/test")]
+    /// <summary>
+    ///     Тест 3: Счётчик передачи данных увеличивается при обработке <c>web_app_data</c>
+    /// </summary>
+    [Fact(DisplayName = "Тест 3: Счётчик передачи данных увеличивается при обработке web_app_data")]
+    public async Task Should_MarkSendData_When_WebAppDataHandled()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<WebAppStatsCollector>();
+        var sp = services.BuildServiceProvider();
+        var logger = sp.GetRequiredService<ILogger<LoggingMiddleware>>();
+        var mw = new LoggingMiddleware(logger);
+        var stats = sp.GetRequiredService<WebAppStatsCollector>();
+
+        var ctx = new UpdateContext(
+            "tg",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(2),
+            "data",
+            null,
+            null,
+            null,
+            new Dictionary<string, object>
+            {
+                [UpdateItems.MessageId] = 3,
+                [UpdateItems.UpdateType] = "message",
+                [UpdateItems.WebAppData] = true
+            },
+            sp,
+            default);
+
+        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+
+        var snapshot = stats.GetSnapshot();
+        snapshot.SendDataTotal.Should().Be(1);
+    }
+
+    [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
     }
 
-    [Command("/fail")]
+    [Command("fail")]
     private sealed class FailingHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => throw new InvalidOperationException("fail");

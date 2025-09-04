@@ -15,7 +15,7 @@ namespace Bot.Core.Stats;
 /// </summary>
 /// <remarks>
 /// <list type="number">
-/// <item>Считает запросы авторизации и профиля.</item>
+/// <item>Считает запросы авторизации, профиля и передачи данных.</item>
 /// <item>Записывает задержку запросов.</item>
 /// </list>
 /// </remarks>
@@ -23,10 +23,16 @@ public sealed class WebAppStatsCollector
 {
     private readonly Counter<long>? _authCounter;
     private readonly Counter<long>? _meCounter;
+    private readonly Counter<long>? _sendDataCounter;
+    private readonly Counter<long>? _sendDataSuccessCounter;
+    private readonly Counter<long>? _sendDataErrorCounter;
     private readonly Histogram<double>? _latencyHistogram;
     private readonly List<double> _latencies = new();
     private long _authTotal;
     private long _meTotal;
+    private long _sendDataTotal;
+    private long _sendDataSuccess;
+    private long _sendDataError;
     private readonly object _sync = new();
 
     /// <summary>
@@ -40,6 +46,9 @@ public sealed class WebAppStatsCollector
             var meter = meterFactory.Create(MetricsMiddleware.MeterName);
             _authCounter = meter.CreateCounter<long>("tgbot_webapp_auth_total", unit: "count");
             _meCounter = meter.CreateCounter<long>("tgbot_webapp_me_total", unit: "count");
+            _sendDataCounter = meter.CreateCounter<long>("tgbot_webapp_senddata_total", unit: "count");
+            _sendDataSuccessCounter = meter.CreateCounter<long>("tgbot_webapp_senddata_success_total", unit: "count");
+            _sendDataErrorCounter = meter.CreateCounter<long>("tgbot_webapp_senddata_error_total", unit: "count");
             _latencyHistogram = meter.CreateHistogram<double>("tgbot_webapp_request_latency_ms", unit: "ms");
         }
     }
@@ -77,6 +86,34 @@ public sealed class WebAppStatsCollector
     }
 
     /// <summary>
+    /// Отметить передачу данных.
+    /// </summary>
+    /// <param name="latencyMs">Длительность обработки в миллисекундах.</param>
+    /// <param name="success">Признак успешной обработки.</param>
+    public void MarkSendData(double latencyMs, bool success)
+    {
+        _sendDataCounter?.Add(1);
+        if (success)
+        {
+            _sendDataSuccessCounter?.Add(1);
+            Interlocked.Increment(ref _sendDataSuccess);
+        }
+        else
+        {
+            _sendDataErrorCounter?.Add(1);
+            Interlocked.Increment(ref _sendDataError);
+        }
+
+        _latencyHistogram?.Record(latencyMs);
+        BotMetricsEventSource.Log.WebAppSendData(latencyMs);
+        Interlocked.Increment(ref _sendDataTotal);
+        lock (_sync)
+        {
+            _latencies.Add(latencyMs);
+        }
+    }
+
+    /// <summary>
     /// Получить снимок статистики.
     /// </summary>
     public WebAppSnapshot GetSnapshot()
@@ -91,6 +128,9 @@ public sealed class WebAppStatsCollector
         return new WebAppSnapshot(
             Interlocked.Read(ref _authTotal),
             Interlocked.Read(ref _meTotal),
+            Interlocked.Read(ref _sendDataTotal),
+            Interlocked.Read(ref _sendDataSuccess),
+            Interlocked.Read(ref _sendDataError),
             Percentile(latencies, 0.50),
             Percentile(latencies, 0.95),
             Percentile(latencies, 0.99));
@@ -128,5 +168,13 @@ public sealed class WebAppStatsCollector
 /// <item>Содержит количества запросов и перцентили задержки.</item>
 /// </list>
 /// </remarks>
-public readonly record struct WebAppSnapshot(long AuthTotal, long MeTotal, double P50, double P95, double P99);
+public readonly record struct WebAppSnapshot(
+    long AuthTotal,
+    long MeTotal,
+    long SendDataTotal,
+    long SendDataSuccess,
+    long SendDataError,
+    double P50,
+    double P95,
+    double P99);
 

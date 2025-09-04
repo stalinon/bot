@@ -27,6 +27,7 @@ namespace Bot.Admin.MinimalApi.Tests;
 ///         <item>Проверяет эндпоинт статистики.</item>
 ///         <item>Проверяет эндпоинт рассылки.</item>
 ///         <item>Проверяет пробы готовности.</item>
+///         <item>Проверяет эндпоинт пользовательских метрик.</item>
 ///     </list>
 /// </remarks>
 public class AdminApiTests : IClassFixture<AdminApiFactory>
@@ -191,9 +192,9 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
     }
 
     /// <summary>
-    ///     Тест 11: Статистика содержит агрегированные метрики.
+    ///     Тест 11: Статистика содержит агрегированные метрики, включая <c>web_app_data</c>.
     /// </summary>
-    [Fact(DisplayName = "Тест 11: Статистика содержит агрегированные метрики")]
+    [Fact(DisplayName = "Тест 11: Статистика содержит агрегированные метрики, включая web_app_data")]
     public async Task Should_ContainAggregatedMetrics_When_StatsRequestedWithToken()
     {
         var client = _factory.CreateClient();
@@ -202,7 +203,29 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         var resp = await client.SendAsync(request);
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
-        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate", "webappAuth", "webappMe", "webappLatencyP50", "webappLatencyP95", "webappLatencyP99");
+        json.Should().ContainKeys("p50", "p95", "p99", "rps", "errorRate", "webappAuth", "webappMe", "webappSendData", "webappSendDataSuccess", "webappSendDataError", "webappLatencyP50", "webappLatencyP95", "webappLatencyP99");
+    }
+
+    /// <summary>
+    ///     Тест 12: Пользовательские метрики возвращаются на эндпоинте.
+    /// </summary>
+    [Fact(DisplayName = "Тест 12: Пользовательские метрики возвращаются на эндпоинте")]
+    public async Task Should_ReturnCustomMetrics_When_RequestedWithToken()
+    {
+        var custom = _factory.Services.GetRequiredService<CustomStats>();
+        custom.Increment("foo");
+        custom.Record("bar", 2);
+
+        var client = _factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/admin/stats/custom");
+        request.Headers.Add("X-Admin-Token", "secret");
+        var resp = await client.SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, JsonElement>>();
+        json.Should().ContainKey("counters");
+        json["counters"].GetProperty("foo").GetInt64().Should().Be(1);
+        json.Should().ContainKey("histograms");
+        json["histograms"].GetProperty("bar").GetProperty("p95").GetDouble().Should().BeGreaterOrEqualTo(0);
     }
 
     private sealed class DummyStateStore : IStateStore

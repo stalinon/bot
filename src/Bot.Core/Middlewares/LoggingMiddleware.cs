@@ -3,7 +3,9 @@ using System.Diagnostics;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Stats;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Bot.Core.Middlewares;
@@ -50,17 +52,17 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
             await next(ctx);
             var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
             logger.LogInformation("handler {Handler} finished in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
-            LogWebAppData(sw.ElapsedMilliseconds);
+            LogWebAppData(sw.ElapsedMilliseconds, true);
         }
         catch (Exception ex)
         {
             var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
             logger.LogError(ex, "handler {Handler} failed in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
-            LogWebAppData(sw.ElapsedMilliseconds);
+            LogWebAppData(sw.ElapsedMilliseconds, false);
             throw;
         }
 
-        void LogWebAppData(long latency)
+        void LogWebAppData(long latency, bool success)
         {
             if (ctx.GetItem<bool>(UpdateItems.WebAppData) == true)
             {
@@ -69,6 +71,8 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
                     ctx.User.Id,
                     "miniapp",
                     latency);
+                var stats = ctx.Services.GetService<WebAppStatsCollector>();
+                stats?.MarkSendData(latency, success);
             }
         }
     }

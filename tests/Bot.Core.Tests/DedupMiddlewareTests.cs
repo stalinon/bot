@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Stats;
 using Bot.Core.Utils;
+using Bot.TestKit;
 
 using FluentAssertions;
 
@@ -25,6 +27,7 @@ namespace Bot.Core.Tests;
 ///         <item>Фильтрация дубликатов.</item>
 ///         <item>Обработка уникальных обновлений.</item>
 ///         <item>Учёт потерянных обновлений в статистике.</item>
+///         <item>Работа в нескольких инстансах при использовании хранилища.</item>
 ///     </list>
 /// </remarks>
 public class DedupMiddlewareTests
@@ -129,6 +132,46 @@ public class DedupMiddlewareTests
         await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
 
         stats.GetSnapshot().DroppedUpdates.Should().Be(1);
+    }
+
+    /// <summary>
+    ///     Тест 4: Дубликат игнорируется в разных инстансах при использовании хранилища.
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Дубликат игнорируется в разных инстансах при использовании хранилища")]
+    public async Task Duplicate_is_ignored_across_instances_with_store()
+    {
+        var loggerFactory = LoggerFactory.Create(b => { });
+        using var cache1 = new TtlCache<string>(TimeSpan.FromMinutes(1));
+        using var cache2 = new TtlCache<string>(TimeSpan.FromMinutes(1));
+        var store = new InMemoryStateStore();
+        var stats1 = new StatsCollector();
+        var stats2 = new StatsCollector();
+        var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache1, stats1, store);
+        var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache2, stats2, store);
+        var ctx = new UpdateContext(
+            Transport: "test",
+            UpdateId: "1",
+            Chat: new ChatAddress(1),
+            User: new UserAddress(1),
+            Text: null,
+            Command: null,
+            Args: null,
+            Payload: null,
+            Items: new Dictionary<string, object>(),
+            Services: new DummyServiceProvider(),
+            CancellationToken: CancellationToken.None);
+        var calls = 0;
+        UpdateDelegate next = _ =>
+        {
+            calls++;
+            return Task.CompletedTask;
+        };
+
+        await mw1.InvokeAsync(ctx, next);
+        await mw2.InvokeAsync(ctx, next);
+
+        calls.Should().Be(1);
+        stats2.GetSnapshot().DroppedUpdates.Should().Be(1);
     }
 
     private sealed class DummyServiceProvider : IServiceProvider
