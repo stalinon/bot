@@ -1,4 +1,6 @@
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 
@@ -11,10 +13,16 @@ namespace Bot.Core.Routing;
 /// <summary>
 ///     Регистр обработчиков
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Сопоставляет команды обработчикам</item>
+///         <item>Автоматически привязывает аргументы к типам</item>
+///     </list>
+/// </remarks>
 public sealed class HandlerRegistry
 {
-    private readonly ConcurrentDictionary<string, Type> _commands = new(StringComparer.OrdinalIgnoreCase);
-    private readonly List<(System.Text.RegularExpressions.Regex Pattern, Type Type)> _regexHandlers = new();
+    private readonly List<(string[] Path, Type Handler, Type? ArgsType)> _commands = [];
+    private readonly List<(System.Text.RegularExpressions.Regex Pattern, Type Type)> _regexHandlers = [];
 
     /// <summary>
     ///     Зарегистрировать обработчики из сборки
@@ -39,7 +47,8 @@ public sealed class HandlerRegistry
 
         foreach (var ca in t.GetCustomAttributes<CommandAttribute>())
         {
-            _commands[ca.Name] = t;
+            var path = ca.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            _commands.Add((path, t, ca.ArgsType));
         }
 
         foreach (var ta in t.GetCustomAttributes<TextMatchAttribute>())
@@ -53,20 +62,99 @@ public sealed class HandlerRegistry
     /// </summary>
     public Type? FindFor(UpdateContext ctx)
     {
-        if (!string.IsNullOrEmpty(ctx.Command) && _commands.TryGetValue(ctx.Command!, out var t))
+        if (!string.IsNullOrEmpty(ctx.Command))
         {
-            if (MatchesFilter(t, ctx)) return t;
+            var tokens = new[] { ctx.Command! }.Concat(ctx.Args ?? []).ToArray();
+
+            foreach (var (path, handler, argsType) in _commands.OrderByDescending(c => c.Path.Length))
+            {
+                if (tokens.Length < path.Length)
+                {
+                    continue;
+                }
+
+                var match = true;
+                for (var i = 0; i < path.Length; i++)
+                {
+                    if (!string.Equals(tokens[i], path[i], StringComparison.OrdinalIgnoreCase))
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match && MatchesFilter(handler, ctx))
+                {
+                    if (argsType is not null)
+                    {
+                        var argsTokens = tokens[path.Length..];
+                        var bound = BindArgs(argsType, argsTokens);
+                        if (bound is null)
+                        {
+                            return null;
+                        }
+
+                        ctx.SetItem(UpdateItems.CommandArgs, bound);
+                    }
+
+                    return handler;
+                }
+            }
         }
 
         if (!string.IsNullOrEmpty(ctx.Text))
         {
             foreach (var (p, type) in _regexHandlers)
             {
-                if (p.IsMatch(ctx.Text!) && MatchesFilter(type, ctx)) return type;
+                if (p.IsMatch(ctx.Text!) && MatchesFilter(type, ctx))
+                {
+                    return type;
+                }
             }
         }
 
         return null;
+    }
+
+    private static object? BindArgs(Type t, IReadOnlyList<string> tokens)
+    {
+        var ctor = t.GetConstructors().SingleOrDefault();
+        if (ctor is null)
+        {
+            return null;
+        }
+
+        var parameters = ctor.GetParameters();
+        if (parameters.Length != tokens.Count)
+        {
+            return null;
+        }
+
+        var values = new object?[parameters.Length];
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            try
+            {
+                values[i] = Convert.ChangeType(tokens[i], parameters[i].ParameterType);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        var instance = ctor.Invoke(values);
+
+        try
+        {
+            Validator.ValidateObject(instance, new ValidationContext(instance), true);
+        }
+        catch (ValidationException)
+        {
+            return null;
+        }
+
+        return instance;
     }
 
     private static bool MatchesFilter(Type t, UpdateContext ctx)

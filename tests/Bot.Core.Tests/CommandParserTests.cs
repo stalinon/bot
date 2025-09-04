@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 using Bot.Core.Middlewares;
 
+using FluentAssertions;
 using Xunit;
 
 namespace Bot.Core.Tests;
@@ -16,20 +17,20 @@ public class CommandParserTests
     /// </summary>
     public static IEnumerable<object?[]> Cases => new object?[][]
     {
-        new object?[]{"/cmd", "/cmd", null, Array.Empty<string>()},
-        new object?[]{"/cmd@Bot", "/cmd", null, Array.Empty<string>()},
-        new object?[]{"/cmd arg", "/cmd", "arg", new[]{"arg"}},
-        new object?[]{"/cmd arg1 arg2", "/cmd", "arg1 arg2", new[]{"arg1","arg2"}},
-        new object?[]{"/cmd   arg1   arg2", "/cmd", "arg1   arg2", new[]{"arg1","arg2"}},
-        new object?[]{"/cmd \"arg 1\"", "/cmd", "\"arg 1\"", new[]{"arg 1"}},
-        new object?[]{"/cmd \"arg 1\" arg2", "/cmd", "\"arg 1\" arg2", new[]{"arg 1","arg2"}},
-        new object?[]{"/cmd 'arg 1'", "/cmd", "'arg 1'", new[]{"arg 1"}},
-        new object?[]{"/cmd \"arg with \\\"quotes\\\"\"", "/cmd", "\"arg with \\\"quotes\\\"\"", new[]{"arg with \"quotes\""}},
-        new object?[]{"/cmd@Bot arg", "/cmd", "arg", new[]{"arg"}},
-        new object?[]{"/cmd   ", "/cmd", "", Array.Empty<string>()},
-        new object?[]{"/cmd arg1 \"arg 2\" 'arg 3'", "/cmd", "arg1 \"arg 2\" 'arg 3'", new[]{"arg1","arg 2","arg 3"}},
-        new object?[]{"/cmd \"\" arg", "/cmd", "\"\" arg", new[]{"arg"}},
-        new object?[]{"/cmd \"arg with \\\"quotes\\\"\" arg2", "/cmd", "\"arg with \\\"quotes\\\"\" arg2", new[]{"arg with \"quotes\"","arg2"}},
+        new object?[]{"/cmd", "cmd", null, Array.Empty<string>()},
+        new object?[]{"/cmd@Bot", "cmd", null, Array.Empty<string>()},
+        new object?[]{"/cmd arg", "cmd", "arg", new[]{"arg"}},
+        new object?[]{"/cmd arg1 arg2", "cmd", "arg1 arg2", new[]{"arg1","arg2"}},
+        new object?[]{"/cmd   arg1   arg2", "cmd", "arg1   arg2", new[]{"arg1","arg2"}},
+        new object?[]{"/cmd \"arg 1\"", "cmd", "\"arg 1\"", new[]{"arg 1"}},
+        new object?[]{"/cmd \"arg 1\" arg2", "cmd", "\"arg 1\" arg2", new[]{"arg 1","arg2"}},
+        new object?[]{"/cmd 'arg 1'", "cmd", "'arg 1'", new[]{"arg 1"}},
+        new object?[]{"/cmd \"arg with \\\"quotes\\\"\"", "cmd", "\"arg with \\\"quotes\\\"\"", new[]{"arg with \"quotes\""}},
+        new object?[]{"/cmd@Bot arg", "cmd", "arg", new[]{"arg"}},
+        new object?[]{"/cmd   ", "cmd", "", Array.Empty<string>()},
+        new object?[]{"/cmd arg1 \"arg 2\" 'arg 3'", "cmd", "arg1 \"arg 2\" 'arg 3'", new[]{"arg1","arg 2","arg 3"}},
+        new object?[]{"/cmd \"\" arg", "cmd", "\"\" arg", new[]{"arg"}},
+        new object?[]{"/cmd \"arg with \\\"quotes\\\"\" arg2", "cmd", "\"arg with \\\"quotes\\\"\" arg2", new[]{"arg with \"quotes\"","arg2"}},
         new object?[]{"text", null, null, null},
     };
 
@@ -43,14 +44,25 @@ public class CommandParserTests
         var result = CommandParser.Parse(text);
         if (cmd is null)
         {
-            Assert.Null(result);
+            result.Should().BeNull();
         }
         else
         {
-            Assert.NotNull(result);
-            Assert.Equal(cmd, result!.Command);
-            Assert.Equal(payload, result.Payload);
-            Assert.Equal(expectedArgs!, result.Args);
+            result.Should().NotBeNull();
+            result!.Command.Should().Be(cmd);
+            result.Payload.Should().Be(payload);
+            result.Args.Should().Equal(expectedArgs!);
         }
+    }
+
+    /// <summary>
+    ///     Тест 2. Должен поддерживать подкоманды
+    /// </summary>
+    [Fact(DisplayName = "Тест 2. Должен поддерживать подкоманды")]
+    public void Should_Parse_Subcommands()
+    {
+        var result = CommandParser.Parse("/vote tax 5");
+        result.Should().NotBeNull();
+        result!.Parts.Should().Equal("vote", "tax", "5");
     }
 }

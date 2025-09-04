@@ -84,7 +84,7 @@ public class PipelineIntegrationTests
         await svc.StopAsync(default);
     }
 
-    [Command("/ping")]
+    [Command("ping")]
     private sealed class PingHandler(IStateStore store, ITransportClient tx) : IUpdateHandler
     {
         /// <inheritdoc />

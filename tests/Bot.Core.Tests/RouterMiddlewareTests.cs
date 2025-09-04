@@ -52,7 +52,7 @@ public sealed class RouterMiddlewareTests
             new ChatAddress(1),
             new UserAddress(2),
             "hi",
-            "/test",
+            "test",
             null,
             null,
             new Dictionary<string, object>
@@ -69,7 +69,7 @@ public sealed class RouterMiddlewareTests
         provider.Logs.Should().Contain(e => e.Message.StartsWith("handler TestHandler finished"));
     }
 
-    [Command("/test")]
+    [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;

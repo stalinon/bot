@@ -30,4 +30,9 @@ public static class UpdateItems
     ///     Признак данных веб-приложения
     /// </summary>
     public const string WebAppData = nameof(WebAppData);
+
+    /// <summary>
+    ///     Привязанные аргументы команды
+    /// </summary>
+    public const string CommandArgs = nameof(CommandArgs);
 }
