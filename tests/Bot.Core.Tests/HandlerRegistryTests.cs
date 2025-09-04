@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ using Bot.Abstractions.Attributes;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Routing;
 
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
@@ -19,7 +21,7 @@ namespace Bot.Core.Tests;
 /// </summary>
 public class HandlerRegistryTests
 {
-    [Command("/cmd")]
+    [Command("cmd")]
     private sealed class CmdHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
@@ -37,7 +39,15 @@ public class HandlerRegistryTests
         public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
     }
 
-    private static UpdateContext CreateContext(string? text, string? command)
+    [Command("vote tax", typeof(VoteArgs))]
+    private sealed class VoteHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
+    }
+
+    private sealed record VoteArgs(string Target, [Range(1,10)] int Value);
+
+    private static UpdateContext CreateContext(string? text, string? command, string[]? args = null)
     {
         var services = new ServiceCollection().BuildServiceProvider();
         return new UpdateContext(
@@ -47,7 +57,7 @@ public class HandlerRegistryTests
             new UserAddress(1),
             text,
             command,
-            null,
+            args,
             null,
             new Dictionary<string, object>(),
             services,
@@ -64,8 +74,8 @@ public class HandlerRegistryTests
         registry.Register(typeof(CmdHandler));
         registry.Register(typeof(FirstRegexHandler));
 
-        var ctx = CreateContext("/cmd", "/cmd");
-        Assert.Equal(typeof(CmdHandler), registry.FindFor(ctx));
+        var ctx = CreateContext("/cmd", "cmd");
+        registry.FindFor(ctx).Should().Be(typeof(CmdHandler));
     }
 
     /// <summary>
@@ -79,6 +89,33 @@ public class HandlerRegistryTests
         registry.Register(typeof(FirstRegexHandler));
 
         var ctx = CreateContext("anything", null);
-        Assert.Equal(typeof(SecondRegexHandler), registry.FindFor(ctx));
+        registry.FindFor(ctx).Should().Be(typeof(SecondRegexHandler));
+    }
+
+    /// <summary>
+    ///     3. Проверяет привязку аргументов к типу
+    /// </summary>
+    [Fact(DisplayName = "Тест 3. Привязка аргументов к типу")]
+    public void Should_Bind_Arguments()
+    {
+        var registry = new HandlerRegistry();
+        registry.Register(typeof(VoteHandler));
+
+        var ctx = CreateContext("/vote tax 5", "vote", new[] { "tax", "5" });
+        registry.FindFor(ctx).Should().Be(typeof(VoteHandler));
+        ctx.GetItem<VoteArgs>(UpdateItems.CommandArgs)!.Should().Be(new VoteArgs("tax", 5));
+    }
+
+    /// <summary>
+    ///     4. Проверяет валидацию аргументов
+    /// </summary>
+    [Fact(DisplayName = "Тест 4. Валидация аргументов")]
+    public void Should_Validate_Arguments()
+    {
+        var registry = new HandlerRegistry();
+        registry.Register(typeof(VoteHandler));
+
+        var ctx = CreateContext("/vote tax 50", "vote", new[] { "tax", "50" });
+        registry.FindFor(ctx).Should().BeNull();
     }
 }

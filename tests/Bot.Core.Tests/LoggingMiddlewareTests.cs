@@ -57,7 +57,7 @@ public sealed class LoggingMiddlewareTests
             new ChatAddress(1),
             new UserAddress(2),
             longText,
-            "/test",
+            "test",
             null,
             null,
             new Dictionary<string, object>
@@ -105,7 +105,7 @@ public sealed class LoggingMiddlewareTests
             new ChatAddress(1),
             new UserAddress(2),
             "hi",
-            "/fail",
+            "fail",
             null,
             null,
             new Dictionary<string, object>
@@ -164,13 +164,13 @@ public sealed class LoggingMiddlewareTests
         snapshot.SendDataTotal.Should().Be(1);
     }
 
-    [Command("/test")]
+    [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => Task.CompletedTask;
     }
 
-    [Command("/fail")]
+    [Command("fail")]
     private sealed class FailingHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx) => throw new InvalidOperationException("fail");
