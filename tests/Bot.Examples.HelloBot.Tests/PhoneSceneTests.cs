@@ -1,15 +1,11 @@
 using System.Linq;
 
-using Bot.Abstractions;
-using Bot.Abstractions.Addresses;
 using Bot.Core.Scenes;
 using Bot.Examples.HelloBot.Handlers;
 using Bot.Examples.HelloBot.Scenes;
 using Bot.TestKit;
 
 using FluentAssertions;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
 
@@ -47,21 +43,17 @@ public sealed class PhoneSceneTests
     [Fact(DisplayName = "Тест 1: Должен успешно запросить и подтвердить номер")]
     public async Task Should_AskAndConfirmPhone()
     {
-        var ctx = CreateCtx("/phone", "/phone");
+        var ctx = SceneTestExtensions.CreateContext("/phone", "/phone");
         await _handler.HandleAsync(ctx);
 
-        var ctx2 = CreateCtx("+79991234567", null);
-        await _handler.HandleAsync(ctx2);
-
-        var ctx3 = CreateCtx("да", null);
-        await _handler.HandleAsync(ctx3);
+        await _handler.StepAsync(_navigator, ctx, "+79991234567");
+        var state = await _handler.StepAsync(_navigator, ctx, "да");
 
         _client.SentTexts.Select(t => t.text).Should().ContainInOrder(
             "введите номер телефона",
             "подтвердите номер: +79991234567 (да/нет)",
             "номер сохранён: +79991234567");
 
-        var state = await _navigator.GetStateAsync(ctx3);
         state.Should().BeNull();
     }
 
@@ -71,33 +63,14 @@ public sealed class PhoneSceneTests
     [Fact(DisplayName = "Тест 2: Должен выйти из сцены по таймауту")]
     public async Task Should_ExitByTimeout()
     {
-        var ctx = CreateCtx("/phone", "/phone");
+        var ctx = SceneTestExtensions.CreateContext("/phone", "/phone");
         await _handler.HandleAsync(ctx);
 
-        await Task.Delay(150);
-
-        var ctx2 = CreateCtx("+79991234567", null);
-        await _handler.HandleAsync(ctx2);
+        await _handler.StepAsync(_navigator, ctx, "+79991234567", delay: TimeSpan.FromMilliseconds(150));
 
         _client.SentTexts[^1].text.Should().Be("не понимаю :(");
-        var state = await _navigator.GetStateAsync(ctx2);
+        var state = await _navigator.GetStateAsync(ctx);
         state.Should().BeNull();
     }
 
-    private static UpdateContext CreateCtx(string text, string? command)
-    {
-        var services = new ServiceCollection().BuildServiceProvider();
-        return new UpdateContext(
-            "tg",
-            "1",
-            new ChatAddress(1),
-            new UserAddress(1),
-            text,
-            command,
-            null,
-            null,
-            new Dictionary<string, object>(),
-            services,
-            CancellationToken.None);
-    }
 }

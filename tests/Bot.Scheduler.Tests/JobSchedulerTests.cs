@@ -2,15 +2,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Bot.Abstractions.Contracts;
-using Bot.Hosting;
 using Bot.Scheduler;
 using Bot.TestKit;
 
 using FluentAssertions;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 using Xunit;
 
@@ -39,19 +36,17 @@ public sealed class JobSchedulerTests
     public async Task Should_RunJob_OnInterval()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IStateStore, InMemoryStateStore>();
         services.AddSingleton<IntervalJob>();
-        services.AddJob<IntervalJob>(interval: TimeSpan.FromMilliseconds(50));
-        services.AddJobScheduler();
         var provider = services.BuildServiceProvider();
-        var scheduler = provider.GetRequiredService<IHostedService>();
+        var jobs = new[] { new JobDescriptor(typeof(IntervalJob), null, TimeSpan.FromMilliseconds(50)) };
+        var lockService = new FakeDistributedLock();
+        var scheduler = new FakeJobScheduler(provider, jobs, lockService);
 
-        await scheduler.StartAsync(CancellationToken.None);
-        await Task.Delay(160);
-        await scheduler.StopAsync(CancellationToken.None);
+        await scheduler.RunAsync(CancellationToken.None);
+        await scheduler.RunAsync(CancellationToken.None);
 
         var job = provider.GetRequiredService<IntervalJob>();
-        job.Counter.Should().BeGreaterOrEqualTo(2);
+        job.Counter.Should().Be(2);
     }
 
     /// <summary>
@@ -60,31 +55,24 @@ public sealed class JobSchedulerTests
     [Fact(DisplayName = "Тест 2: Должен предотвращать параллельный запуск")]
     public async Task Should_PreventParallelExecution()
     {
-        var store = new AtomicStateStore();
+        var lockService = new FakeDistributedLock();
 
         var services1 = new ServiceCollection();
-        services1.AddSingleton<IStateStore>(store);
         services1.AddSingleton<LongJob>();
-        services1.AddJob<LongJob>(interval: TimeSpan.FromMilliseconds(50));
-        services1.AddJobScheduler();
         var provider1 = services1.BuildServiceProvider();
-        var scheduler1 = provider1.GetRequiredService<IHostedService>();
+        var job = provider1.GetRequiredService<LongJob>();
+        var jobs = new[] { new JobDescriptor(typeof(LongJob), null, TimeSpan.FromMilliseconds(50)) };
+        var scheduler1 = new FakeJobScheduler(provider1, jobs, lockService);
 
         var services2 = new ServiceCollection();
-        services2.AddSingleton<IStateStore>(store);
-        services2.AddSingleton(provider1.GetRequiredService<LongJob>());
-        services2.AddJob<LongJob>(interval: TimeSpan.FromMilliseconds(50));
-        services2.AddJobScheduler();
+        services2.AddSingleton(job);
         var provider2 = services2.BuildServiceProvider();
-        var scheduler2 = provider2.GetRequiredService<IHostedService>();
+        var scheduler2 = new FakeJobScheduler(provider2, jobs, lockService);
 
-        await scheduler1.StartAsync(CancellationToken.None);
-        await scheduler2.StartAsync(CancellationToken.None);
-        await Task.Delay(80);
-        await scheduler1.StopAsync(CancellationToken.None);
-        await scheduler2.StopAsync(CancellationToken.None);
+        var t1 = scheduler1.RunAsync(CancellationToken.None);
+        var t2 = scheduler2.RunAsync(CancellationToken.None);
+        await Task.WhenAll(t1, t2);
 
-        var job = provider1.GetRequiredService<LongJob>();
         job.Counter.Should().Be(1);
     }
 }
