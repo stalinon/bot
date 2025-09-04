@@ -27,6 +27,14 @@ public interface ISceneNavigator
     Task<SceneState?> GetStateAsync(UpdateContext ctx);
 
     /// <summary>
+    ///     Сохранить контекст текущего шага.
+    /// </summary>
+    /// <param name="ctx">Контекст обновления.</param>
+    /// <param name="data">Произвольные данные шага.</param>
+    /// <param name="ttl">Время жизни шага.</param>
+    Task SaveStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null);
+
+    /// <summary>
     ///     Перейти к следующему шагу.
     /// </summary>
     /// <param name="ctx">Контекст обновления.</param>

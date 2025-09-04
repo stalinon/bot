@@ -67,6 +67,28 @@ public sealed class SceneNavigator : ISceneNavigator
     }
 
     /// <inheritdoc />
+    public async Task SaveStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null)
+    {
+        while (true)
+        {
+            var state = await GetStateAsync(ctx).ConfigureAwait(false) ??
+                        throw new InvalidOperationException("No active scene");
+            var next = state with
+            {
+                Data = data,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Ttl = ttl ?? state.Ttl
+            };
+            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, null, ctx.CancellationToken)
+                .ConfigureAwait(false);
+            if (updated)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<int> NextStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null)
     {
         while (true)
@@ -76,7 +98,7 @@ public sealed class SceneNavigator : ISceneNavigator
             var next = state with
             {
                 Step = state.Step + 1,
-                Data = data,
+                Data = data ?? state.Data,
                 UpdatedAt = DateTimeOffset.UtcNow,
                 Ttl = ttl ?? _ttl
             };
