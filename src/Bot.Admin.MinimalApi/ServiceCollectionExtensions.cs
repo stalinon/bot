@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<StatsCollector>();
         services.AddSingleton<WebAppStatsCollector>();
+        services.AddSingleton<CustomStats>();
         services.Configure<AdminOptions>(configuration.GetSection("Admin"));
         services.AddSingleton<IHealthProbe, TransportProbe>();
         services.AddSingleton<IHealthProbe, QueueProbe>();

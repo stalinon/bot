@@ -61,6 +61,7 @@ public static class ServiceCollectionExtensions
         services.AddMetrics();
         services.AddSingleton<StatsCollector>();
         services.AddSingleton<WebAppStatsCollector>();
+        services.AddSingleton<CustomStats>();
 
         if (metrics is not null)
         {
