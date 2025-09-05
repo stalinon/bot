@@ -8,12 +8,14 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 using Bot.TestKit;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -49,6 +51,8 @@ public class PipelineIntegrationTests
         });
         services.AddOptions<DeduplicationOptions>().Configure(o =>
             o.Window = TimeSpan.FromMinutes(5));
+        services.AddSingleton(sp => new TtlCache<string>(
+            sp.GetRequiredService<IOptions<DeduplicationOptions>>().Value.Window));
         services.AddSingleton<ITransportClient, FakeTransportClient>();
         services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();
