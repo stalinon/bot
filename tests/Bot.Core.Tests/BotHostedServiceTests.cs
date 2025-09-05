@@ -10,7 +10,6 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
-using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 
@@ -39,9 +38,16 @@ public class BotHostedServiceTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IMeterFactory, DummyMeterFactory>();
+        services.AddOptions<RateLimitOptions>().Configure(o =>
+        {
+            o.PerUserPerMinute = int.MaxValue;
+            o.PerChatPerMinute = int.MaxValue;
+            o.Mode = RateLimitMode.Soft;
+        });
+        services.AddOptions<DeduplicationOptions>().Configure(o =>
+            o.Window = TimeSpan.FromMinutes(5));
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
-        services.AddSingleton(new RateLimitOptions
-        { PerUserPerMinute = int.MaxValue, PerChatPerMinute = int.MaxValue, Mode = RateLimitMode.Soft });
+
         services.AddSingleton<ITransportClient, DummyTransportClient>();
         services.AddSingleton(new HandlerRegistry());
         services.AddScoped<ExceptionHandlingMiddleware>();

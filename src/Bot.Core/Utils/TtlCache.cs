@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 namespace Bot.Core.Utils;
 
 /// <summary>
-///     Простой TTL-кеш на базе <see cref="ConcurrentDictionary{TKey,TValue}" />.
-///     Записи старше указанного TTL периодически удаляются.
+///     Простой TTL-кеш с компактным хранением ключей и редкой уборкой.
 /// </summary>
 public sealed class TtlCache<TKey> : IDisposable where TKey : notnull
 {
-    private readonly ConcurrentDictionary<TKey, DateTimeOffset> _entries = new();
+    private readonly ConcurrentDictionary<TKey, byte> _entries = new();
+    private readonly ConcurrentQueue<(TKey Key, long Expire)> _queue = new();
     private readonly Timer _timer;
 
     /// <inheritdoc cref="TtlCache{TKey}" />
@@ -36,18 +36,23 @@ public sealed class TtlCache<TKey> : IDisposable where TKey : notnull
     /// <returns><c>true</c>, если ключ был добавлен; иначе <c>false</c>.</returns>
     public bool TryAdd(TKey key)
     {
-        return _entries.TryAdd(key, DateTimeOffset.UtcNow);
+        var added = _entries.TryAdd(key, 0);
+        if (added)
+        {
+            var exp = DateTimeOffset.UtcNow.Add(Ttl).Ticks;
+            _queue.Enqueue((key, exp));
+        }
+
+        return added;
     }
 
     private void Cleanup()
     {
-        var now = DateTimeOffset.UtcNow;
-        foreach (var (key, created) in _entries)
+        var now = DateTimeOffset.UtcNow.Ticks;
+        while (_queue.TryPeek(out var item) && item.Expire <= now)
         {
-            if (now - created >= Ttl)
-            {
-                _entries.TryRemove(key, out _);
-            }
+            _queue.TryDequeue(out _);
+            _entries.TryRemove(item.Key, out _);
         }
     }
 }

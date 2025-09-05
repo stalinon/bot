@@ -6,7 +6,6 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
-using Bot.Core.Utils;
 using Bot.Hosting.Options;
 using Bot.Scheduler;
 using Bot.Storage.EFCore;
@@ -51,9 +50,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RateLimitOptions>(sp =>
             sp.GetRequiredService<IOptions<BotOptions>>()
                 .Value.RateLimits);
-        services.AddSingleton(sp => new TtlCache<string>(sp
-            .GetRequiredService<IOptions<BotOptions>>()
-            .Value.DeduplicationTtl));
+        services.AddSingleton<DeduplicationOptions>(sp =>
+            sp.GetRequiredService<IOptions<BotOptions>>()
+                .Value.Deduplication);
         services.AddSingleton<BotHostedService>();
         services.AddHostedService<BotHostedService>();
         services.AddMetrics();

@@ -7,7 +7,6 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Stats;
-using Bot.Core.Utils;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,9 +27,15 @@ public class DedupAndRateLimitIntegrationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
+        services.AddOptions<DeduplicationOptions>().Configure(o =>
+            o.Window = TimeSpan.FromMinutes(1));
+        services.AddOptions<RateLimitOptions>().Configure(o =>
+        {
+            o.PerUserPerMinute = 3;
+            o.PerChatPerMinute = 3;
+            o.Mode = RateLimitMode.Soft;
+        });
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(1)));
-        services.AddSingleton(new RateLimitOptions
-        { PerUserPerMinute = 3, PerChatPerMinute = 3, Mode = RateLimitMode.Soft });
         services.AddScoped<DedupMiddleware>();
         services.AddSingleton<RateLimitMiddleware>();
         services.AddSingleton<ITransportClient, DummyTransportClient>();
