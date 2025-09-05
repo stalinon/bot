@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 
 using Bot.Abstractions;
+using Bot.Core.Options;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Telegram;
@@ -40,7 +41,11 @@ public sealed class WebhookIntegrationTests
                 Webhook = new WebhookOptions { QueueCapacity = 8 }
             }
         });
-        var source = new TelegramWebhookSource(Mock.Of<ITelegramBotClient>(), srcOptions, new StatsCollector());
+        var source = new TelegramWebhookSource(
+            Mock.Of<ITelegramBotClient>(),
+            srcOptions,
+            new QueueOptions { Policy = QueuePolicy.Drop },
+            new StatsCollector());
 
         var builder = new WebHostBuilder()
             .ConfigureServices(services =>
@@ -55,6 +60,7 @@ public sealed class WebhookIntegrationTests
                         Webhook = new WebhookOptions { Secret = "s", QueueCapacity = 8 }
                     }
                 }));
+                services.AddSingleton(new QueueOptions { Policy = QueuePolicy.Drop });
                 services.AddSingleton(source);
             })
             .Configure(app =>
