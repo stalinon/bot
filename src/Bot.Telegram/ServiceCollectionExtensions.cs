@@ -1,4 +1,5 @@
 using Bot.Abstractions.Contracts;
+using Bot.Core.Options;
 using Bot.Hosting.Options;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,8 @@ public static class ServiceCollectionExtensions
             return new TelegramBotClient(opts.Token,
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient(telegram));
         });
+        services.AddOptions<QueueOptions>();
+        services.AddSingleton(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<QueueOptions>>().Value);
         services.AddSingleton<TelegramPollingSource>();
         services.AddSingleton<TelegramWebhookSource>();
         services.AddSingleton<WebhookService>();
