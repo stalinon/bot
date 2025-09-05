@@ -5,8 +5,10 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -27,6 +29,8 @@ public class DedupAndRateLimitIntegrationTests
         services.AddLogging();
         services.AddOptions<DeduplicationOptions>().Configure(o =>
             o.Window = TimeSpan.FromMinutes(1));
+        services.AddSingleton(sp => new TtlCache<string>(
+            sp.GetRequiredService<IOptions<DeduplicationOptions>>().Value.Window));
         services.AddOptions<RateLimitOptions>().Configure(o =>
         {
             o.PerUserPerMinute = 3;

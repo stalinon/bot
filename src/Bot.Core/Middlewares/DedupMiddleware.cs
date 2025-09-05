@@ -21,12 +21,13 @@ namespace Bot.Core.Middlewares;
 /// </remarks>
 public sealed class DedupMiddleware(
     ILogger<DedupMiddleware> logger,
+    TtlCache<string> cache,
     IOptions<DeduplicationOptions> options,
     StatsCollector stats,
-    IStateStore? store = null) : IUpdateMiddleware, IDisposable
+    IStateStore? store = null) : IUpdateMiddleware
 {
     private readonly DeduplicationOptions _options = options.Value;
-    private readonly TtlCache<string> _cache = new(options.Value.Window);
+    private readonly TtlCache<string> _cache = cache;
 
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
@@ -39,7 +40,7 @@ public sealed class DedupMiddleware(
             {
                 if (_options.Mode == RateLimitMode.Soft)
                 {
-                    logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                    logger.LogWarning("повторное обновление {UpdateId} проигнорировано", ctx.UpdateId);
                 }
                 stats.MarkDroppedUpdate();
                 return;
@@ -52,7 +53,7 @@ public sealed class DedupMiddleware(
             {
                 if (_options.Mode == RateLimitMode.Soft)
                 {
-                    logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                    logger.LogWarning("повторное обновление {UpdateId} проигнорировано", ctx.UpdateId);
                 }
                 stats.MarkDroppedUpdate();
                 return;
@@ -60,11 +61,5 @@ public sealed class DedupMiddleware(
         }
 
         await next(ctx);
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        _cache.Dispose();
     }
 }

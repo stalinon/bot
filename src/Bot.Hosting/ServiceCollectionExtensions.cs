@@ -6,6 +6,7 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 using Bot.Hosting.Options;
 using Bot.Scheduler;
 using Bot.Storage.EFCore;
@@ -59,6 +60,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<StatsCollector>();
         services.AddSingleton<WebAppStatsCollector>();
         services.AddSingleton<CustomStats>();
+        services.AddSingleton(sp => new TtlCache<string>(
+            sp.GetRequiredService<DeduplicationOptions>().Window));
 
         if (metrics is not null)
         {

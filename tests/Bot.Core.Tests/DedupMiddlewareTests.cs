@@ -1,20 +1,14 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
-using Bot.Abstractions.Contracts;
-using Bot.Core.Middlewares;
 using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Stats;
-using Bot.Core.Stats;
 using Bot.Core.Utils;
 using Bot.TestKit;
-using Bot.TestKit;
 
 using FluentAssertions;
-using FluentAssertions;
 
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -43,9 +37,12 @@ public class DedupMiddlewareTests
     {
         var loggerFactory = LoggerFactory.Create(b => { });
         var stats = new StatsCollector();
-        using var mw = new DedupMiddleware(
+        var options = Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) });
+        using var cache = new TtlCache<string>(options.Value.Window);
+        var mw = new DedupMiddleware(
             loggerFactory.CreateLogger<DedupMiddleware>(),
-            Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) }),
+            cache,
+            options,
             stats);
         var ctx = new UpdateContext(
             "test",
@@ -83,9 +80,12 @@ public class DedupMiddlewareTests
     {
         var loggerFactory = LoggerFactory.Create(b => { });
         var stats = new StatsCollector();
-        using var mw = new DedupMiddleware(
+        var options = Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) });
+        using var cache = new TtlCache<string>(options.Value.Window);
+        var mw = new DedupMiddleware(
             loggerFactory.CreateLogger<DedupMiddleware>(),
-            Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) }),
+            cache,
+            options,
             stats);
         var ctx1 = new UpdateContext(
             "test",
@@ -120,9 +120,12 @@ public class DedupMiddlewareTests
     {
         var loggerFactory = LoggerFactory.Create(b => { });
         var stats = new StatsCollector();
-        using var mw = new DedupMiddleware(
+        var options = Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMinutes(1) });
+        using var cache = new TtlCache<string>(options.Value.Window);
+        var mw = new DedupMiddleware(
             loggerFactory.CreateLogger<DedupMiddleware>(),
-            Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMinutes(1) }),
+            cache,
+            options,
             stats);
         var ctx = new UpdateContext(
             "test",
@@ -154,8 +157,10 @@ public class DedupMiddlewareTests
         var store = new InMemoryStateStore();
         var stats1 = new StatsCollector();
         var stats2 = new StatsCollector();
-        using var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), options, stats1, store);
-        using var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), options, stats2, store);
+        using var cache1 = new TtlCache<string>(options.Value.Window);
+        using var cache2 = new TtlCache<string>(options.Value.Window);
+        var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache1, options, stats1, store);
+        var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache2, options, stats2, store);
         var ctx = new UpdateContext(
             "test",
             "1",
