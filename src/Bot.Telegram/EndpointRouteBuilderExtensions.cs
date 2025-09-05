@@ -24,9 +24,9 @@ public static class EndpointRouteBuilderExtensions
         var opts = endpoints.ServiceProvider.GetRequiredService<IOptions<BotOptions>>().Value;
         endpoints.MapPost(
             $"/tg/{opts.Transport.Webhook.Secret}",
-            (Update update, TelegramWebhookSource source, ILogger<TelegramWebhookSource> logger) =>
+            async (Update update, TelegramWebhookSource source, ILogger<TelegramWebhookSource> logger, CancellationToken ct) =>
             {
-                if (!source.TryEnqueue(update))
+                if (!await source.TryEnqueueAsync(update, ct))
                 {
                     logger.LogWarning("webhook queue overflow for update {UpdateId}", update.Id);
                     return Results.StatusCode(StatusCodes.Status429TooManyRequests);

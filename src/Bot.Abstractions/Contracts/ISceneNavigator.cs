@@ -39,4 +39,13 @@ public interface ISceneNavigator
     /// <param name="data">Произвольные данные шага.</param>
     /// <param name="ttl">Время жизни шага.</param>
     Task<int> NextStepAsync(UpdateContext ctx, string? data = null, TimeSpan? ttl = null);
+
+    /// <summary>
+    ///     Установить номер шага.
+    /// </summary>
+    /// <param name="ctx">Контекст обновления.</param>
+    /// <param name="step">Новый номер шага.</param>
+    /// <param name="data">Произвольные данные шага.</param>
+    /// <param name="ttl">Время жизни шага.</param>
+    Task SetStepAsync(UpdateContext ctx, int step, string? data = null, TimeSpan? ttl = null);
 }

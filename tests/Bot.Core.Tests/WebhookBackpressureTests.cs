@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using Bot.Core.Options;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Telegram;
@@ -44,6 +45,7 @@ public class WebhookBackpressureTests
                 }));
                 services.AddSingleton(Mock.Of<ITelegramBotClient>());
                 services.AddSingleton<StatsCollector>();
+                services.AddSingleton(new QueueOptions { Policy = QueuePolicy.Drop });
                 services.AddSingleton<TelegramWebhookSource>();
                 services.AddLogging(b => b.AddProvider(provider));
             })

@@ -108,6 +108,29 @@ public sealed class SceneNavigator : ISceneNavigator
         }
     }
 
+    /// <inheritdoc />
+    public async Task SetStepAsync(UpdateContext ctx, int step, string? data = null, TimeSpan? ttl = null)
+    {
+        while (true)
+        {
+            var state = await GetStateAsync(ctx).ConfigureAwait(false) ??
+                        throw new InvalidOperationException("No active scene");
+            var next = state with
+            {
+                Step = step,
+                Data = data ?? state.Data,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                Ttl = ttl ?? _ttl
+            };
+            var updated = await _store.TrySetIfAsync(Scope, Key(ctx), state, next, null, ctx.CancellationToken)
+                .ConfigureAwait(false);
+            if (updated)
+            {
+                return;
+            }
+        }
+    }
+
     private static string Key(UpdateContext ctx)
     {
         return $"{ctx.Transport}:{ctx.User.Id}:{ctx.Chat.Id}";

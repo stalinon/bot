@@ -1,7 +1,8 @@
-using System.Threading.Channels;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Options;
+using Bot.Core.Queue;
+using Bot.Core.Stats;
 
 using Microsoft.Extensions.Logging;
 
@@ -13,14 +14,14 @@ namespace Bot.Telegram;
 /// <summary>
 ///     Сервис получения обновлений через поллинг
 /// </summary>
-public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<TelegramPollingSource> logger)
+public sealed class TelegramPollingSource(
+    ITelegramBotClient client,
+    ILogger<TelegramPollingSource> logger,
+    QueueOptions queueOptions,
+    StatsCollector stats)
     : IUpdateSource
 {
-    private readonly Channel<Update> _updates = Channel.CreateBounded<Update>(
-        new BoundedChannelOptions(1024)
-        {
-            FullMode = BoundedChannelFullMode.Wait
-        });
+    private readonly UpdateQueue<Update> _updates = new(1024, queueOptions.Policy, stats);
 
     /// <summary>
     ///     Получает обновления через поллинг и передает их в обработчик
@@ -42,7 +43,7 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
                     foreach (var update in updates)
                     {
                         offset = update.Id + 1;
-                        await _updates.Writer.WriteAsync(update, ct);
+                        await _updates.EnqueueAsync(update, ct);
                     }
                 }
             }
@@ -51,13 +52,13 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
             }
             finally
             {
-                _updates.Writer.TryComplete();
+                _updates.Complete();
             }
         }, CancellationToken.None);
 
         var processing = Task.Run(async () =>
         {
-            await foreach (var update in _updates.Reader.ReadAllAsync())
+            await foreach (var update in _updates.ReadAllAsync(CancellationToken.None))
             {
                 try
                 {
@@ -70,6 +71,10 @@ public sealed class TelegramPollingSource(ITelegramBotClient client, ILogger<Tel
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "error in update handler");
+                }
+                finally
+                {
+                    stats.SetQueueDepth(_updates.Count);
                 }
             }
         }, CancellationToken.None);
