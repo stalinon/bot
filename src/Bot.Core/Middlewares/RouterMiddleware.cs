@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Routing;
@@ -17,18 +19,18 @@ public sealed class RouterMiddleware(
     IFallbackHandler? fallbackHandler = null) : IUpdateMiddleware
 {
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var t = registry.FindFor(ctx);
         if (t is null)
         {
             if (fallbackHandler is not null)
             {
-                await fallbackHandler.HandleAsync(ctx);
+                await fallbackHandler.HandleAsync(ctx).ConfigureAwait(false);
             }
             else
             {
-                await next(ctx); // no handler matched
+                await next(ctx).ConfigureAwait(false); // no handler matched
             }
 
             return;
@@ -39,7 +41,7 @@ public sealed class RouterMiddleware(
         try
         {
             ctx.SetItem(UpdateItems.Handler, t.Name);
-            await handler.HandleAsync(ctx);
+            await handler.HandleAsync(ctx).ConfigureAwait(false);
         }
         catch (Exception)
         {

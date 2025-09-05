@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
@@ -48,7 +49,7 @@ public sealed class BotHostedService(
             .Use<CommandParsingMiddleware>()
             .Use<RouterMiddleware>();
 
-        _app = pipeline.Build(_ => Task.CompletedTask);
+        _app = pipeline.Build(_ => ValueTask.CompletedTask);
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -68,14 +69,14 @@ public sealed class BotHostedService(
             },
             async (ctx, ct) =>
             {
-                await _app(ctx);
+                await _app(ctx).ConfigureAwait(false);
                 stats.SetQueueDepth(_channel.Reader.Count);
             });
 
         _writing = source.StartAsync(
             async ctx =>
             {
-                await _channel.Writer.WriteAsync(ctx, _cts.Token);
+                await _channel.Writer.WriteAsync(ctx, _cts.Token).ConfigureAwait(false);
                 stats.SetQueueDepth(_channel.Reader.Count);
             },
             _cts.Token);
@@ -109,7 +110,7 @@ public sealed class BotHostedService(
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
             try
             {
-                await Task.WhenAll(tasks).WaitAsync(linked.Token);
+                await Task.WhenAll(tasks).WaitAsync(linked.Token).ConfigureAwait(false);
                 logger.LogInformation(
                     "bot hosted service stopped: writing {WritingStatus}, processing {ProcessingStatus}",
                     _writing?.Status,

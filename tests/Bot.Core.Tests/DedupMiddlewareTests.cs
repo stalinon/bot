@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -53,7 +55,7 @@ public class DedupMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw.InvokeAsync(ctx, next);
@@ -92,7 +94,7 @@ public class DedupMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw.InvokeAsync(ctx1, next);
@@ -123,8 +125,8 @@ public class DedupMiddlewareTests
             new DummyServiceProvider(),
             CancellationToken.None);
 
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => ValueTask.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => ValueTask.CompletedTask);
 
         stats.GetSnapshot().DroppedUpdates.Should().Be(1);
     }
@@ -159,7 +161,7 @@ public class DedupMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw1.InvokeAsync(ctx, next);

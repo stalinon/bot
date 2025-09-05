@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 
@@ -9,7 +11,7 @@ namespace Bot.Core.Middlewares;
 public sealed class CommandParsingMiddleware : IUpdateMiddleware
 {
     /// <inheritdoc />
-    public Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var result = CommandParser.Parse(ctx.Text);
         if (result is null)

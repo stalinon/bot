@@ -103,7 +103,7 @@ public sealed class WebAppFlowTests : IClassFixture<WebAppApiFactory>
         var router = new RouterMiddleware(sp, registry, sp.GetRequiredService<StatsCollector>());
         ctx = ctx with { Services = sp };
 
-        await router.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await router.InvokeAsync(ctx, _ => ValueTask.CompletedTask);
 
         handled.Should().BeTrue();
         ctx.Payload.Should().Be("42");

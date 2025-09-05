@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -58,7 +60,7 @@ public sealed class WebAppDataIntegrationTests
         var router = new RouterMiddleware(sp, registry, sp.GetRequiredService<StatsCollector>());
         ctx = ctx with { Services = sp };
 
-        await router.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await router.InvokeAsync(ctx, _ => ValueTask.CompletedTask).ConfigureAwait(false);
 
         handled.Should().BeTrue();
         ctx.Payload.Should().Be("42");

@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Stats;
@@ -24,7 +26,7 @@ public sealed class DedupMiddleware(
     IStateStore? store = null) : IUpdateMiddleware
 {
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         if (store is not null)
         {
@@ -48,6 +50,6 @@ public sealed class DedupMiddleware(
             }
         }
 
-        await next(ctx);
+        await next(ctx).ConfigureAwait(false);
     }
 }
