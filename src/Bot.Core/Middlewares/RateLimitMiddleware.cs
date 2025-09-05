@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
 using Bot.Core.Stats;
+
+using Microsoft.Extensions.Options;
 
 namespace Bot.Core.Middlewares;
 
@@ -17,29 +21,42 @@ namespace Bot.Core.Middlewares;
 ///         <item>Учитывает ограниченные обновления в статистике.</item>
 ///     </list>
 /// </remarks>
-public sealed class RateLimitMiddleware(
-    RateLimitOptions options,
-    ITransportClient tx,
-    StatsCollector stats,
-    IStateStore? store = null) : IUpdateMiddleware
+public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
 {
-    private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _chat = new();
-    private readonly IStateStore? _store = store;
-    private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
+    private readonly ConcurrentDictionary<long, RingBuffer> _chat = new();
+    private readonly ConcurrentDictionary<long, RingBuffer> _user = new();
+    private readonly Timer _cleanup;
+    private readonly RateLimitOptions _options;
+    private readonly StatsCollector _stats;
+    private readonly ITransportClient _tx;
+    private readonly IStateStore? _store;
+
+    /// <summary>
+    ///     Инициализирует экземпляр <see cref="RateLimitMiddleware" />.
+    /// </summary>
+    public RateLimitMiddleware(IOptions<RateLimitOptions> options,
+        ITransportClient tx,
+        StatsCollector stats,
+        IStateStore? store = null)
+    {
+        _options = options.Value;
+        _tx = tx;
+        _stats = stats;
+        _store = store;
+        _cleanup = new Timer(Cleanup, null, _options.Window, _options.Window);
+    }
 
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var now = DateTimeOffset.UtcNow;
-        if (!await CheckAsync(_user, ctx.User.Id, options.PerUserPerMinute, now, "ratelimit:user",
-                ctx.CancellationToken) ||
-            !await CheckAsync(_chat, ctx.Chat.Id, options.PerChatPerMinute, now, "ratelimit:chat",
-                ctx.CancellationToken))
+        if (!await CheckAsync(_user, ctx.User.Id, _options.PerUserPerMinute, now, "ratelimit:user", ctx.CancellationToken) ||
+            !await CheckAsync(_chat, ctx.Chat.Id, _options.PerChatPerMinute, now, "ratelimit:chat", ctx.CancellationToken))
         {
-            stats.MarkRateLimited();
-            if (options.Mode == RateLimitMode.Soft)
+            _stats.MarkRateLimited();
+            if (_options.Mode == RateLimitMode.Soft)
             {
-                await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);
+                await _tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);
             }
 
             return;
@@ -48,36 +65,83 @@ public sealed class RateLimitMiddleware(
         await next(ctx);
     }
 
-    private async Task<bool> CheckAsync(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _cleanup.Dispose();
+    }
+
+    private async Task<bool> CheckAsync(ConcurrentDictionary<long, RingBuffer> dict, long key, int limit,
         DateTimeOffset now, string scope, CancellationToken ct)
     {
-        if (options.UseStateStore && _store is not null)
+        if (_options.UseStateStore && _store is not null)
         {
-            var count = await _store.IncrementAsync(scope, key.ToString(), 1, options.Window, ct).ConfigureAwait(false);
+            var count = await _store.IncrementAsync(scope, key.ToString(), 1, _options.Window, ct).ConfigureAwait(false);
             return count <= limit;
         }
 
-        return Check(dict, key, limit, now, options.Window);
+        if (limit == int.MaxValue)
+        {
+            return true;
+        }
+
+        var buf = dict.GetOrAdd(key, _ => new RingBuffer(limit));
+        lock (buf)
+        {
+            return buf.Add(now.Ticks, _options.Window.Ticks);
+        }
     }
 
-    private static bool Check(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
-        DateTimeOffset now, TimeSpan window)
+    private void Cleanup(object? state)
     {
-        var q = dict.GetOrAdd(key, _ => new Queue<DateTimeOffset>());
-        lock (q)
+        var threshold = DateTimeOffset.UtcNow.Ticks - _options.Window.Ticks;
+        CleanupDict(_user, threshold);
+        CleanupDict(_chat, threshold);
+    }
+
+    private static void CleanupDict(ConcurrentDictionary<long, RingBuffer> dict, long threshold)
+    {
+        foreach (var (key, buf) in dict)
         {
-            while (q.Count > 0 && now - q.Peek() > window)
+            if (buf.Last < threshold)
             {
-                q.Dequeue();
+                dict.TryRemove(key, out _);
+            }
+        }
+    }
+
+    private sealed class RingBuffer
+    {
+        private readonly long[] _items;
+        private int _index;
+        private int _count;
+
+        public RingBuffer(int size)
+        {
+            _items = new long[size];
+        }
+
+        public bool Add(long now, long window)
+        {
+            if (_count < _items.Length)
+            {
+                _items[_index] = now;
+                _index = (_index + 1) % _items.Length;
+                _count++;
+                return true;
             }
 
-            if (q.Count >= limit)
+            var oldest = _items[_index];
+            if (now - oldest < window)
             {
                 return false;
             }
 
-            q.Enqueue(now);
+            _items[_index] = now;
+            _index = (_index + 1) % _items.Length;
             return true;
         }
+
+        public long Last => _count == 0 ? 0 : _items[(_index - 1 + _items.Length) % _items.Length];
     }
 }

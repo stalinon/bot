@@ -1,3 +1,5 @@
+using Bot.Core.Options;
+using Bot.Core.Stats;
 using Bot.Telegram;
 
 using FluentAssertions;
@@ -86,7 +88,7 @@ public sealed class TelegramPollingSourceTests
 
         var processed = new List<string>();
         var logger = new LoggerFactory().CreateLogger<TelegramPollingSource>();
-        var source = new TelegramPollingSource(client.Object, logger);
+        var source = new TelegramPollingSource(client.Object, logger, new QueueOptions { Policy = QueuePolicy.Wait }, new StatsCollector());
         using var cts = new CancellationTokenSource();
 
         var start = source.StartAsync(async ctx =>
@@ -98,7 +100,13 @@ public sealed class TelegramPollingSourceTests
             }
         }, cts.Token);
 
-        await Task.Delay(10);
+        var waited = 0;
+        while (processed.Count == 0 && waited < 1000)
+        {
+            await Task.Delay(10);
+            waited += 10;
+        }
+
         cts.Cancel();
         await start; // wait for draining
 

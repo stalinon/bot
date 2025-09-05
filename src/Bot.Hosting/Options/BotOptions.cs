@@ -35,9 +35,9 @@ public sealed class BotOptions
     public RateLimitOptions RateLimits { get; set; } = new();
 
     /// <summary>
-    ///     Время жизни записей для дедупликации
+    ///     Настройки дедупликации
     /// </summary>
-    public TimeSpan DeduplicationTtl { get; set; } = TimeSpan.FromMinutes(5);
+    public DeduplicationOptions Deduplication { get; set; } = new();
 
     /// <summary>
     ///     Таймаут дренажа очереди при остановке

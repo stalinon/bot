@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Bot.Abstractions;
+using Bot.Core.Options;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Telegram;
@@ -30,7 +31,11 @@ public class TelegramWebhookSourceTests
         var bot = Mock.Of<ITelegramBotClient>();
         var options =
             Microsoft.Extensions.Options.Options.Create(new BotOptions { Transport = new TransportOptions() });
-        var source = new TelegramWebhookSource(bot, options, new StatsCollector());
+        var source = new TelegramWebhookSource(
+            bot,
+            options,
+            new QueueOptions { Policy = QueuePolicy.Drop },
+            new StatsCollector());
         var tcs = new TaskCompletionSource<UpdateContext>();
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
@@ -55,7 +60,7 @@ public class TelegramWebhookSourceTests
         var json = JsonSerializer.Serialize(obj, Json);
         var upd = JsonSerializer.Deserialize<Update>(json, Json)!;
 
-        var enqueued = source.TryEnqueue(upd);
+        var enqueued = await source.TryEnqueueAsync(upd);
         Assert.True(enqueued);
 
         var ctx = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
