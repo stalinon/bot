@@ -45,7 +45,11 @@ public class PipelineIntegrationTests
         services.AddSingleton<IMeterFactory, DummyMeterFactory>();
         services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
         services.AddSingleton(new RateLimitOptions
-        { PerUserPerMinute = 100, PerChatPerMinute = 100, Mode = RateLimitMode.Soft });
+        {
+            PerUserPerMinute = 100,
+            PerChatPerMinute = 100,
+            Mode = RateLimitMode.Soft
+        });
         services.AddSingleton<ITransportClient, FakeTransportClient>();
         services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();

@@ -23,7 +23,7 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
     private const int TextLimit = 128;
 
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var updateType = ctx.GetItem<string>(UpdateItems.UpdateType) ?? "unknown";
         var messageId = ctx.GetItem<int?>(UpdateItems.MessageId);
@@ -48,7 +48,7 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
         var sw = Stopwatch.StartNew();
         try
         {
-            await next(ctx);
+            await next(ctx).ConfigureAwait(false);
             var handler = ctx.GetItem<string>(UpdateItems.Handler) ?? "unknown";
             logger.LogInformation("handler {Handler} finished in {DurationMs}ms", handler, sw.ElapsedMilliseconds);
             LogWebAppData(sw.ElapsedMilliseconds, true);

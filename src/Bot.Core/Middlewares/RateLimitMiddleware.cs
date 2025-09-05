@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
@@ -28,32 +29,33 @@ public sealed class RateLimitMiddleware(
     private readonly ConcurrentDictionary<long, Queue<DateTimeOffset>> _user = new();
 
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var now = DateTimeOffset.UtcNow;
         if (!await CheckAsync(_user, ctx.User.Id, options.PerUserPerMinute, now, "ratelimit:user",
-                ctx.CancellationToken) ||
+                ctx.CancellationToken).ConfigureAwait(false) ||
             !await CheckAsync(_chat, ctx.Chat.Id, options.PerChatPerMinute, now, "ratelimit:chat",
-                ctx.CancellationToken))
+                ctx.CancellationToken).ConfigureAwait(false))
         {
             stats.MarkRateLimited();
             if (options.Mode == RateLimitMode.Soft)
             {
-                await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);
+                await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken).ConfigureAwait(false);
             }
 
             return;
         }
 
-        await next(ctx);
+        await next(ctx).ConfigureAwait(false);
     }
 
-    private async Task<bool> CheckAsync(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
+    private async ValueTask<bool> CheckAsync(ConcurrentDictionary<long, Queue<DateTimeOffset>> dict, long key, int limit,
         DateTimeOffset now, string scope, CancellationToken ct)
     {
         if (options.UseStateStore && _store is not null)
         {
-            var count = await _store.IncrementAsync(scope, key.ToString(), 1, options.Window, ct).ConfigureAwait(false);
+            var count = await _store.IncrementAsync(scope, key.ToString(), 1, options.Window, ct)
+                .ConfigureAwait(false);
             return count <= limit;
         }
 

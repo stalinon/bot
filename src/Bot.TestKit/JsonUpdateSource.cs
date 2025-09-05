@@ -44,14 +44,14 @@ public sealed class JsonUpdateSource(string path) : IUpdateSource
 
     private sealed class JsonUpdate
     {
-        public string? Transport { get; }
-        public string? UpdateId { get; }
-        public ChatAddress? Chat { get; }
-        public UserAddress? User { get; }
-        public string? Text { get; }
-        public string? Command { get; }
-        public string[]? Args { get; }
-        public string? Payload { get; }
-        public Dictionary<string, object>? Items { get; }
+        public string? Transport { get; init; }
+        public string? UpdateId { get; init; }
+        public ChatAddress? Chat { get; init; }
+        public UserAddress? User { get; init; }
+        public string? Text { get; init; }
+        public string? Command { get; init; }
+        public string[]? Args { get; init; }
+        public string? Payload { get; init; }
+        public Dictionary<string, object>? Items { get; init; }
     }
 }

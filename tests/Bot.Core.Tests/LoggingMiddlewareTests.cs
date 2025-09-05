@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -63,7 +65,8 @@ public sealed class LoggingMiddlewareTests
             sp,
             default);
 
-        await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => Task.CompletedTask));
+        await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => ValueTask.CompletedTask))
+            .ConfigureAwait(false);
 
         var entry = provider.Logs.Should().ContainSingle(e => e.Message == "update").Subject;
         entry.Scope["UpdateId"].Should().Be("1");
@@ -111,7 +114,11 @@ public sealed class LoggingMiddlewareTests
             sp,
             default);
 
-        var act = async () => { await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => Task.CompletedTask)); };
+        var act = async () =>
+        {
+            await mw.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => ValueTask.CompletedTask))
+                .ConfigureAwait(false);
+        };
 
         await act.Should().ThrowAsync<InvalidOperationException>();
 
@@ -151,7 +158,7 @@ public sealed class LoggingMiddlewareTests
             sp,
             default);
 
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => ValueTask.CompletedTask).ConfigureAwait(false);
 
         var snapshot = stats.GetSnapshot();
         snapshot.SendDataTotal.Should().Be(1);

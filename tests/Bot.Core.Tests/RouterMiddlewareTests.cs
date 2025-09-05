@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Attributes;
@@ -60,7 +62,8 @@ public sealed class RouterMiddlewareTests
             sp,
             default);
 
-        await logging.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => Task.CompletedTask));
+        await logging.InvokeAsync(ctx, c => router.InvokeAsync(c, _ => ValueTask.CompletedTask))
+            .ConfigureAwait(false);
 
         ctx.GetItem<string>(UpdateItems.Handler).Should().Be(nameof(TestHandler));
         provider.Logs.Should().Contain(e => e.Message.StartsWith("handler TestHandler finished"));

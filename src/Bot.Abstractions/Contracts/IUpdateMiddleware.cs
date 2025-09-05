@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Bot.Abstractions.Contracts;
 
 /// <summary>
@@ -8,5 +10,5 @@ public interface IUpdateMiddleware
     /// <summary>
     ///     Активация
     /// </summary>
-    Task InvokeAsync(UpdateContext ctx, UpdateDelegate next);
+    ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next);
 }
