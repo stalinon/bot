@@ -8,7 +8,6 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
-using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 using Bot.TestKit;
@@ -42,9 +41,14 @@ public class PipelineIntegrationTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton<IMeterFactory, DummyMeterFactory>();
-        services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
-        services.AddSingleton(new RateLimitOptions
-            { PerUserPerMinute = 100, PerChatPerMinute = 100, Mode = RateLimitMode.Soft });
+        services.AddOptions<RateLimitOptions>().Configure(o =>
+        {
+            o.PerUserPerMinute = 100;
+            o.PerChatPerMinute = 100;
+            o.Mode = RateLimitMode.Soft;
+        });
+        services.AddOptions<DeduplicationOptions>().Configure(o =>
+            o.Window = TimeSpan.FromMinutes(5));
         services.AddSingleton<ITransportClient, FakeTransportClient>();
         services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();

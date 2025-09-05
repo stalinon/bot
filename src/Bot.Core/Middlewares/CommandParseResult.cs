@@ -11,5 +11,5 @@ public sealed record CommandParseResult(string Command, string? Payload, string[
     /// <summary>
     ///     Все части команды и аргументы.
     /// </summary>
-    public string[] Parts => [Command, ..Args];
+    public string[] Parts => [Command, .. Args];
 }

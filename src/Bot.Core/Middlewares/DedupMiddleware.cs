@@ -1,9 +1,11 @@
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Options;
 using Bot.Core.Stats;
 using Bot.Core.Utils;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Bot.Core.Middlewares;
 
@@ -19,35 +21,50 @@ namespace Bot.Core.Middlewares;
 /// </remarks>
 public sealed class DedupMiddleware(
     ILogger<DedupMiddleware> logger,
-    TtlCache<string> cache,
+    IOptions<DeduplicationOptions> options,
     StatsCollector stats,
-    IStateStore? store = null) : IUpdateMiddleware
+    IStateStore? store = null) : IUpdateMiddleware, IDisposable
 {
+    private readonly DeduplicationOptions _options = options.Value;
+    private readonly TtlCache<string> _cache = new(options.Value.Window);
+
     /// <inheritdoc />
     public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         if (store is not null)
         {
-            var added = await store.SetIfNotExistsAsync("dedup", ctx.UpdateId, 1, cache.Ttl, ctx.CancellationToken)
+            var added = await store.SetIfNotExistsAsync("dedup", ctx.UpdateId, 1, _cache.Ttl, ctx.CancellationToken)
                 .ConfigureAwait(false);
             if (!added)
             {
-                logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                if (_options.Mode == RateLimitMode.Soft)
+                {
+                    logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                }
                 stats.MarkDroppedUpdate();
                 return;
             }
         }
         else
         {
-            var added = cache.TryAdd(ctx.UpdateId);
+            var added = _cache.TryAdd(ctx.UpdateId);
             if (!added)
             {
-                logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                if (_options.Mode == RateLimitMode.Soft)
+                {
+                    logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
+                }
                 stats.MarkDroppedUpdate();
                 return;
             }
         }
 
         await next(ctx);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _cache.Dispose();
     }
 }
