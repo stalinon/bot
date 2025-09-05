@@ -56,7 +56,7 @@ public class StatsCollectorTests
     public void Should_TrackDroppedAndRateLimited_When_Marked()
     {
         var stats = new StatsCollector();
-        stats.MarkDroppedUpdate();
+        stats.MarkDroppedUpdate("test");
         stats.MarkRateLimited();
         stats.SetQueueDepth(5);
 
@@ -98,7 +98,7 @@ public class StatsCollectorTests
                 case "tgbot_rate_limited_total":
                     rateLimited = value;
                     break;
-                case "tgbot_queue_depth":
+                case "queue_depth":
                     gauge = value;
                     break;
             }
@@ -112,7 +112,7 @@ public class StatsCollectorTests
         });
         listener.Start();
 
-        stats.MarkDroppedUpdate();
+        stats.MarkDroppedUpdate("test");
         stats.MarkRateLimited();
         using (var m = stats.Measure("h"))
         {

@@ -33,7 +33,7 @@ public sealed class DedupMiddleware(
             if (!added)
             {
                 logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
-                stats.MarkDroppedUpdate();
+                stats.MarkDroppedUpdate("dedup");
                 return;
             }
         }
@@ -43,7 +43,7 @@ public sealed class DedupMiddleware(
             if (!added)
             {
                 logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
-                stats.MarkDroppedUpdate();
+                stats.MarkDroppedUpdate("dedup");
                 return;
             }
         }
