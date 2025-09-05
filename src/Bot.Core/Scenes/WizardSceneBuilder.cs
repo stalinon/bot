@@ -11,6 +11,7 @@ namespace Bot.Core.Scenes;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Позволяет описывать шаги с валидацией.</item>
+///         <item>Поддерживает ветвление шагов.</item>
 ///         <item>Автоматизирует переходы и завершение сцены.</item>
 ///     </list>
 /// </remarks>
@@ -24,17 +25,40 @@ public sealed class WizardSceneBuilder
     /// </summary>
     /// <param name="prompt">Текст вопроса.</param>
     /// <param name="validator">Валидатор ответа.</param>
+    /// <param name="ttl">Время жизни шага.</param>
+    /// <param name="next">Функция выбора следующего шага.</param>
+    /// <returns>Построитель для чейнинга.</returns>
+    public WizardSceneBuilder AddStep(
+        string prompt,
+        Func<UpdateContext, string, Task<string?>> validator,
+        TimeSpan? ttl = null,
+        Func<IReadOnlyDictionary<int, string>, int?>? next = null)
+    {
+        _steps.Add(new WizardStep(prompt, validator, ttl, next));
+        return this;
+    }
+
+    /// <summary>
+    ///     Добавить шаг мастера с простым валидатором.
+    /// </summary>
+    /// <param name="prompt">Текст вопроса.</param>
+    /// <param name="validator">Валидатор ответа.</param>
     /// <param name="error">Текст ошибки.</param>
     /// <param name="ttl">Время жизни шага.</param>
+    /// <param name="next">Функция выбора следующего шага.</param>
     /// <returns>Построитель для чейнинга.</returns>
     public WizardSceneBuilder AddStep(
         string prompt,
         Func<string, bool> validator,
         string error = "Некорректное значение",
-        TimeSpan? ttl = null)
+        TimeSpan? ttl = null,
+        Func<IReadOnlyDictionary<int, string>, int?>? next = null)
     {
-        _steps.Add(new WizardStep(prompt, validator, error, ttl));
-        return this;
+        return AddStep(
+            prompt,
+            (_, text) => Task.FromResult(validator(text) ? null : error),
+            ttl,
+            next);
     }
 
     /// <summary>
@@ -63,9 +87,9 @@ public sealed class WizardSceneBuilder
 
     private sealed record WizardStep(
         string Prompt,
-        Func<string, bool> Validator,
-        string Error,
-        TimeSpan? Ttl);
+        Func<UpdateContext, string, Task<string?>> Validator,
+        TimeSpan? Ttl,
+        Func<IReadOnlyDictionary<int, string>, int?>? Next);
 
     private sealed class WizardScene : IScene
     {
@@ -102,7 +126,7 @@ public sealed class WizardSceneBuilder
         {
             var first = _steps[0];
             await _client.SendTextAsync(ctx.Chat, first.Prompt, ctx.CancellationToken).ConfigureAwait(false);
-            await _navigator.NextStepAsync(ctx, ttl: first.Ttl).ConfigureAwait(false);
+            await _navigator.SetStepAsync(ctx, 1, ttl: first.Ttl).ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -126,9 +150,10 @@ public sealed class WizardSceneBuilder
             }
 
             var step = _steps[index];
-            if (!step.Validator(ctx.Text))
+            var error = await step.Validator(ctx, ctx.Text).ConfigureAwait(false);
+            if (error is not null)
             {
-                await _client.SendTextAsync(ctx.Chat, step.Error, ctx.CancellationToken).ConfigureAwait(false);
+                await _client.SendTextAsync(ctx.Chat, error, ctx.CancellationToken).ConfigureAwait(false);
                 return;
             }
 
@@ -139,11 +164,12 @@ public sealed class WizardSceneBuilder
             var serialized = JsonSerializer.Serialize(data);
             await _navigator.SaveStepAsync(ctx, serialized, step.Ttl).ConfigureAwait(false);
 
-            if (index + 1 < _steps.Count)
+            var nextIndex = step.Next is null ? index + 1 : step.Next(data);
+            if (nextIndex is not null && nextIndex < _steps.Count)
             {
-                var next = _steps[index + 1];
+                var next = _steps[nextIndex.Value];
                 await _client.SendTextAsync(ctx.Chat, next.Prompt, ctx.CancellationToken).ConfigureAwait(false);
-                await _navigator.NextStepAsync(ctx, ttl: next.Ttl).ConfigureAwait(false);
+                await _navigator.SetStepAsync(ctx, nextIndex.Value + 1, ttl: next.Ttl).ConfigureAwait(false);
             }
             else
             {
