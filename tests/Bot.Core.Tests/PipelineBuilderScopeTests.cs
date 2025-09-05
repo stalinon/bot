@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -40,11 +42,11 @@ public sealed class PipelineBuilderScopeTests
         var countingFactory = new CountingServiceScopeFactory(root.GetRequiredService<IServiceScopeFactory>());
         var builder = new PipelineBuilder(countingFactory);
         builder.Use<DummyMiddleware>();
-        var app = builder.Build(_ => Task.CompletedTask);
+        var app = builder.Build(_ => ValueTask.CompletedTask);
         var ctx = CreateContext(root);
 
         // Act
-        await app(ctx);
+        await app(ctx).ConfigureAwait(false);
 
         // Assert
         countingFactory.Count.Should().Be(1);
@@ -71,7 +73,7 @@ public sealed class PipelineBuilderScopeTests
     {
         public static bool ProviderMatches;
 
-        public Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+        public ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
         {
             ProviderMatches = ReferenceEquals(sp, ctx.Services);
             return next(ctx);

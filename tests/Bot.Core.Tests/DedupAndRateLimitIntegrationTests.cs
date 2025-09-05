@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -33,6 +35,7 @@ public class DedupAndRateLimitIntegrationTests
             o.PerChatPerMinute = 3;
             o.Mode = RateLimitMode.Soft;
         });
+        services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(1)));
         services.AddScoped<DedupMiddleware>();
         services.AddSingleton<RateLimitMiddleware>();
         services.AddSingleton<ITransportClient, DummyTransportClient>();
@@ -47,10 +50,10 @@ public class DedupAndRateLimitIntegrationTests
         pipeline.Use(next => async ctx =>
         {
             Interlocked.Increment(ref handled);
-            await next(ctx);
+            await next(ctx).ConfigureAwait(false);
         });
 
-        var app = pipeline.Build(_ => Task.CompletedTask);
+        var app = pipeline.Build(_ => ValueTask.CompletedTask);
 
         foreach (var id in new[] { "1", "1", "2", "3", "4" })
         {
@@ -67,7 +70,7 @@ public class DedupAndRateLimitIntegrationTests
                 sp,
                 CancellationToken.None);
 
-            await app(ctx);
+            await app(ctx).ConfigureAwait(false);
         }
 
         Assert.Equal(3, handled);

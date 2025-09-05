@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
@@ -29,7 +31,7 @@ public sealed class DedupMiddleware(
     private readonly TtlCache<string> _cache = new(options.Value.Window);
 
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         if (store is not null)
         {
@@ -41,6 +43,7 @@ public sealed class DedupMiddleware(
                 {
                     logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
                 }
+
                 stats.MarkDroppedUpdate("dedup");
                 return;
             }
@@ -54,12 +57,13 @@ public sealed class DedupMiddleware(
                 {
                     logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
                 }
+                
                 stats.MarkDroppedUpdate("dedup");
                 return;
             }
         }
 
-        await next(ctx);
+        await next(ctx).ConfigureAwait(false);
     }
 
     /// <inheritdoc />

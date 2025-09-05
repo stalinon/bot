@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
@@ -47,7 +48,7 @@ public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var now = DateTimeOffset.UtcNow;
         if (!await CheckAsync(_user, ctx.User.Id, _options.PerUserPerMinute, now, "ratelimit:user", ctx.CancellationToken) ||
@@ -56,13 +57,13 @@ public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
             _stats.MarkRateLimited();
             if (_options.Mode == RateLimitMode.Soft)
             {
-                await _tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken);
+                await tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken).ConfigureAwait(false);
             }
 
             return;
         }
 
-        await next(ctx);
+        await next(ctx).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -71,12 +72,13 @@ public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
         _cleanup.Dispose();
     }
 
-    private async Task<bool> CheckAsync(ConcurrentDictionary<long, RingBuffer> dict, long key, int limit,
+    private async ValueTask<bool> CheckAsync(ConcurrentDictionary<long, RingBuffer> dict, long key, int limit,
         DateTimeOffset now, string scope, CancellationToken ct)
     {
         if (_options.UseStateStore && _store is not null)
         {
-            var count = await _store.IncrementAsync(scope, key.ToString(), 1, _options.Window, ct).ConfigureAwait(false);
+            var count = await _store.IncrementAsync(scope, key.ToString(), 1, options.Window, ct)
+                .ConfigureAwait(false);
             return count <= limit;
         }
 

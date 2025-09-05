@@ -1,5 +1,7 @@
 using System.Diagnostics.Metrics;
 
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
@@ -44,6 +46,8 @@ public class BotHostedServiceTests
         });
         services.AddOptions<DeduplicationOptions>().Configure(o =>
             o.Window = TimeSpan.FromMinutes(5));
+        services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
+
         services.AddSingleton<ITransportClient, DummyTransportClient>();
         services.AddSingleton(new HandlerRegistry());
         services.AddScoped<ExceptionHandlingMiddleware>();
@@ -67,9 +71,9 @@ public class BotHostedServiceTests
 
         using var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromSeconds(1));
-        await svc.StartAsync(cts.Token);
-        await Task.Delay(TimeSpan.FromSeconds(2));
-        await svc.StopAsync(CancellationToken.None);
+        await svc.StartAsync(cts.Token).ConfigureAwait(false);
+        await Task.Delay(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+        await svc.StopAsync(CancellationToken.None).ConfigureAwait(false);
 
         Assert.True(tracker.MaxActive <= parallelism, $"max {tracker.MaxActive} > {parallelism}");
     }
@@ -92,12 +96,12 @@ public class BotHostedServiceTests
                     new Dictionary<string, object>(),
                     null!,
                     ct);
-                await onUpdate(ctx);
+                await onUpdate(ctx).ConfigureAwait(false);
             }
 
             try
             {
-                await Task.Delay(Timeout.Infinite, ct);
+                await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -144,8 +148,8 @@ public class BotHostedServiceTests
                     }
                 } while (Interlocked.CompareExchange(ref _max, current, prev) != prev);
 
-                await Task.Delay(50);
-                await next(ctx);
+                await Task.Delay(50).ConfigureAwait(false);
+                await next(ctx).ConfigureAwait(false);
                 Interlocked.Decrement(ref _active);
             };
         }

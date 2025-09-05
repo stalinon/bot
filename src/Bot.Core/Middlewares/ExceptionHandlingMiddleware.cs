@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
 
@@ -11,11 +13,11 @@ namespace Bot.Core.Middlewares;
 public sealed class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> logger) : IUpdateMiddleware
 {
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         try
         {
-            await next(ctx);
+            await next(ctx).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (ctx.CancellationToken.IsCancellationRequested)
         {

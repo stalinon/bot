@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Core.Pipeline;
@@ -24,7 +26,7 @@ public class PipelineBuilderTests
         var services = new ServiceCollection().BuildServiceProvider();
         var builder = new PipelineBuilder(services.GetRequiredService<IServiceScopeFactory>());
 
-        builder.Build(_ => Task.CompletedTask);
+        builder.Build(_ => ValueTask.CompletedTask);
 
         Assert.Throws<InvalidOperationException>(() => builder.Use(next => next));
     }
@@ -44,13 +46,13 @@ public class PipelineBuilderTests
             builder.Use(next => async ctx =>
             {
                 Interlocked.Increment(ref counter);
-                await next(ctx);
+                await next(ctx).ConfigureAwait(false);
             })));
 
         await Task.WhenAll(tasks);
 
-        var app = builder.Build(_ => Task.CompletedTask);
-        await app(CreateContext());
+        var app = builder.Build(_ => ValueTask.CompletedTask);
+        await app(CreateContext()).ConfigureAwait(false);
 
         Assert.Equal(50, counter);
     }

@@ -50,6 +50,8 @@ public class PipelineIntegrationTests
         });
         services.AddOptions<DeduplicationOptions>().Configure(o =>
             o.Window = TimeSpan.FromMinutes(5));
+        services.AddSingleton(new TtlCache<string>(TimeSpan.FromMinutes(5)));
+
         services.AddSingleton<ITransportClient, FakeTransportClient>();
         services.AddSingleton<IStateStore, InMemoryStateStore>();
         var registry = new HandlerRegistry();

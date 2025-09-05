@@ -58,7 +58,7 @@ public class RateLimitMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw.InvokeAsync(ctx, next);
@@ -101,7 +101,7 @@ public class RateLimitMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw.InvokeAsync(ctx1, next);
@@ -140,8 +140,8 @@ public class RateLimitMiddlewareTests
             new DummyServiceProvider(),
             CancellationToken.None);
 
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
-        await mw.InvokeAsync(ctx, _ => Task.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => ValueTask.CompletedTask);
+        await mw.InvokeAsync(ctx, _ => ValueTask.CompletedTask);
 
         stats.GetSnapshot().RateLimited.Should().Be(1);
     }
@@ -181,7 +181,7 @@ public class RateLimitMiddlewareTests
         UpdateDelegate next = _ =>
         {
             calls++;
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         };
 
         await mw1.InvokeAsync(ctx1, next);

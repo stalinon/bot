@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Threading.Tasks;
 
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
@@ -37,13 +38,13 @@ public sealed class MetricsMiddleware : IUpdateMiddleware
     }
 
     /// <inheritdoc />
-    public async Task InvokeAsync(UpdateContext ctx, UpdateDelegate next)
+    public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var sw = Stopwatch.StartNew();
         var success = false;
         try
         {
-            await next(ctx);
+            await next(ctx).ConfigureAwait(false);
             success = true;
         }
         catch (OperationCanceledException) when (ctx.CancellationToken.IsCancellationRequested)
