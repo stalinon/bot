@@ -2,13 +2,14 @@ using Bot.Abstractions;
 using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
+using Bot.Core.Options;
 using Bot.Core.Stats;
-using Bot.Core.Utils;
 using Bot.TestKit;
 
 using FluentAssertions;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Xunit;
 
@@ -34,9 +35,11 @@ public class DedupMiddlewareTests
     public async Task Duplicate_within_ttl_is_ignored_and_after_ttl_passes()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
-        using var cache = new TtlCache<string>(TimeSpan.FromMilliseconds(100));
         var stats = new StatsCollector();
-        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
+        using var mw = new DedupMiddleware(
+            loggerFactory.CreateLogger<DedupMiddleware>(),
+            Microsoft.Extensions.Options.Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) }),
+            stats);
         var ctx = new UpdateContext(
             "test",
             "42",
@@ -72,9 +75,11 @@ public class DedupMiddlewareTests
     public async Task Different_update_ids_are_processed_independently()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
-        using var cache = new TtlCache<string>(TimeSpan.FromMilliseconds(100));
         var stats = new StatsCollector();
-        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
+        using var mw = new DedupMiddleware(
+            loggerFactory.CreateLogger<DedupMiddleware>(),
+            Microsoft.Extensions.Options.Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMilliseconds(100) }),
+            stats);
         var ctx1 = new UpdateContext(
             "test",
             "1",
@@ -107,9 +112,11 @@ public class DedupMiddlewareTests
     public async Task Duplicate_increments_dropped_counter()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
-        using var cache = new TtlCache<string>(TimeSpan.FromMinutes(1));
         var stats = new StatsCollector();
-        var mw = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache, stats);
+        using var mw = new DedupMiddleware(
+            loggerFactory.CreateLogger<DedupMiddleware>(),
+            Microsoft.Extensions.Options.Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMinutes(1) }),
+            stats);
         var ctx = new UpdateContext(
             "test",
             "1",
@@ -136,13 +143,12 @@ public class DedupMiddlewareTests
     public async Task Duplicate_is_ignored_across_instances_with_store()
     {
         var loggerFactory = LoggerFactory.Create(b => { });
-        using var cache1 = new TtlCache<string>(TimeSpan.FromMinutes(1));
-        using var cache2 = new TtlCache<string>(TimeSpan.FromMinutes(1));
+        var options = Microsoft.Extensions.Options.Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMinutes(1) });
         var store = new InMemoryStateStore();
         var stats1 = new StatsCollector();
         var stats2 = new StatsCollector();
-        var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache1, stats1, store);
-        var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), cache2, stats2, store);
+        using var mw1 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), options, stats1, store);
+        using var mw2 = new DedupMiddleware(loggerFactory.CreateLogger<DedupMiddleware>(), options, stats2, store);
         var ctx = new UpdateContext(
             "test",
             "1",

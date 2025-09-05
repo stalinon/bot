@@ -1,7 +1,7 @@
-using System.Threading.Channels;
-
 using Bot.Abstractions;
 using Bot.Abstractions.Contracts;
+using Bot.Core.Options;
+using Bot.Core.Queue;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
 
@@ -25,16 +25,15 @@ namespace Bot.Telegram;
 public sealed class TelegramWebhookSource(
     ITelegramBotClient client,
     IOptions<BotOptions> options,
+    QueueOptions queueOptions,
     StatsCollector stats)
     : IUpdateSource
 {
     private readonly BotOptions _options = options.Value;
-
-    private readonly Channel<Update> _updates = Channel.CreateBounded<Update>(
-        new BoundedChannelOptions(options.Value.Transport.Webhook.QueueCapacity)
-        {
-            FullMode = BoundedChannelFullMode.Wait
-        });
+    private readonly UpdateQueue<Update> _updates = new(
+        options.Value.Transport.Webhook.QueueCapacity,
+        queueOptions.Policy,
+        stats);
 
     /// <summary>
     ///     Читает очередь и передает обновления в обработчик
@@ -47,15 +46,14 @@ public sealed class TelegramWebhookSource(
             await client.SetWebhook(url, cancellationToken: ct);
         }
 
-        await foreach (var update in _updates.Reader.ReadAllAsync(ct))
+        await foreach (var update in _updates.ReadAllAsync(ct))
         {
             var ctx = TelegramUpdateMapper.Map(update);
             if (ctx is not null)
             {
                 await onUpdate(ctx with { Services = default!, CancellationToken = ct });
             }
-
-            stats.SetQueueDepth(_updates.Reader.Count);
+            stats.SetQueueDepth(_updates.Count);
         }
     }
 
@@ -63,15 +61,8 @@ public sealed class TelegramWebhookSource(
     ///     Попытаться поместить обновление в очередь
     /// </summary>
     /// <returns><c>true</c>, если помещено успешно</returns>
-    public bool TryEnqueue(Update update)
+    public ValueTask<bool> TryEnqueueAsync(Update update, CancellationToken ct = default)
     {
-        var written = _updates.Writer.TryWrite(update);
-        stats.SetQueueDepth(_updates.Reader.Count);
-        if (!written)
-        {
-            stats.MarkDroppedUpdate();
-        }
-
-        return written;
+        return _updates.EnqueueAsync(update, ct);
     }
 }
