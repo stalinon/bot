@@ -100,7 +100,13 @@ public sealed class TelegramPollingSourceTests
             }
         }, cts.Token);
 
-        await Task.Delay(10);
+        var waited = 0;
+        while (processed.Count == 0 && waited < 1000)
+        {
+            await Task.Delay(10);
+            waited += 10;
+        }
+
         cts.Cancel();
         await start; // wait for draining
 
