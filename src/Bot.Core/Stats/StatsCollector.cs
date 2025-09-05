@@ -41,7 +41,7 @@ public sealed class StatsCollector
             _droppedCounter = meter.CreateCounter<long>("tgbot_dropped_updates_total", "count");
             _rateLimitedCounter = meter.CreateCounter<long>("tgbot_rate_limited_total", "count");
             _handlerLatency = meter.CreateHistogram<double>("tgbot_handler_latency_ms", "ms");
-            _queueGauge = meter.CreateObservableGauge<long>("tgbot_queue_depth", () => Volatile.Read(ref _queueDepth));
+            _queueGauge = meter.CreateObservableGauge<long>("queue_depth", () => Volatile.Read(ref _queueDepth));
         }
     }
 
@@ -69,9 +69,10 @@ public sealed class StatsCollector
     /// <summary>
     ///     Увеличить счётчик потерянных обновлений.
     /// </summary>
-    public void MarkDroppedUpdate()
+    /// <param name="policy">Политика очереди.</param>
+    public void MarkDroppedUpdate(string policy)
     {
-        _droppedCounter?.Add(1);
+        _droppedCounter?.Add(1, new KeyValuePair<string, object?>("policy", policy));
         BotMetricsEventSource.Log.MarkDroppedUpdate();
         Interlocked.Increment(ref _droppedUpdates);
     }

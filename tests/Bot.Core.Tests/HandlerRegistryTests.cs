@@ -76,7 +76,8 @@ public class HandlerRegistryTests
 
         var ctx = CreateContext("/vote tax 5", "vote", ["tax", "5"]);
         registry.FindFor(ctx).Should().Be(typeof(VoteHandler));
-        ctx.GetItem<VoteArgs>(UpdateItems.CommandArgs)!.Should().Be(new VoteArgs("tax", 5));
+        ctx.GetItem<VoteArgs>(UpdateItems.CommandArgs)!
+            .Should().BeEquivalentTo(new VoteArgs("tax", 5));
     }
 
     /// <summary>
@@ -128,6 +129,19 @@ public class HandlerRegistryTests
         }
     }
 
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
     [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Local")]
     private sealed record VoteArgs(string Target, [property: Range(1, 10)] int Value);
+    {
+        public VoteArgs(string target, int value)
+        {
+            Target = target;
+            Value = value;
+        }
+
+        public string Target { get; }
+
+        [Range(1, 10)]
+        public int Value { get; }
+    }
 }
