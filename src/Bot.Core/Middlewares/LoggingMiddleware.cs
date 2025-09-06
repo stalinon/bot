@@ -40,7 +40,8 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
             ["UserId"] = ctx.User.Id,
             ["MessageId"] = messageId,
             ["UpdateType"] = updateType,
-            ["Text"] = text
+            ["Text"] = text,
+            ["TraceId"] = Activity.Current?.TraceId.ToString()
         });
 
         logger.LogInformation("update");

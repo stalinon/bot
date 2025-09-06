@@ -32,6 +32,11 @@ public static class UpdateItems
     public const string WebAppData = nameof(WebAppData);
 
     /// <summary>
+    ///     Контекст трассировки
+    /// </summary>
+    public const string TraceContext = nameof(TraceContext);
+
+    /// <summary>
     ///     Привязанные аргументы команды
     /// </summary>
     public const string CommandArgs = nameof(CommandArgs);

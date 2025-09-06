@@ -2,6 +2,7 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
 using Bot.Core.Transport;
 using Bot.Hosting.Options;
+using Bot.Observability;
 using Bot.Outbox;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -52,9 +53,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMessageKeyProvider, GuidMessageKeyProvider>();
         services.AddSingleton<TelegramTransportClient>();
         services.AddSingleton<ITransportClient>(sp =>
-            new OutboxTransportClient(sp.GetRequiredService<TelegramTransportClient>(),
+            new TracingTransportClient(new OutboxTransportClient(
+                sp.GetRequiredService<TelegramTransportClient>(),
                 sp.GetRequiredService<IOutbox>(),
-                sp.GetRequiredService<IMessageKeyProvider>()));
+                sp.GetRequiredService<IMessageKeyProvider>())));
         services.AddSingleton<IBotUi, TelegramBotUi>();
         services.AddSingleton<IChatMenuService, ChatMenuService>();
         return services;
