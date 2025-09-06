@@ -54,11 +54,11 @@ public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
         if (!await CheckAsync(_user, ctx.User.Id, _options.PerUserPerMinute, now, "ratelimit:user", ctx.CancellationToken) ||
             !await CheckAsync(_chat, ctx.Chat.Id, _options.PerChatPerMinute, now, "ratelimit:chat", ctx.CancellationToken))
         {
-                _stats.MarkRateLimited();
-                if (_options.Mode == RateLimitMode.Soft)
-                {
-                    await _tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken).ConfigureAwait(false);
-                }
+            _stats.MarkRateLimited();
+            if (_options.Mode == RateLimitMode.Soft)
+            {
+                await _tx.SendTextAsync(ctx.Chat, "помедленнее", ctx.CancellationToken).ConfigureAwait(false);
+            }
 
             return;
         }
@@ -75,12 +75,12 @@ public sealed class RateLimitMiddleware : IUpdateMiddleware, IDisposable
     private async ValueTask<bool> CheckAsync(ConcurrentDictionary<long, RingBuffer> dict, long key, int limit,
         DateTimeOffset now, string scope, CancellationToken ct)
     {
-            if (_options.UseStateStore && _store is not null)
-            {
-                var count = await _store.IncrementAsync(scope, key.ToString(), 1, _options.Window, ct)
-                    .ConfigureAwait(false);
-                return count <= limit;
-            }
+        if (_options.UseStateStore && _store is not null)
+        {
+            var count = await _store.IncrementAsync(scope, key.ToString(), 1, _options.Window, ct)
+                .ConfigureAwait(false);
+            return count <= limit;
+        }
 
         if (limit == int.MaxValue)
         {

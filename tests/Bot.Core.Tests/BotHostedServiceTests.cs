@@ -27,10 +27,10 @@ namespace Bot.Core.Tests;
 public class BotHostedServiceTests
 {
     /// <summary>
-    ///     Параллельная обработка не превышает заданный предел.
+    ///     Тест 1: Параллельная обработка ограничена
     /// </summary>
-    [Fact(DisplayName = "Тест 1. Параллельная обработка ограничена")]
-    public async Task Parallelism_is_limited()
+    [Fact(DisplayName = "Тест 1: Параллельная обработка ограничена")]
+    public async Task Should_LimitParallelism_When_ProcessingManyUpdates()
     {
         const int updates = 20;
         const int parallelism = 4;
@@ -79,41 +79,41 @@ public class BotHostedServiceTests
         Assert.True(tracker.MaxActive <= parallelism, $"max {tracker.MaxActive} > {parallelism}");
     }
 
-      private sealed class TestUpdateSource(int count) : IUpdateSource
-      {
-          public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
-          {
-              for (var i = 0; i < count; i++)
-              {
-                  var ctx = new UpdateContext(
-                      "test",
-                      i.ToString(),
-                      new ChatAddress(1),
-                      new UserAddress(1),
-                      null,
-                      null,
-                      null,
-                      null,
-                      new Dictionary<string, object>(),
-                      null!,
-                      ct);
-                  await onUpdate(ctx).ConfigureAwait(false);
-              }
+    private sealed class TestUpdateSource(int count) : IUpdateSource
+    {
+        public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var ctx = new UpdateContext(
+                    "test",
+                    i.ToString(),
+                    new ChatAddress(1),
+                    new UserAddress(1),
+                    null,
+                    null,
+                    null,
+                    null,
+                    new Dictionary<string, object>(),
+                    null!,
+                    ct);
+                await onUpdate(ctx).ConfigureAwait(false);
+            }
 
-              try
-              {
-                  await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
-              }
-              catch (OperationCanceledException)
-              {
-              }
-          }
+            try
+            {
+                await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
 
-          public Task StopAsync()
-          {
-              return Task.CompletedTask;
-          }
-      }
+        public Task StopAsync()
+        {
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class DummyMeterFactory : IMeterFactory
     {

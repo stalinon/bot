@@ -57,7 +57,7 @@ public sealed class DedupMiddleware(
                 {
                     logger.LogWarning("duplicate update {UpdateId} ignored", ctx.UpdateId);
                 }
-                
+
                 stats.MarkDroppedUpdate("dedup");
                 return;
             }
