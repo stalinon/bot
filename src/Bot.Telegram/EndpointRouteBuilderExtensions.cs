@@ -1,4 +1,5 @@
 using Bot.Hosting.Options;
+using Bot.Observability;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +27,9 @@ public static class EndpointRouteBuilderExtensions
             $"/tg/{opts.Transport.Webhook.Secret}",
             async (Update update, TelegramWebhookSource source, ILogger<TelegramWebhookSource> logger, CancellationToken ct) =>
             {
+                using var activity = Telemetry.ActivitySource.StartActivity("Webhook/Ingress");
+                activity?.SetTag("transport", "telegram");
+                activity?.SetTag("update.id", update.Id);
                 if (!await source.TryEnqueueAsync(update, ct))
                 {
                     logger.LogWarning("webhook queue overflow for update {UpdateId}", update.Id);

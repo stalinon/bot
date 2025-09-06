@@ -2,9 +2,13 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
 using Bot.Core.Transport;
 using Bot.Hosting.Options;
+using Bot.Observability;
 using Bot.Outbox;
+
 using FluentAssertions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Xunit;
 
 namespace Bot.Telegram.Tests;
@@ -14,7 +18,7 @@ namespace Bot.Telegram.Tests;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///         <item>Проверяется оборачивание транспорта в аутбокс.</item>
+///         <item>Проверяется подключение транспорта с трассировкой.</item>
 ///     </list>
 /// </remarks>
 public sealed class ServiceCollectionExtensionsTests
@@ -25,10 +29,10 @@ public sealed class ServiceCollectionExtensionsTests
     }
 
     /// <summary>
-    ///     Тест 1: Регистрирует транспорт с аутбоксом.
+    ///     Тест 1: Регистрирует транспорт с трассировкой.
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Регистрирует транспорт с аутбоксом.")]
-    public void Should_RegisterOutboxTransport()
+    [Fact(DisplayName = "Тест 1: Регистрирует транспорт с трассировкой.")]
+    public void Should_RegisterTracingTransport()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -41,7 +45,7 @@ public sealed class ServiceCollectionExtensionsTests
 
         // Assert
         var client = sp.GetRequiredService<ITransportClient>();
-        client.Should().BeOfType<OutboxTransportClient>();
+        client.Should().BeOfType<TracingTransportClient>();
     }
 
     private sealed class DummyOutbox : IOutbox

@@ -20,6 +20,7 @@
     <ProjectReference Include="..\Bot.Hosting\Bot.Hosting.csproj"/>
     <ProjectReference Include="..\Bot.Core\Bot.Core.csproj"/>
     <ProjectReference Include="..\Bot.Outbox\Bot.Outbox.csproj"/>
+    <ProjectReference Include="..\Bot.Observability\Bot.Observability.csproj"/>
   </ItemGroup>
 
 </Project>

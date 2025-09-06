@@ -7,6 +7,7 @@ using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
+using Bot.Observability;
 using Bot.Scheduler;
 using Bot.Storage.EFCore;
 using Bot.Storage.File;
@@ -135,7 +136,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection UseStateStorage(this IServiceCollection services, IStateStore store)
     {
-        services.AddSingleton(store);
+        services.AddSingleton<IStateStore>(new TracingStateStore(store));
         services.AddSingleton<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
         return services;
     }
@@ -180,7 +181,8 @@ public static class ServiceCollectionExtensions
                         o.UseSqlite(cs, b => b.MigrationsAssembly(typeof(StateContext).Assembly.FullName));
                     }
                 });
-                services.AddScoped<IStateStore, EfCoreStateStore>();
+                services.AddScoped<IStateStore>(sp =>
+                    new TracingStateStore(new EfCoreStateStore(sp.GetRequiredService<StateContext>())));
                 services.AddScoped<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
                 break;
             default:

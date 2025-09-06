@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Bot.Storage.Redis\Bot.Storage.Redis.csproj"/>
     <ProjectReference Include="..\Bot.Storage.EFCore\Bot.Storage.EFCore.csproj"/>
     <ProjectReference Include="..\Bot.Scheduler\Bot.Scheduler.csproj"/>
+    <ProjectReference Include="..\Bot.Observability\Bot.Observability.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

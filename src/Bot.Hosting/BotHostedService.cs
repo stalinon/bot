@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -6,6 +7,7 @@ using Bot.Abstractions.Contracts;
 using Bot.Core.Middlewares;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
+using Bot.Observability;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -70,13 +72,33 @@ public sealed class BotHostedService(
             },
             async (ctx, ct) =>
             {
+                var parent = ctx.GetItem<ActivityContext>(UpdateItems.TraceContext);
+                using var activity = Telemetry.ActivitySource.StartActivity(
+                    "Pipeline/Handle",
+                    ActivityKind.Internal,
+                    parent);
+                activity?.SetTag("transport", ctx.Transport);
+                activity?.SetTag("update.id", ctx.UpdateId);
                 await _app(ctx).ConfigureAwait(false);
+                var handler = ctx.GetItem<string>(UpdateItems.Handler);
+                if (handler is not null)
+                {
+                    activity?.SetTag("handler", handler);
+                }
+
                 stats.SetQueueDepth(_channel.Reader.Count);
             });
 
         _writing = _source.StartAsync(
             async ctx =>
             {
+                using var activity = Telemetry.ActivitySource.StartActivity("Update/Receive");
+                activity?.SetTag("transport", ctx.Transport);
+                activity?.SetTag("update.id", ctx.UpdateId);
+                activity?.SetTag("chat.id", ctx.Chat.Id);
+                activity?.SetTag("user.id", ctx.User.Id);
+                var trace = activity?.Context ?? default;
+                ctx.SetItem(UpdateItems.TraceContext, trace);
                 await _channel.Writer.WriteAsync(ctx, _cts.Token).ConfigureAwait(false);
                 stats.SetQueueDepth(_channel.Reader.Count);
             },
