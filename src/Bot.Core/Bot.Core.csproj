@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Bot.Abstractions\Bot.Abstractions.csproj"/>
+    <ProjectReference Include="..\Bot.Outbox\Bot.Outbox.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

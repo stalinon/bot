@@ -1,6 +1,8 @@
 using Bot.Abstractions.Contracts;
 using Bot.Core.Options;
+using Bot.Core.Transport;
 using Bot.Hosting.Options;
+using Bot.Outbox;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -47,7 +49,12 @@ public static class ServiceCollectionExtensions
                 ? sp.GetRequiredService<TelegramWebhookSource>()
                 : sp.GetRequiredService<TelegramPollingSource>();
         });
-        services.AddSingleton<ITransportClient, TelegramTransportClient>();
+        services.AddSingleton<IMessageKeyProvider, GuidMessageKeyProvider>();
+        services.AddSingleton<TelegramTransportClient>();
+        services.AddSingleton<ITransportClient>(sp =>
+            new OutboxTransportClient(sp.GetRequiredService<TelegramTransportClient>(),
+                sp.GetRequiredService<IOutbox>(),
+                sp.GetRequiredService<IMessageKeyProvider>()));
         services.AddSingleton<IBotUi, TelegramBotUi>();
         services.AddSingleton<IChatMenuService, ChatMenuService>();
         return services;
