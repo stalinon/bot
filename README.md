@@ -38,6 +38,7 @@ API включено по умолчанию. Для запросов необх
 
 ### Документация
 
+* [Обзор возможностей](docs/features.md)
 * [Mini App](docs/miniapps.md)
 * [Сцены](docs/scenes.md)
 
