@@ -20,18 +20,11 @@ namespace Bot.Core.Middlewares;
 /// </remarks>
 public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpdateMiddleware
 {
-    private const int TextLimit = 128;
-
     /// <inheritdoc />
     public async ValueTask InvokeAsync(UpdateContext ctx, UpdateDelegate next)
     {
         var updateType = ctx.GetItem<string>(UpdateItems.UpdateType) ?? "unknown";
         var messageId = ctx.GetItem<int?>(UpdateItems.MessageId);
-        var text = ctx.Text;
-        if (text is not null && text.Length > TextLimit)
-        {
-            text = text[..TextLimit];
-        }
 
         using var scope = logger.BeginScope(new Dictionary<string, object?>
         {
@@ -40,7 +33,7 @@ public sealed class LoggingMiddleware(ILogger<LoggingMiddleware> logger) : IUpda
             ["UserId"] = ctx.User.Id,
             ["MessageId"] = messageId,
             ["UpdateType"] = updateType,
-            ["Text"] = text,
+            ["Text"] = ctx.Text,
             ["TraceId"] = Activity.Current?.TraceId.ToString()
         });
 

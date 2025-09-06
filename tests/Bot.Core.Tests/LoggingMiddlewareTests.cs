@@ -22,7 +22,7 @@ namespace Bot.Core.Tests;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///         <item>Проверяется добавление идентификаторов, усечение текста и логирование имени обработчика</item>
+///         <item>Проверяется добавление идентификаторов и логирование имени обработчика</item>
 ///         <item>Проверяется логирование ошибок обработчика с именем</item>
 ///         <item>Проверяется учёт <c>web_app_data</c>.</item>
 ///     </list>
@@ -30,10 +30,10 @@ namespace Bot.Core.Tests;
 public sealed class LoggingMiddlewareTests
 {
     /// <summary>
-    ///     Тест 1: Лог содержит идентификаторы, усечённый текст и имя обработчика
+    ///     Тест 1: Лог содержит идентификаторы, текст и имя обработчика
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Лог содержит идентификаторы, усечённый текст и имя обработчика")]
-    public async Task Should_LogHandlerName_WithTruncatedText_When_Invoked()
+    [Fact(DisplayName = "Тест 1: Лог содержит идентификаторы, текст и имя обработчика")]
+    public async Task Should_LogHandlerName_WithText_When_Invoked()
     {
         var provider = new CollectingLoggerProvider();
         var services = new ServiceCollection();
@@ -74,7 +74,7 @@ public sealed class LoggingMiddlewareTests
         entry.Scope["UserId"].Should().Be(2L);
         entry.Scope["MessageId"].Should().Be(3);
         entry.Scope["UpdateType"].Should().Be("message");
-        entry.Scope["Text"].Should().Be(longText[..128]);
+        entry.Scope["Text"].Should().Be(longText);
 
         provider.Logs.Should().Contain(e => e.Message.StartsWith("handler TestHandler finished"));
     }
