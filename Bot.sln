@@ -47,6 +47,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{DD8D543F-A
 	ProjectSection(SolutionItems) = preProject
 		docs\.gitkeep = docs\.gitkeep
 		docs\scenes.md = docs\scenes.md
+		README.md = README.md
+		docs\features.md = docs\features.md
+		docs\miniapps.md = docs\miniapps.md
+		docs\miniapps-checklist.md = docs\miniapps-checklist.md
+		AGENTS.md = AGENTS.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "environment", "environment", "{E44D280A-2370-459E-91F2-A8E79A19FF3F}"
@@ -87,6 +92,29 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Logging", "src\Bot.Logging\Bot.Logging.csproj", "{B5E627E8-91B3-4302-98C0-2675FF5723EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bot.Logging.Tests", "tests\Bot.Logging.Tests\Bot.Logging.Tests.csproj", "{59175F4B-653D-4079-8057-A1C68163296B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "observability", "observability", "{A2C62B8E-02DF-4FD0-94BB-427420748A21}"
+	ProjectSection(SolutionItems) = preProject
+		docs\observability\grafana-dashboard.json = docs\observability\grafana-dashboard.json
+		docs\observability\README.md = docs\observability\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "operations", "operations", "{5399BA1F-13DA-4899-8826-2CCEEB1380AA}"
+	ProjectSection(SolutionItems) = preProject
+		docs\operations\alerts.md = docs\operations\alerts.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{F650CE9E-CDA3-4A68-B12E-9B0A06511733}"
+	ProjectSection(SolutionItems) = preProject
+		docs\perf\README.md = docs\perf\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{F3E46120-3DAB-4D19-9976-5586A206E612}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\pack.ps1 = scripts\pack.ps1
+		scripts\quickstart.ps1 = scripts\quickstart.ps1
+		scripts\quickstart.sh = scripts\quickstart.sh
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -254,5 +282,8 @@ Global
 		{C0E9696F-DC45-4B88-A43D-2C1496F9826C} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
 		{B5E627E8-91B3-4302-98C0-2675FF5723EB} = {8397F202-E819-4200-A2A5-8094C594C0D3}
 		{59175F4B-653D-4079-8057-A1C68163296B} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
+		{A2C62B8E-02DF-4FD0-94BB-427420748A21} = {DD8D543F-A3EF-409A-8BC1-27CDA8BA1A1E}
+		{5399BA1F-13DA-4899-8826-2CCEEB1380AA} = {DD8D543F-A3EF-409A-8BC1-27CDA8BA1A1E}
+		{F650CE9E-CDA3-4A68-B12E-9B0A06511733} = {DD8D543F-A3EF-409A-8BC1-27CDA8BA1A1E}
 	EndGlobalSection
 EndGlobal
