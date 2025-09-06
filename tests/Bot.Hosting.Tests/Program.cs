@@ -40,7 +40,8 @@ public class Program
             Microsoft.Extensions.Options.Options.Create(new BotOptions
             {
                 Transport = new TransportOptions { Parallelism = 1 }
-            }));
+            }),
+            Microsoft.Extensions.Options.Options.Create(new StopOptions()));
         typeof(BotHostedService).GetField("_channel", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(hosted,
             channel);
 
@@ -49,6 +50,7 @@ public class Program
         builder.Services.AddSingleton(hosted);
         builder.Services.AddSingleton(channel);
         builder.Services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = 1);
+        builder.Services.AddOptions<StopOptions>();
 
         var app = builder.Build();
         app.MapHealth();

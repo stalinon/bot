@@ -49,6 +49,14 @@ public static class ServiceCollectionExtensions
     {
         services.AddLogging(b => b.AddBotLogging());
         services.AddOptions<BotOptions>().Configure(configure);
+        services.AddOptions<QueueOptions>().BindConfiguration("Queue");
+        services.AddOptions<StopOptions>().BindConfiguration("Stop");
+        services.AddOptions<ObservabilityOptions>().BindConfiguration("Obs");
+        services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<QueueOptions>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<StopOptions>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<ObservabilityOptions>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<OutboxOptions>>().Value);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<RateLimitOptions>(sp =>
             sp.GetRequiredService<IOptions<BotOptions>>()

@@ -24,10 +24,12 @@ public sealed class BotHostedService(
     IEnumerable<Action<IUpdatePipeline>> configurePipeline,
     StatsCollector stats,
     ILogger<BotHostedService> logger,
-    IOptions<BotOptions> options)
+    IOptions<BotOptions> options,
+    IOptions<StopOptions> stopOptions)
     : IHostedService
 {
     private readonly BotOptions _options = options.Value;
+    private readonly StopOptions _stop = stopOptions.Value;
     private readonly IUpdateSource _source = source;
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
@@ -128,8 +130,8 @@ public sealed class BotHostedService(
         }
 
         var timeout = _options.DrainTimeout;
-        var env = Environment.GetEnvironmentVariable("STOP__DRAIN_TIMEOUT_SECONDS");
-        if (int.TryParse(env, out var secs))
+        var secs = _stop.DrainTimeoutSeconds;
+        if (secs > 0)
         {
             timeout = TimeSpan.FromSeconds(secs);
         }

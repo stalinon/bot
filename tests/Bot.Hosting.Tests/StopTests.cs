@@ -46,7 +46,8 @@ public sealed class StopTests
             [],
             new StatsCollector(),
             new LoggerFactory().CreateLogger<BotHostedService>(),
-            Microsoft.Extensions.Options.Options.Create(new BotOptions()));
+            Microsoft.Extensions.Options.Options.Create(new BotOptions()),
+            Microsoft.Extensions.Options.Options.Create(new StopOptions()));
 
         await hosted.StartAsync(CancellationToken.None);
         await hosted.StopAsync(CancellationToken.None);
@@ -79,7 +80,8 @@ public sealed class StopTests
             {
                 DrainTimeout = TimeSpan.FromMilliseconds(50),
                 Transport = new TransportOptions { Parallelism = 1 }
-            }));
+            }),
+            Microsoft.Extensions.Options.Options.Create(new StopOptions()));
 
         await hosted.StartAsync(CancellationToken.None);
         await Task.Delay(10);
