@@ -1,4 +1,7 @@
 using Bot.Core.Stats;
+using Bot.Outbox;
+
+using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.Extensions.Options;
 
@@ -12,6 +15,7 @@ namespace Bot.Admin.MinimalApi;
 ///         <item>Подключает проверки здоровья.</item>
 ///         <item>Возвращает статистику бота.</item>
 ///         <item>Организует рассылку сообщений.</item>
+///         <item>Предоставляет доступ к аутбоксу.</item>
 ///     </list>
 /// </remarks>
 public static class EndpointRouteBuilderExtensions
@@ -25,6 +29,7 @@ public static class EndpointRouteBuilderExtensions
         endpoints.MapAdminStats();
         endpoints.MapAdminCustomStats();
         endpoints.MapAdminBroadcast();
+        endpoints.MapAdminOutbox();
         return endpoints;
     }
 
@@ -146,6 +151,29 @@ public static class EndpointRouteBuilderExtensions
             }
 
             return Results.Ok();
+        });
+        return endpoints;
+    }
+
+    /// <summary>
+    ///     Подключить эндпоинты аутбокса.
+    /// </summary>
+    public static IEndpointRouteBuilder MapAdminOutbox(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapGet("/admin/outbox/pending", async (
+            [FromServices] IOutbox outbox,
+            HttpRequest req,
+            [FromServices] IOptions<AdminOptions> options,
+            CancellationToken ct) =>
+        {
+            if (!req.Headers.TryGetValue("X-Admin-Token", out var token) ||
+                token != options.Value.AdminToken)
+            {
+                return Results.StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            var count = await outbox.GetPendingAsync(ct);
+            return Results.Json(new { pending = count });
         });
         return endpoints;
     }
