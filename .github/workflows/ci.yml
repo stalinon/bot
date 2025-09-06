@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -24,6 +24,16 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore --configuration Release
+      - name: Start Redis
+        run: docker run --name redis -p 6379:6379 -d redis
+        shell: bash
+      - name: Wait for Redis
+        run: |
+          for i in {1..10}; do
+            docker exec redis redis-cli ping && break
+            sleep 1
+          done
+        shell: bash
       - name: Test
         run: dotnet test --no-build --configuration Release
 
@@ -37,6 +47,16 @@ jobs:
           dotnet-version: '8.0.x'
           cache: true
           cache-dependency-path: '**/packages.lock.json'
+      - name: Start Redis
+        run: docker run --name redis -p 6379:6379 -d redis
+        shell: bash
+      - name: Wait for Redis
+        run: |
+          for i in {1..10}; do
+            docker exec redis redis-cli ping && break
+            sleep 1
+          done
+        shell: bash
       - name: HelloBot smoke
         run: dotnet test tests/Bot.Examples.HelloBot.Tests --configuration Release
 
@@ -50,6 +70,16 @@ jobs:
           dotnet-version: '8.0.x'
           cache: true
           cache-dependency-path: '**/packages.lock.json'
+      - name: Start Redis
+        run: docker run --name redis -p 6379:6379 -d redis
+        shell: bash
+      - name: Wait for Redis
+        run: |
+          for i in {1..10}; do
+            docker exec redis redis-cli ping && break
+            sleep 1
+          done
+        shell: bash
       - name: Load smoke
         run: dotnet test --configuration Release --filter "Category=Load"
 
