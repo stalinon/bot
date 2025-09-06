@@ -132,16 +132,4 @@ public class HandlerRegistryTests
     [SuppressMessage("ReSharper", "ClassNeverInstantiated.Local")]
     [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Local")]
     private sealed record VoteArgs(string Target, [property: Range(1, 10)] int Value);
-    {
-        public VoteArgs(string target, int value)
-        {
-            Target = target;
-            Value = value;
-        }
-
-        public string Target { get; }
-
-        [Range(1, 10)]
-        public int Value { get; }
-    }
 }

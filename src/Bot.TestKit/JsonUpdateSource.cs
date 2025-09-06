@@ -42,6 +42,14 @@ public sealed class JsonUpdateSource(string path) : IUpdateSource
         }
     }
 
+    /// <summary>
+    ///     Остановить источник.
+    /// </summary>
+    public Task StopAsync()
+    {
+        return Task.CompletedTask;
+    }
+
     private sealed class JsonUpdate
     {
         public string? Transport { get; init; }

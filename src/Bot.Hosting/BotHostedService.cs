@@ -26,6 +26,7 @@ public sealed class BotHostedService(
     : IHostedService
 {
     private readonly BotOptions _options = options.Value;
+    private readonly IUpdateSource _source = source;
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
     private CancellationTokenSource? _cts;
@@ -73,13 +74,13 @@ public sealed class BotHostedService(
                 stats.SetQueueDepth(_channel.Reader.Count);
             });
 
-        _writing = source.StartAsync(
-            async ctx =>
-            {
-                await _channel.Writer.WriteAsync(ctx, _cts.Token).ConfigureAwait(false);
-                stats.SetQueueDepth(_channel.Reader.Count);
-            },
-            _cts.Token);
+          _writing = _source.StartAsync(
+              async ctx =>
+              {
+                  await _channel.Writer.WriteAsync(ctx, _cts.Token).ConfigureAwait(false);
+                  stats.SetQueueDepth(_channel.Reader.Count);
+              },
+              _cts.Token);
 
         _writing.ContinueWith(t => _channel.Writer.TryComplete(t.Exception), TaskScheduler.Current);
 
@@ -87,39 +88,68 @@ public sealed class BotHostedService(
     }
 
     /// <inheritdoc />
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        logger.LogInformation("bot hosted service stopping");
-        _cts?.Cancel();
-        _channel?.Writer.TryComplete();
+      public async Task StopAsync(CancellationToken cancellationToken)
+      {
+          logger.LogInformation("bot hosted service drain phase");
+          await _source.StopAsync().ConfigureAwait(false);
+          _channel?.Writer.TryComplete();
 
-        var tasks = new List<Task>();
-        if (_writing is not null)
-        {
-            tasks.Add(_writing);
-        }
+          var tasks = new List<Task>();
+          if (_writing is not null)
+          {
+              tasks.Add(_writing);
+          }
 
-        if (_processing is not null)
-        {
-            tasks.Add(_processing);
-        }
+          if (_processing is not null)
+          {
+              tasks.Add(_processing);
+          }
 
-        if (tasks.Count > 0)
-        {
-            using var timeout = new CancellationTokenSource(_options.DrainTimeout);
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
-            try
-            {
-                await Task.WhenAll(tasks).WaitAsync(linked.Token).ConfigureAwait(false);
-                logger.LogInformation(
-                    "bot hosted service stopped: writing {WritingStatus}, processing {ProcessingStatus}",
-                    _writing?.Status,
-                    _processing?.Status);
-            }
-            catch (OperationCanceledException)
-            {
-                logger.LogWarning("bot hosted service drain timeout {Timeout} exceeded", _options.DrainTimeout);
-            }
-        }
-    }
+          var timeout = _options.DrainTimeout;
+          var env = Environment.GetEnvironmentVariable("STOP__DRAIN_TIMEOUT_SECONDS");
+          if (int.TryParse(env, out var secs))
+          {
+              timeout = TimeSpan.FromSeconds(secs);
+          }
+
+          if (tasks.Count > 0)
+          {
+              using var timeoutCts = new CancellationTokenSource(timeout);
+              using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+              try
+              {
+                  await Task.WhenAll(tasks).WaitAsync(linked.Token).ConfigureAwait(false);
+              }
+              catch (OperationCanceledException)
+              {
+                  logger.LogWarning("bot hosted service drain timeout {Timeout} exceeded", timeout);
+              }
+          }
+
+          var remaining = _channel?.Reader.Count ?? 0;
+          if (remaining > 0)
+          {
+              stats.MarkLostUpdates(remaining);
+              logger.LogWarning("bot hosted service lost {Remaining} updates", remaining);
+          }
+
+          logger.LogInformation("bot hosted service stop phase");
+          _cts?.Cancel();
+
+          if (tasks.Count > 0)
+          {
+              try
+              {
+                  await Task.WhenAll(tasks).ConfigureAwait(false);
+                  logger.LogInformation(
+                      "bot hosted service stopped: writing {WritingStatus}, processing {ProcessingStatus}",
+                      _writing?.Status,
+                      _processing?.Status);
+              }
+              catch (Exception ex)
+              {
+                  logger.LogWarning(ex, "bot hosted service stop error");
+              }
+          }
+      }
 }

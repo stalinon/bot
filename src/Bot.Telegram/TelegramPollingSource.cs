@@ -22,13 +22,15 @@ public sealed class TelegramPollingSource(
     : IUpdateSource
 {
     private readonly UpdateQueue<Update> _updates = new(1024, queueOptions.Policy, stats);
+    private CancellationTokenSource? _cts;
 
     /// <summary>
     ///     Получает обновления через поллинг и передает их в обработчик
     /// </summary>
     public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
     {
-        await client.DeleteWebhook(cancellationToken: ct);
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        await client.DeleteWebhook(cancellationToken: _cts.Token);
         var me = await client.GetMe(ct);
         logger.LogInformation("telegram polling started as @{username}", me.Username);
 
@@ -37,13 +39,13 @@ public sealed class TelegramPollingSource(
             var offset = 0;
             try
             {
-                while (!ct.IsCancellationRequested)
+                while (!_cts.Token.IsCancellationRequested)
                 {
-                    var updates = await client.GetUpdates(offset, cancellationToken: ct);
+                    var updates = await client.GetUpdates(offset, cancellationToken: _cts.Token);
                     foreach (var update in updates)
                     {
                         offset = update.Id + 1;
-                        await _updates.EnqueueAsync(update, ct);
+                        await _updates.EnqueueAsync(update, _cts.Token);
                     }
                 }
             }
@@ -65,7 +67,7 @@ public sealed class TelegramPollingSource(
                     var ctx = TelegramUpdateMapper.Map(update);
                     if (ctx is not null)
                     {
-                        await onUpdate(ctx with { Services = default!, CancellationToken = ct });
+                        await onUpdate(ctx with { Services = default!, CancellationToken = _cts.Token });
                     }
                 }
                 catch (Exception ex)
@@ -80,5 +82,14 @@ public sealed class TelegramPollingSource(
         }, CancellationToken.None);
 
         await Task.WhenAll(polling, processing);
+    }
+
+    /// <summary>
+    ///     Остановить источник поллинга.
+    /// </summary>
+    public Task StopAsync()
+    {
+        _cts?.Cancel();
+        return Task.CompletedTask;
     }
 }

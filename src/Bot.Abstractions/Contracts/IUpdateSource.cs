@@ -9,4 +9,9 @@ public interface IUpdateSource
     ///     Запуск
     /// </summary>
     Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct);
+
+    /// <summary>
+    ///     Остановка
+    /// </summary>
+    Task StopAsync();
 }

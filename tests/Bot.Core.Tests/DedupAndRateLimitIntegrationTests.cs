@@ -7,6 +7,7 @@ using Bot.Core.Middlewares;
 using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 
 using Microsoft.Extensions.DependencyInjection;
 

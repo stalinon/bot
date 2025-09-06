@@ -21,6 +21,7 @@ public sealed class BotMetricsEventSource : EventSource
     private readonly EventCounter _handlerLatency;
     private readonly EventCounter _queueDepth;
     private readonly IncrementingEventCounter _rateLimited;
+    private readonly IncrementingEventCounter _lost;
     private readonly EventCounter _updateLatency;
 
     private readonly IncrementingEventCounter _updates;
@@ -46,6 +47,10 @@ public sealed class BotMetricsEventSource : EventSource
         _rateLimited = new IncrementingEventCounter("tgbot_rate_limited_total", this)
         {
             DisplayName = "Ограниченные обновления"
+        };
+        _lost = new IncrementingEventCounter("tgbot_lost_updates_total", this)
+        {
+            DisplayName = "Потерянные при остановке обновления"
         };
         _updateLatency = new EventCounter("tgbot_update_latency_ms", this)
         {
@@ -125,6 +130,15 @@ public sealed class BotMetricsEventSource : EventSource
     }
 
     /// <summary>
+    ///     Увеличить счётчик потерянных при остановке обновлений.
+    /// </summary>
+    /// <param name="count">Количество потерянных обновлений.</param>
+    public void MarkLostUpdates(long count)
+    {
+        _lost.Increment(count);
+    }
+
+    /// <summary>
     ///     Установить текущую глубину очереди.
     /// </summary>
     public void SetQueueDepth(long depth)
@@ -200,6 +214,7 @@ public sealed class BotMetricsEventSource : EventSource
             _errors.Dispose();
             _dropped.Dispose();
             _rateLimited.Dispose();
+            _lost.Dispose();
             _updateLatency.Dispose();
             _handlerLatency.Dispose();
             _queueDepth.Dispose();

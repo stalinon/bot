@@ -15,7 +15,7 @@ namespace Bot.Core.Tests;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Проверяются перцентили и агрегированные метрики.</item>
-///         <item>Учитываются потерянные и ограниченные обновления.</item>
+///         <item>Учитываются отбрасываемые, ограниченные и потерянные при остановке обновления.</item>
 ///         <item>Экспортируются метрики через <see cref="Meter" />.</item>
 ///     </list>
 /// </remarks>
@@ -50,21 +50,23 @@ public class StatsCollectorTests
     }
 
     /// <summary>
-    ///     Тест 2: Счётчики потерянных и ограниченных обновлений учитываются.
-    /// </summary>
-    [Fact(DisplayName = "Тест 2: Счётчики потерянных и ограниченных обновлений учитываются")]
-    public void Should_TrackDroppedAndRateLimited_When_Marked()
-    {
-        var stats = new StatsCollector();
-        stats.MarkDroppedUpdate("test");
-        stats.MarkRateLimited();
-        stats.SetQueueDepth(5);
+    ///     Тест 2: Счётчики отбрасываемых, ограниченных и потерянных при остановке обновлений учитываются.
+/// </summary>
+[Fact(DisplayName = "Тест 2: Счётчики отбрасываемых, ограниченных и потерянных при остановке обновлений учитываются")]
+public void Should_TrackDroppedRateLimitedAndLost_When_Marked()
+{
+    var stats = new StatsCollector();
+    stats.MarkDroppedUpdate("test");
+    stats.MarkRateLimited();
+    stats.MarkLostUpdates(2);
+    stats.SetQueueDepth(5);
 
-        var snapshot = stats.GetSnapshot();
-        snapshot.DroppedUpdates.Should().Be(1);
-        snapshot.RateLimited.Should().Be(1);
-        snapshot.QueueDepth.Should().Be(5);
-    }
+    var snapshot = stats.GetSnapshot();
+    snapshot.DroppedUpdates.Should().Be(1);
+    snapshot.RateLimited.Should().Be(1);
+    snapshot.LostUpdates.Should().Be(2);
+    snapshot.QueueDepth.Should().Be(5);
+}
 
     /// <summary>
     ///     Тест 3: Метрики экспортируются через Meter.
@@ -80,6 +82,7 @@ public class StatsCollectorTests
         var rateLimited = 0L;
         var gauge = 0L;
         var latency = 0.0;
+        var lost = 0L;
 
         listener.InstrumentPublished = (instrument, l) =>
         {
@@ -89,20 +92,23 @@ public class StatsCollectorTests
             }
         };
         listener.SetMeasurementEventCallback<long>((inst, value, tags, state) =>
-        {
-            switch (inst.Name)
             {
-                case "tgbot_dropped_updates_total":
-                    dropped = value;
-                    break;
-                case "tgbot_rate_limited_total":
-                    rateLimited = value;
-                    break;
-                case "queue_depth":
-                    gauge = value;
-                    break;
-            }
-        });
+                switch (inst.Name)
+                {
+                    case "tgbot_dropped_updates_total":
+                        dropped = value;
+                        break;
+                    case "tgbot_rate_limited_total":
+                        rateLimited = value;
+                        break;
+                    case "tgbot_lost_updates_total":
+                        lost = value;
+                        break;
+                    case "queue_depth":
+                        gauge = value;
+                        break;
+                }
+            });
         listener.SetMeasurementEventCallback<double>((inst, value, tags, state) =>
         {
             if (inst.Name == "tgbot_handler_latency_ms")
@@ -114,6 +120,7 @@ public class StatsCollectorTests
 
         stats.MarkDroppedUpdate("test");
         stats.MarkRateLimited();
+        stats.MarkLostUpdates(2);
         using (var m = stats.Measure("h"))
         {
             Thread.Sleep(1);
@@ -124,6 +131,7 @@ public class StatsCollectorTests
 
         dropped.Should().Be(1);
         rateLimited.Should().Be(1);
+        lost.Should().Be(2);
         gauge.Should().Be(7);
         latency.Should().BeGreaterThan(0);
     }

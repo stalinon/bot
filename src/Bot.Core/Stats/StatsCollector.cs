@@ -13,7 +13,7 @@ namespace Bot.Core.Stats;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Сохраняет метрики обработчиков.</item>
-///         <item>Учитывает потерянные и ограниченные обновления.</item>
+///         <item>Учитывает отбрасываемые, ограниченные и потерянные при остановке обновления.</item>
 ///         <item>Следит за глубиной очереди.</item>
 ///     </list>
 /// </remarks>
@@ -24,10 +24,12 @@ public sealed class StatsCollector
     private readonly Histogram<double>? _handlerLatency;
     private readonly ObservableGauge<long>? _queueGauge;
     private readonly Counter<long>? _rateLimitedCounter;
+    private readonly Counter<long>? _lostCounter;
     private readonly DateTime _startTime = DateTime.UtcNow;
     private long _droppedUpdates;
     private int _queueDepth;
     private long _rateLimited;
+    private long _lostUpdates;
 
     /// <summary>
     ///     Создать сборщик статистики.
@@ -42,6 +44,7 @@ public sealed class StatsCollector
             _rateLimitedCounter = meter.CreateCounter<long>("tgbot_rate_limited_total", "count");
             _handlerLatency = meter.CreateHistogram<double>("tgbot_handler_latency_ms", "ms");
             _queueGauge = meter.CreateObservableGauge<long>("queue_depth", () => Volatile.Read(ref _queueDepth));
+            _lostCounter = meter.CreateCounter<long>("tgbot_lost_updates_total", "count");
         }
     }
 
@@ -85,6 +88,17 @@ public sealed class StatsCollector
         _rateLimitedCounter?.Add(1);
         BotMetricsEventSource.Log.MarkRateLimited();
         Interlocked.Increment(ref _rateLimited);
+    }
+
+    /// <summary>
+    ///     Увеличить счётчик потерянных при остановке обновлений.
+    /// </summary>
+    /// <param name="count">Количество потерянных обновлений.</param>
+    public void MarkLostUpdates(long count)
+    {
+        _lostCounter?.Add(count);
+        BotMetricsEventSource.Log.MarkLostUpdates(count);
+        Interlocked.Add(ref _lostUpdates, count);
     }
 
     /// <summary>
@@ -144,6 +158,7 @@ public sealed class StatsCollector
             totalErrorRate,
             Interlocked.Read(ref _droppedUpdates),
             Interlocked.Read(ref _rateLimited),
+            Interlocked.Read(ref _lostUpdates),
             Volatile.Read(ref _queueDepth));
     }
 

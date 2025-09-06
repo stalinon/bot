@@ -9,6 +9,7 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 using Bot.TestKit;
@@ -89,7 +90,7 @@ public class PipelineIntegrationTests
             .Use<CommandParsingMiddleware>()
             .Use<RouterMiddleware>();
 
-        var app = pipeline.Build(_ => Task.CompletedTask);
+        var app = pipeline.Build(_ => ValueTask.CompletedTask);
         var ctx = new UpdateContext(
             "test",
             "1",
