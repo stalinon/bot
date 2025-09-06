@@ -66,6 +66,7 @@ public class BotHostedServiceTests
         services.AddSingleton<ILogger<BotHostedService>>(sp =>
             sp.GetRequiredService<ILoggerFactory>().CreateLogger<BotHostedService>());
         services.AddOptions<BotOptions>().Configure(o => o.Transport.Parallelism = parallelism);
+        services.AddOptions<StopOptions>();
 
         var sp = services.BuildServiceProvider();
         var svc = ActivatorUtilities.CreateInstance<BotHostedService>(sp);
