@@ -1,0 +1,51 @@
+{
+  "title": "Bot service observability",
+  "uid": "bot-observability",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "RPS",
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{app=\"bot\"}[1m]))",
+          "legendFormat": "rps"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p50/p95/p99",
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{app=\"bot\"}[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app=\"bot\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{app=\"bot\"}[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error rate",
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{app=\"bot\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{app=\"bot\"}[5m]))",
+          "legendFormat": "error rate"
+        }
+      ]
+    }
+  ]
+}
