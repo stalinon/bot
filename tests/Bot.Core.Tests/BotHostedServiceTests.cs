@@ -10,6 +10,7 @@ using Bot.Core.Options;
 using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
+using Bot.Core.Utils;
 using Bot.Hosting;
 using Bot.Hosting.Options;
 
@@ -78,36 +79,41 @@ public class BotHostedServiceTests
         Assert.True(tracker.MaxActive <= parallelism, $"max {tracker.MaxActive} > {parallelism}");
     }
 
-    private sealed class TestUpdateSource(int count) : IUpdateSource
-    {
-        public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
-        {
-            for (var i = 0; i < count; i++)
-            {
-                var ctx = new UpdateContext(
-                    "test",
-                    i.ToString(),
-                    new ChatAddress(1),
-                    new UserAddress(1),
-                    null,
-                    null,
-                    null,
-                    null,
-                    new Dictionary<string, object>(),
-                    null!,
-                    ct);
-                await onUpdate(ctx).ConfigureAwait(false);
-            }
+      private sealed class TestUpdateSource(int count) : IUpdateSource
+      {
+          public async Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct)
+          {
+              for (var i = 0; i < count; i++)
+              {
+                  var ctx = new UpdateContext(
+                      "test",
+                      i.ToString(),
+                      new ChatAddress(1),
+                      new UserAddress(1),
+                      null,
+                      null,
+                      null,
+                      null,
+                      new Dictionary<string, object>(),
+                      null!,
+                      ct);
+                  await onUpdate(ctx).ConfigureAwait(false);
+              }
 
-            try
-            {
-                await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
-    }
+              try
+              {
+                  await Task.Delay(Timeout.Infinite, ct).ConfigureAwait(false);
+              }
+              catch (OperationCanceledException)
+              {
+              }
+          }
+
+          public Task StopAsync()
+          {
+              return Task.CompletedTask;
+          }
+      }
 
     private sealed class DummyMeterFactory : IMeterFactory
     {

@@ -58,6 +58,21 @@ public sealed class TelegramWebhookSource(
     }
 
     /// <summary>
+    ///     Остановить получение обновлений через вебхук.
+    /// </summary>
+    public async Task StopAsync()
+    {
+        _updates.Complete();
+        try
+        {
+            await client.DeleteWebhook(cancellationToken: CancellationToken.None).ConfigureAwait(false);
+        }
+        catch
+        {
+        }
+    }
+
+    /// <summary>
     ///     Попытаться поместить обновление в очередь
     /// </summary>
     /// <returns><c>true</c>, если помещено успешно</returns>

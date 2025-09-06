@@ -23,6 +23,14 @@ internal sealed class DummyUpdateSource : IUpdateSource
     {
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    ///     Остановка заглушки.
+    /// </summary>
+    public Task StopAsync()
+    {
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>
