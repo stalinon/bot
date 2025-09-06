@@ -2,8 +2,11 @@ using Bot.Abstractions.Addresses;
 using Bot.Abstractions.Contracts;
 using Bot.Core.Transport;
 using Bot.Outbox;
+
 using FluentAssertions;
+
 using Moq;
+
 using Xunit;
 
 namespace Bot.Core.Tests;
