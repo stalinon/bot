@@ -51,22 +51,22 @@ public class StatsCollectorTests
 
     /// <summary>
     ///     Тест 2: Счётчики отбрасываемых, ограниченных и потерянных при остановке обновлений учитываются.
-/// </summary>
-[Fact(DisplayName = "Тест 2: Счётчики отбрасываемых, ограниченных и потерянных при остановке обновлений учитываются")]
-public void Should_TrackDroppedRateLimitedAndLost_When_Marked()
-{
-    var stats = new StatsCollector();
-    stats.MarkDroppedUpdate("test");
-    stats.MarkRateLimited();
-    stats.MarkLostUpdates(2);
-    stats.SetQueueDepth(5);
+    /// </summary>
+    [Fact(DisplayName = "Тест 2: Счётчики отбрасываемых, ограниченных и потерянных при остановке обновлений учитываются")]
+    public void Should_TrackDroppedRateLimitedAndLost_When_Marked()
+    {
+        var stats = new StatsCollector();
+        stats.MarkDroppedUpdate("test");
+        stats.MarkRateLimited();
+        stats.MarkLostUpdates(2);
+        stats.SetQueueDepth(5);
 
-    var snapshot = stats.GetSnapshot();
-    snapshot.DroppedUpdates.Should().Be(1);
-    snapshot.RateLimited.Should().Be(1);
-    snapshot.LostUpdates.Should().Be(2);
-    snapshot.QueueDepth.Should().Be(5);
-}
+        var snapshot = stats.GetSnapshot();
+        snapshot.DroppedUpdates.Should().Be(1);
+        snapshot.RateLimited.Should().Be(1);
+        snapshot.LostUpdates.Should().Be(2);
+        snapshot.QueueDepth.Should().Be(5);
+    }
 
     /// <summary>
     ///     Тест 3: Метрики экспортируются через Meter.
