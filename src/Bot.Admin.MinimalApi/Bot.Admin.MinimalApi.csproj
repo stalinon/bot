@@ -5,5 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Bot.Core\Bot.Core.csproj"/>
+    <ProjectReference Include="..\Bot.Outbox\Bot.Outbox.csproj"/>
   </ItemGroup>
 </Project>
