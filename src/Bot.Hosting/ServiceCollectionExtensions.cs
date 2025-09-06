@@ -7,6 +7,7 @@ using Bot.Core.Pipeline;
 using Bot.Core.Routing;
 using Bot.Core.Stats;
 using Bot.Hosting.Options;
+using Bot.Logging;
 using Bot.Observability;
 using Bot.Scheduler;
 using Bot.Storage.EFCore;
@@ -46,6 +47,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddBot(this IServiceCollection services, Action<BotOptions> configure,
         Action<MeterProviderBuilder>? metrics = null)
     {
+        services.AddLogging(b => b.AddBotLogging());
         services.AddOptions<BotOptions>().Configure(configure);
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<RateLimitOptions>(sp =>
