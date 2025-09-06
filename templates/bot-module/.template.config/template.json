@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Bot Team",
+  "groupIdentity": "Bot.Templates",
+  "identity": "Bot.Templates.BotModule",
+  "name": "Bot Module",
+  "shortName": "bot-module",
+  "sourceName": "BotModule",
+  "preferNameDirectory": true,
+  "symbols": {
+    "lang": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"ru"},{"choice":"en"}], "defaultValue": "ru" }
+  },
+  "primaryOutputs": [{ "path": "src/Module/BotModule.csproj" }]
+}

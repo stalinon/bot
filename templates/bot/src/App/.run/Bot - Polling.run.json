@@ -1,0 +1,7 @@
+{
+  "$schema": "https://jetbrains.com/schemas/run-configuration/2021.2",
+  "name": "Bot — Polling",
+  "type": "DotNetProject",
+  "predefinedTarget": "Project",
+  "programParameters": "--transport polling"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Bot Team",
+  "groupIdentity": "Bot.Templates",
+  "identity": "Bot.Templates.BotWebApp",
+  "name": "Bot Mini App (lean)",
+  "shortName": "bot-webapp",
+  "sourceName": "BotWebApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "lang": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"ru"},{"choice":"en"}], "defaultValue": "ru" }
+  },
+  "primaryOutputs": [{ "path": "src/App/BotWebApp.csproj" }]
+}

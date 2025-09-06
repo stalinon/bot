@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Bot.WebApp" Version="1.0.0" />
+    <PackageReference Include="Bot.WebApp.MinimalApi" Version="1.0.0" />
+  </ItemGroup>
+</Project>
