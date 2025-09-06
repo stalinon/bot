@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Bot Team",
+  "groupIdentity": "Bot.Templates",
+  "identity": "Bot.Templates.Bot",
+  "name": "Bot App (lean)",
+  "shortName": "bot",
+  "sourceName": "BotApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "transport": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"polling"},{"choice":"webhook"}], "defaultValue": "polling" },
+    "public-url": { "type": "parameter", "datatype": "text" },
+    "webhook-secret": { "type": "generated", "generator": "guid" },
+    "store": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"file"},{"choice":"redis"},{"choice":"ef"}], "defaultValue": "file" },
+    "redis": { "type": "parameter", "datatype": "text" },
+    "ef-provider": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"postgres"},{"choice":"sqlite"}] },
+    "ef-conn": { "type": "parameter", "datatype": "text" },
+    "admin": { "type": "parameter", "datatype": "bool", "defaultValue": "true" },
+    "webapp": { "type": "parameter", "datatype": "bool", "defaultValue": "false" },
+    "lang": { "type": "parameter", "datatype": "choice", "choices": [{"choice":"ru"},{"choice":"en"}], "defaultValue": "ru" },
+    "bot-token": { "type": "parameter", "datatype": "text" }
+  },
+  "primaryOutputs": [{ "path": "src/App/BotApp.csproj" }]
+}

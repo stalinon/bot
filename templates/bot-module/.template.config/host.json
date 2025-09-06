@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json.schemastore.org/templatinghost.json",
+  "symbolInfo": [
+    { "id": "lang", "name": { "ru": "Язык", "en": "Language" }, "isRequired": true }
+  ]
+}
