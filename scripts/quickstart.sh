@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Скрипт быстрый старт для шаблона tbot
+# Скрипт быстрый старт для шаблона bot
 # 1. Устанавливает локальный шаблон.
 # 2. Генерирует проект с вебхуком, Mini App и EF Core хранилищем.
 # 3. Запускает проект и проверяет /start и Mini App.
 
 # Установка шаблона
-TEMPLATE_DIR="$(dirname "$0")/../templates/tbot"
+TEMPLATE_DIR="$(dirname "$0")/../templates/bot"
 dotnet new install "$TEMPLATE_DIR" --force >/dev/null
 
 # Генерация проекта в корне репозитория
 PROJECT_DIR="quickstart-bot"
 rm -rf "$PROJECT_DIR"
-dotnet new tbot --transport webhook --webapp -n "$PROJECT_DIR" >/dev/null
+dotnet new bot --transport webhook --webapp -n "$PROJECT_DIR" >/dev/null
 cd "$PROJECT_DIR"
 sed -i 's/{{transport}}/webhook/' appsettings.json
 sed -i 's/{{store}}/ef/' appsettings.json
