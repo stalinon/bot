@@ -32,8 +32,8 @@ builder.Services
         new SceneNavigator(
             sp.GetRequiredService<IStateStore>(),
             TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
-    .AddScoped<PhoneScene>()
-    .AddScoped<ProfileScene>()
+    .AddScoped<PhoneScene>(sp => new PhoneScene(sp.GetRequiredService<ITransportClient>(), sp.GetRequiredService<ISceneNavigator>(), TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
+    .AddScoped<ProfileScene>(sp => new ProfileScene(sp.GetRequiredService<ISceneNavigator>(), sp.GetRequiredService<ITransportClient>(), TimeSpan.FromSeconds(cfg.GetValue("PHONE_STEP_TTL_SECONDS", 60))))
     .UsePipeline()
     .UseConfiguredStateStorage(cfg);
 

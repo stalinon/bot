@@ -74,7 +74,7 @@ public sealed class HandlerRegistry
                 var match = true;
                 for (var i = 0; i < path.Length; i++)
                 {
-                    if (!string.Equals(tokens[i], path[i], StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(tokens[i], path[i].Trim('/'), StringComparison.OrdinalIgnoreCase))
                     {
                         match = false;
                         break;

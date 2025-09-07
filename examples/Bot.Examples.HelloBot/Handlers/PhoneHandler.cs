@@ -22,7 +22,7 @@ public sealed class PhoneHandler(ISceneNavigator navigator, PhoneScene scene, IF
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)
     {
-        if (string.Equals(ctx.Command, "/phone", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ctx.Command, "phone", StringComparison.OrdinalIgnoreCase))
         {
             await navigator.EnterAsync(ctx, scene);
             return;

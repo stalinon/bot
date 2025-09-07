@@ -9,6 +9,7 @@ using Bot.Core.Stats;
 using Bot.Hosting.Options;
 using Bot.Logging;
 using Bot.Observability;
+using Bot.Outbox;
 using Bot.Scheduler;
 using Bot.Storage.EFCore;
 using Bot.Storage.File;
@@ -57,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(sp => sp.GetRequiredService<IOptions<StopOptions>>().Value);
         services.AddSingleton(sp => sp.GetRequiredService<IOptions<ObservabilityOptions>>().Value);
         services.AddSingleton(sp => sp.GetRequiredService<IOptions<OutboxOptions>>().Value);
+        services.AddSingleton<IOutbox>(sp => new FileOutbox(sp.GetRequiredService<IOptions<OutboxOptions>>().Value.Path));
         services.AddSingleton<IUpdatePipeline, PipelineBuilder>();
         services.AddSingleton<RateLimitOptions>(sp =>
             sp.GetRequiredService<IOptions<BotOptions>>()

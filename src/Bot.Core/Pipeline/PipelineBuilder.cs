@@ -22,7 +22,12 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
             _components.Add(next => async ctx =>
             {
                 ctx.CancellationToken.ThrowIfCancellationRequested();
-                var mw = ctx.Services.GetRequiredService<T>();
+                var mw = ctx.Services.GetService<T>();
+                if (mw == null)
+                {
+                    return;
+                }
+
                 await mw.InvokeAsync(ctx, next).ConfigureAwait(false);
             });
 

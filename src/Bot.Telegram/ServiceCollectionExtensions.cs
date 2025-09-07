@@ -39,7 +39,7 @@ public static class ServiceCollectionExtensions
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient(telegram));
         });
         services.AddOptions<QueueOptions>();
-        services.AddSingleton(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<QueueOptions>>().Value);
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<QueueOptions>>().Value);
         services.AddSingleton<TelegramPollingSource>();
         services.AddSingleton<TelegramWebhookSource>();
         services.AddSingleton<WebhookService>();

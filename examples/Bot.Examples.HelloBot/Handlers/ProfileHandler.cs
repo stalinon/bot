@@ -22,7 +22,7 @@ public sealed class ProfileHandler(ISceneNavigator navigator, ProfileScene scene
     /// <inheritdoc />
     public async Task HandleAsync(UpdateContext ctx)
     {
-        if (string.Equals(ctx.Command, "/profile", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(ctx.Command, "profile", StringComparison.OrdinalIgnoreCase))
         {
             await navigator.EnterAsync(ctx, scene);
             return;
