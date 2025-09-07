@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Bot.Templates</PackageId>
+    <PackageReadmeFile>../README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="bot/**" />
+    <Compile Remove="bot-module/**" />
+    <Compile Remove="bot-webapp/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="bot/**" Pack="true" PackagePath="bot" />
+    <Content Include="bot-module/**" Pack="true" PackagePath="bot-module" />
+    <Content Include="bot-webapp/**" Pack="true" PackagePath="bot-webapp" />
+  </ItemGroup>
+</Project>
