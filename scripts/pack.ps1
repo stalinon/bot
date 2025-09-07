@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$solution = Join-Path $root ".." "Bot.sln"
+$solution = Join-Path -Path $root -ChildPath '..\\Bot.sln'
 
 # Восстановление зависимостей в зафиксированном режиме
 dotnet restore $solution --locked-mode
