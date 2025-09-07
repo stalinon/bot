@@ -6,7 +6,6 @@ namespace Bot.Hosting.Options;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Включает OTLP.</item>
-///         <item>Включает Prometheus.</item>
 ///     </list>
 /// </remarks>
 public sealed class ObservabilityExportOptions
@@ -15,10 +14,5 @@ public sealed class ObservabilityExportOptions
     ///     Включить OTLP.
     /// </summary>
     public bool Otlp { get; set; }
-
-    /// <summary>
-    ///     Включить Prometheus.
-    /// </summary>
-    public bool Prometheus { get; set; }
 }
 

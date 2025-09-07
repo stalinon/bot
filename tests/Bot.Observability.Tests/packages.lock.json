@@ -99,8 +99,8 @@
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.0.0-preview.7.25380.108",
-        "contentHash": "0oSQ8o2O8eMxaInqR1GykEzzlerBTN3xQMsEtaWA4zbf1LmrqV7H9ctTTjK4oMeWMCTb9mfYoN9fsVWbAhkTXA=="
+        "resolved": "9.0.8",
+        "contentHash": "xY3lTjj4+ZYmiKIkyWitddrp1uL5uYiweQjqo4BKBw01ZC4HhcfgLghDpPZcUlppgWAFqFy9SgkiYWOMx365pw=="
       },
       "Microsoft.Extensions.Diagnostics.Abstractions": {
         "type": "Transitive",
@@ -323,14 +323,6 @@
         "contentHash": "7LzQSPhz5pNaL4xZgT3wkZODA1NLrEq3bet8KDHgtaJ9q+VNP7wmiZky8gQfMkB4FXuI/pevT8ZurL4p5997WA==",
         "dependencies": {
           "OpenTelemetry": "1.12.0"
-        }
-      },
-      "OpenTelemetry.Exporter.Prometheus.AspNetCore": {
-        "type": "Transitive",
-        "resolved": "1.9.0-alpha.1",
-        "contentHash": "Dy5rM8ICfW3ewi3+nhsdwBDJKJzO7F9nGJp2ouYIks+nK19yenfVL/ijDjzspI0ienpsCN/fwwJtKs2CxmzEsg==",
-        "dependencies": {
-          "OpenTelemetry": "1.8.1"
         }
       },
       "OpenTelemetry.Extensions.Hosting": {
@@ -1232,9 +1224,8 @@
         "type": "Project",
         "dependencies": {
           "Bot.Abstractions": "[1.0.0, )",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.0-preview.7.25380.108, )",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "[9.0.8, )",
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.12.0, )",
-          "OpenTelemetry.Exporter.Prometheus.AspNetCore": "[1.9.0-alpha.1, )",
           "OpenTelemetry.Extensions.Hosting": "[1.12.0, )"
         }
       }
