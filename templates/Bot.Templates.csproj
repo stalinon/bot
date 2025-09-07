@@ -7,8 +7,12 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageType>Template</PackageType>
-    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <NoWarn>$(NoWarn);NU5128;NU5118</NoWarn>
+    <IncludeSymbols>false</IncludeSymbols>
   </PropertyGroup>
+  <ItemGroup>
+    <None Update="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="bot/**" />
     <Compile Remove="bot-module/**" />
@@ -16,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="bot/**" Pack="true" PackagePath="bot" />
-    <Content Include="bot-module/**" Pack="true" PackagePath="bot-module" />
-    <Content Include="bot-webapp/**" Pack="true" PackagePath="bot-webapp" />
+    <None Include="bot/**" Pack="true" PackagePath="bot" />
+    <None Include="bot-module/**" Pack="true" PackagePath="bot-module" />
+    <None Include="bot-webapp/**" Pack="true" PackagePath="bot-webapp" />
   </ItemGroup>
 </Project>
