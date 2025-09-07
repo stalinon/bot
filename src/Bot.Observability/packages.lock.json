@@ -10,9 +10,9 @@
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Direct",
-        "requested": "[10.0.0-preview.7.25380.108, )",
-        "resolved": "10.0.0-preview.7.25380.108",
-        "contentHash": "0oSQ8o2O8eMxaInqR1GykEzzlerBTN3xQMsEtaWA4zbf1LmrqV7H9ctTTjK4oMeWMCTb9mfYoN9fsVWbAhkTXA=="
+        "requested": "[9.0.8, )",
+        "resolved": "9.0.8",
+        "contentHash": "xY3lTjj4+ZYmiKIkyWitddrp1uL5uYiweQjqo4BKBw01ZC4HhcfgLghDpPZcUlppgWAFqFy9SgkiYWOMx365pw=="
       },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
@@ -31,15 +31,6 @@
         "contentHash": "7LzQSPhz5pNaL4xZgT3wkZODA1NLrEq3bet8KDHgtaJ9q+VNP7wmiZky8gQfMkB4FXuI/pevT8ZurL4p5997WA==",
         "dependencies": {
           "OpenTelemetry": "1.12.0"
-        }
-      },
-      "OpenTelemetry.Exporter.Prometheus.AspNetCore": {
-        "type": "Direct",
-        "requested": "[1.9.0-alpha.1, )",
-        "resolved": "1.9.0-alpha.1",
-        "contentHash": "Dy5rM8ICfW3ewi3+nhsdwBDJKJzO7F9nGJp2ouYIks+nK19yenfVL/ijDjzspI0ienpsCN/fwwJtKs2CxmzEsg==",
-        "dependencies": {
-          "OpenTelemetry": "1.8.1"
         }
       },
       "OpenTelemetry.Extensions.Hosting": {

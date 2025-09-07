@@ -11,13 +11,12 @@ namespace Bot.Observability;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Подключают провайдеры метрик и трассировки.</item>
-///         <item>Настраивают экспортёры в зависимости от переменных окружения.</item>
+///         <item>Настраивают OTLP-экспортёр через переменную окружения.</item>
 ///     </list>
 /// </remarks>
 public static class ServiceCollectionExtensions
 {
     private const string OtlpVar = "OBS__EXPORT__OTLP";
-    private const string PromVar = "OBS__EXPORT__PROMETHEUS";
 
     /// <summary>
     ///     Добавить наблюдаемость.
@@ -29,30 +28,17 @@ public static class ServiceCollectionExtensions
         Action<TracerProviderBuilder>? configureTracer = null)
     {
         var otlp = IsEnabled(OtlpVar);
-        var prom = IsEnabled(PromVar);
         var builder = services.AddOpenTelemetry();
 
-        if (otlp || prom)
+        if (otlp)
         {
             builder.WithMetrics(mb =>
             {
                 mb.AddMeter("Bot.Core.Metrics");
-                if (otlp)
-                {
-                    mb.AddOtlpExporter();
-                }
-
-                if (prom)
-                {
-                    mb.AddPrometheusExporter();
-                }
-
+                mb.AddOtlpExporter();
                 configureMeter?.Invoke(mb);
             });
-        }
 
-        if (otlp)
-        {
             builder.WithTracing(tb =>
             {
                 tb.AddSource(Telemetry.ActivitySourceName);

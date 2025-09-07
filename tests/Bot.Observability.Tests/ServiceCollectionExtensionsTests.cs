@@ -16,7 +16,7 @@ namespace Bot.Observability.Tests;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///         <item>Проверяет, что провайдеры создаются при заданных экспортёрах.</item>
+///         <item>Проверяет, что провайдеры создаются при включённом OTLP.</item>
 ///         <item>Проверяет, что провайдеры не создаются без экспортёров.</item>
 ///     </list>
 /// </remarks>
@@ -28,19 +28,17 @@ public sealed class ServiceCollectionExtensionsTests
     }
 
     /// <summary>
-    ///     Тест 1: Должен создавать провайдеры при заданных экспортёрах.
+    ///     Тест 1: Должен создавать провайдеры при включённом OTLP.
     /// </summary>
-    [Fact(DisplayName = "Тест 1: Должен создавать провайдеры при заданных экспортёрах")]
-    public void Should_CreateProviders_When_ExportersConfigured()
+    [Fact(DisplayName = "Тест 1: Должен создавать провайдеры при включённом OTLP")]
+    public void Should_CreateProviders_When_OtlpEnabled()
     {
         Environment.SetEnvironmentVariable("OBS__EXPORT__OTLP", "1");
-        Environment.SetEnvironmentVariable("OBS__EXPORT__PROMETHEUS", "1");
         var services = new ServiceCollection().AddObservability();
         var sp = services.BuildServiceProvider();
         sp.GetService<TracerProvider>().Should().NotBeNull();
         sp.GetService<MeterProvider>().Should().NotBeNull();
         Environment.SetEnvironmentVariable("OBS__EXPORT__OTLP", null);
-        Environment.SetEnvironmentVariable("OBS__EXPORT__PROMETHEUS", null);
     }
 
     /// <summary>
@@ -50,7 +48,6 @@ public sealed class ServiceCollectionExtensionsTests
     public void Should_NotCreateProviders_When_NoExporters()
     {
         Environment.SetEnvironmentVariable("OBS__EXPORT__OTLP", null);
-        Environment.SetEnvironmentVariable("OBS__EXPORT__PROMETHEUS", null);
         var services = new ServiceCollection().AddObservability();
         var sp = services.BuildServiceProvider();
         sp.GetService<TracerProvider>().Should().BeNull();
