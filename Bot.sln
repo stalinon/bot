@@ -110,11 +110,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "perf", "perf", "{F650CE9E-C
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{F3E46120-3DAB-4D19-9976-5586A206E612}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\pack.ps1 = scripts\pack.ps1
-		scripts\quickstart.ps1 = scripts\quickstart.ps1
-		scripts\quickstart.sh = scripts\quickstart.sh
-	EndProjectSection
+ProjectSection(SolutionItems) = preProject
+scripts\pack.ps1 = scripts\pack.ps1
+scripts\pack.sh = scripts\pack.sh
+scripts\quickstart.ps1 = scripts\quickstart.ps1
+scripts\quickstart.sh = scripts\quickstart.sh
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
