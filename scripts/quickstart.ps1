@@ -2,19 +2,19 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Скрипт быстрый старт для шаблона tbot
+# Скрипт быстрый старт для шаблона bot
 # 1. Устанавливает локальный шаблон.
 # 2. Генерирует проект с вебхуком, Mini App и EF Core хранилищем.
 # 3. Запускает проект и проверяет /start и Mini App.
 
 # Установка шаблона
-$templ = Join-Path $PSScriptRoot '..' 'templates' 'tbot'
+$templ = Join-Path $PSScriptRoot '..' 'templates' 'bot'
 dotnet new install $templ --force | Out-Null
 
 # Генерация проекта в корне репозитория
 $project = Join-Path (Get-Location) 'quickstart-bot'
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $project
-$null = dotnet new tbot --transport webhook --webapp -n 'quickstart-bot'
+$null = dotnet new bot --transport webhook --webapp -n 'quickstart-bot'
 Set-Location $project
 (Get-Content appsettings.json) -replace '{{transport}}','webhook' -replace '{{store}}','ef' | Set-Content appsettings.json
 (Get-Content Program.cs) -replace 'UsePipeline\(p => p[\s\S]*?UseConfiguredStateStorage', 'UsePipeline(_ => { })`n    .UseConfiguredStateStorage' | Set-Content Program.cs

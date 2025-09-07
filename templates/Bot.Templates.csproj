@@ -15,13 +15,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="bot/**" />
-    <Compile Remove="bot-module/**" />
-    <Compile Remove="bot-webapp/**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="bot/**" Pack="true" PackagePath="bot" />
-    <None Include="bot-module/**" Pack="true" PackagePath="bot-module" />
-    <None Include="bot-webapp/**" Pack="true" PackagePath="bot-webapp" />
   </ItemGroup>
 </Project>

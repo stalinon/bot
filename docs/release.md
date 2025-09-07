@@ -19,7 +19,7 @@ pwsh scripts/pack.ps1 # Windows
 Для проверки шаблонов установите их локально:
 
 ```bash
-dotnet new install templates/tbot
+dotnet new install templates/bot
 ```
 
 или из собранного пакета:

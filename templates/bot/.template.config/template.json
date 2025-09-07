@@ -3,7 +3,7 @@
   "author": "Bot Team",
   "groupIdentity": "Bot.Templates",
   "identity": "Bot.Templates.Bot",
-  "name": "Bot App (lean)",
+  "name": "Bot",
   "shortName": "bot",
   "sourceName": "BotApp",
   "preferNameDirectory": true,
