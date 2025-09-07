@@ -8,6 +8,7 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <PackageType>Template</PackageType>
     <NoWarn>$(NoWarn);NU5128;NU5118</NoWarn>
+    <IncludeSymbols>false</IncludeSymbols>
   </PropertyGroup>
   <ItemGroup>
     <None Update="README.md" Pack="true" PackagePath="" />
