@@ -41,7 +41,7 @@ public sealed class PhoneSceneTests
     [Fact(DisplayName = "Тест 1: Должен успешно запросить и подтвердить номер")]
     public async Task Should_AskAndConfirmPhone()
     {
-        var ctx = SceneTestExtensions.CreateContext("/phone", "/phone");
+        var ctx = SceneTestExtensions.CreateContext("/phone", "phone");
         await _handler.HandleAsync(ctx);
 
         await _handler.StepAsync(_navigator, ctx, "+79991234567");
@@ -61,7 +61,7 @@ public sealed class PhoneSceneTests
     [Fact(DisplayName = "Тест 2: Должен выйти из сцены по таймауту")]
     public async Task Should_ExitByTimeout()
     {
-        var ctx = SceneTestExtensions.CreateContext("/phone", "/phone");
+        var ctx = SceneTestExtensions.CreateContext("/phone", "phone");
         await _handler.HandleAsync(ctx);
 
         await _handler.StepAsync(_navigator, ctx, "+79991234567", delay: TimeSpan.FromMilliseconds(150));
