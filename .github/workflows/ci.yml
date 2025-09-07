@@ -103,7 +103,7 @@ jobs:
       - name: Check licenses
         run: |
           dotnet tool install --global dotnet-project-licenses
-          dotnet-project-licenses --project Bot.sln
+          dotnet-project-licenses -i Bot.sln
       - name: Get version
         id: get_version
         run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
