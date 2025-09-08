@@ -13,7 +13,7 @@
 3. Создайте бота через [@BotFather](https://t.me/BotFather) и получите токен.
 4. Запустите пример **HelloBot** с вашим токеном:
    ```bash
-   cd Bot.Examples.HelloBot
+   cd Stalinon.Bot.Examples.HelloBot
    export BOT_TOKEN="<ваш-токен>"
    dotnet run
    ```
@@ -76,7 +76,7 @@ API включено по умолчанию. Для запросов необх
 ### Лидерборды на Redis
 
 ```csharp
-using Bot.Storage.Redis;
+using Stalinon.Bot.Storage.Redis;
 
 var options = new RedisOptions { Connection = mux, Database = 0, Prefix = "lb" };
 var board = new RedisSortedSet<Player>(options);

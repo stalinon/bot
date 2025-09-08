@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Stalinon.Bot.Core\Stalinon.Bot.Core.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Logging\Stalinon.Bot.Logging.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Storage.File\Stalinon.Bot.Storage.File.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Storage.Redis\Stalinon.Bot.Storage.Redis.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Storage.EFCore\Stalinon.Bot.Storage.EFCore.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Scheduler\Stalinon.Bot.Scheduler.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Observability\Stalinon.Bot.Observability.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8"/>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics" Version="9.0.8"/>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+  </ItemGroup>
+
+</Project>

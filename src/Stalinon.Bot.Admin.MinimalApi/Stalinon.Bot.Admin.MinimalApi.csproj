@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stalinon.Bot.Core\Stalinon.Bot.Core.csproj"/>
+    <ProjectReference Include="..\Stalinon.Bot.Outbox\Stalinon.Bot.Outbox.csproj"/>
+  </ItemGroup>
+</Project>

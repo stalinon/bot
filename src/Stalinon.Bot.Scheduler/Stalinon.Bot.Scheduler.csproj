@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Cronos" Version="0.7.1"/>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8"/>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stalinon.Bot.Abstractions\Stalinon.Bot.Abstractions.csproj"/>
+  </ItemGroup>
+</Project>

@@ -1,8 +1,8 @@
-using Bot.Admin.MinimalApi;
-using Bot.Hosting;
-using Bot.Storage.File;
-using Bot.Transport.Telegram;
-using Bot.WebApp.MinimalApi;
+using Stalinon.Bot.Admin.MinimalApi;
+using Stalinon.Bot.Hosting;
+using Stalinon.Bot.Storage.File;
+using Stalinon.Bot.Transport.Telegram;
+using Stalinon.Bot.WebApp.MinimalApi;
 
 var builder = WebApplication.CreateBuilder(args);
 var cfg = builder.Configuration;

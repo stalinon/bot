@@ -1,4 +1,4 @@
-# Bot.Templates
+# Stalinon.Bot.Templates
 
 Единый шаблон `bot` позволяет сконфигурировать способ получения обновлений,
 хранилище и дополнительные функции.
@@ -6,7 +6,7 @@
 ## Использование
 
 ```bash
-dotnet new install Bot.Templates
+dotnet new install Stalinon.Bot.Templates
 dotnet new bot --name MyBot [параметры]
 ```
 

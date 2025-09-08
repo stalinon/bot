@@ -1,8 +1,8 @@
 {
   "$schema": "http://json.schemastore.org/template",
   "author": "Bot Team",
-  "groupIdentity": "Bot.Templates",
-  "identity": "Bot.Templates.Bot",
+  "groupIdentity": "Stalinon.Bot.Templates",
+  "identity": "Stalinon.Bot.Templates.Bot",
   "name": "Bot",
   "shortName": "bot",
   "sourceName": "BotApp",
