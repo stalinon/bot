@@ -1,6 +1,6 @@
-using Bot.Abstractions;
-using Bot.Abstractions.Attributes;
-using Bot.Abstractions.Contracts;
+using Stalinon.Bot.Abstractions;
+using Stalinon.Bot.Abstractions.Attributes;
+using Stalinon.Bot.Abstractions.Contracts;
 
 namespace BotApp.Handlers;
 

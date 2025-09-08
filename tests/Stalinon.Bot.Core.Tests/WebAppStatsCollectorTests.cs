@@ -1,0 +1,142 @@
+using System.Diagnostics.Metrics;
+
+using FluentAssertions;
+
+using Stalinon.Bot.Core.Middlewares;
+using Stalinon.Bot.Core.Stats;
+
+using Xunit;
+
+namespace Stalinon.Bot.Core.Tests;
+
+/// <summary>
+///     Тесты для <see cref="WebAppStatsCollector" />.
+/// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Проверяется подсчёт авторизации, профиля и передачи данных.</item>
+///         <item>Проверяется экспорт метрик через <see cref="Meter" />.</item>
+///     </list>
+/// </remarks>
+public sealed class WebAppStatsCollectorTests
+{
+    /// <inheritdoc />
+    public WebAppStatsCollectorTests()
+    {
+    }
+
+    /// <summary>
+    ///     Тест 1: Счётчики авторизации, профиля и передачи данных учитываются.
+    /// </summary>
+    [Fact(DisplayName = "Тест 1: Счётчики авторизации, профиля и передачи данных учитываются")]
+    public void Should_CountAuthMeAndSendData_When_Marked()
+    {
+        var stats = new WebAppStatsCollector();
+        stats.MarkAuth(10);
+        stats.MarkMe(20);
+        stats.MarkSendData(5, true);
+        stats.MarkSendData(7, false);
+
+        var snapshot = stats.GetSnapshot();
+        snapshot.AuthTotal.Should().Be(1);
+        snapshot.MeTotal.Should().Be(1);
+        snapshot.SendDataTotal.Should().Be(2);
+        snapshot.SendDataSuccess.Should().Be(1);
+        snapshot.SendDataError.Should().Be(1);
+        snapshot.P95.Should().BeGreaterOrEqualTo(snapshot.P50);
+        snapshot.P99.Should().BeGreaterOrEqualTo(snapshot.P95);
+    }
+
+    /// <summary>
+    ///     Тест 2: Метрики экспортируются через Meter.
+    /// </summary>
+    [Fact(DisplayName = "Тест 2: Метрики экспортируются через Meter")]
+    public void Should_ExportMetricsViaMeter_When_Marked()
+    {
+        using var meter = new Meter(MetricsMiddleware.MeterName);
+        var factory = new TestMeterFactory(meter);
+        var stats = new WebAppStatsCollector(factory);
+        using var listener = new MeterListener();
+        long auth = 0;
+        long me = 0;
+        long sendData = 0;
+        long sendDataOk = 0;
+        long sendDataErr = 0;
+        double latency = 0;
+
+        listener.InstrumentPublished = (instrument, l) =>
+        {
+            if (instrument.Meter == meter)
+            {
+                l.EnableMeasurementEvents(instrument);
+            }
+        };
+        listener.SetMeasurementEventCallback<long>((inst, value, tags, state) =>
+        {
+            switch (inst.Name)
+            {
+                case "tgbot_webapp_auth_total":
+                    auth += value;
+                    break;
+                case "tgbot_webapp_me_total":
+                    me += value;
+                    break;
+                case "tgbot_webapp_senddata_total":
+                    sendData += value;
+                    break;
+                case "tgbot_webapp_senddata_success_total":
+                    sendDataOk += value;
+                    break;
+                case "tgbot_webapp_senddata_error_total":
+                    sendDataErr += value;
+                    break;
+            }
+        });
+        listener.SetMeasurementEventCallback<double>((inst, value, tags, state) =>
+        {
+            if (inst.Name == "tgbot_webapp_request_latency_ms")
+            {
+                latency = value;
+            }
+        });
+        listener.Start();
+
+        stats.MarkAuth(5);
+        stats.MarkMe(7);
+        stats.MarkSendData(3, true);
+        stats.MarkSendData(4, false);
+
+        listener.RecordObservableInstruments();
+
+        auth.Should().Be(1);
+        me.Should().Be(1);
+        sendData.Should().Be(2);
+        sendDataOk.Should().Be(1);
+        sendDataErr.Should().Be(1);
+        latency.Should().BeGreaterThan(0);
+    }
+
+    private sealed class TestMeterFactory : IMeterFactory
+    {
+        private readonly Meter _meter;
+
+        public TestMeterFactory(Meter meter)
+        {
+            _meter = meter;
+        }
+
+        public Meter Create(MeterOptions options)
+        {
+            return _meter;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public Meter Create(string name, string? version = null)
+        {
+            return _meter;
+        }
+    }
+}

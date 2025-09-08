@@ -1,0 +1,61 @@
+using Microsoft.Extensions.DependencyInjection;
+
+using Stalinon.Bot.Abstractions.Contracts;
+using Stalinon.Bot.Scheduler;
+
+namespace Stalinon.Bot.TestKit;
+
+/// <summary>
+///     Упрощённый планировщик задач для тестов.
+/// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Запускает задачи по требованию без фоновых потоков</item>
+///         <item>Использует распределённый лок для предотвращения параллельного выполнения</item>
+///     </list>
+/// </remarks>
+public sealed class FakeJobScheduler
+{
+    private readonly IEnumerable<JobDescriptor> _jobs;
+    private readonly IDistributedLock _lock;
+    private readonly IServiceProvider _provider;
+
+    /// <summary>
+    ///     Создать планировщик.
+    /// </summary>
+    public FakeJobScheduler(IServiceProvider provider, IEnumerable<JobDescriptor> jobs, IDistributedLock @lock)
+    {
+        _provider = provider;
+        _jobs = jobs;
+        _lock = @lock;
+    }
+
+    /// <summary>
+    ///     Запустить все задачи один раз.
+    /// </summary>
+    public async Task RunAsync(CancellationToken ct)
+    {
+        foreach (var descriptor in _jobs)
+        {
+            ct.ThrowIfCancellationRequested();
+            var key = descriptor.JobType.FullName!;
+            var ttl = descriptor.Interval ?? TimeSpan.Zero;
+            var acquired = await _lock.AcquireAsync(key, ttl, ct).ConfigureAwait(false);
+            if (!acquired)
+            {
+                continue;
+            }
+
+            try
+            {
+                using var scope = _provider.CreateScope();
+                var job = (IJob)scope.ServiceProvider.GetRequiredService(descriptor.JobType);
+                await job.ExecuteAsync(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                await _lock.ReleaseAsync(key, ct).ConfigureAwait(false);
+            }
+        }
+    }
+}
