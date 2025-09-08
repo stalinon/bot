@@ -84,6 +84,8 @@ jobs:
         run: dotnet test --configuration Release --filter "Category=Load"
 
   release:
+    permissions:
+      contents: write
     if: startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
