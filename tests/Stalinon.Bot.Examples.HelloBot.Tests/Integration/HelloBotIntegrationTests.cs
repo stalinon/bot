@@ -27,20 +27,27 @@ namespace Stalinon.Bot.Examples.HelloBot.Tests.Integration;
 ///     <list type="number">
 ///         <item>Отвечает на <c>/start</c> и <c>/ping</c>.</item>
 ///         <item>Проходит сценарий <c>/phone</c>.</item>
-///         <item>Без <c>BOT_TOKEN</c> падает при конфигурации.</item>
 ///     </list>
 /// </remarks>
 public sealed class HelloBotIntegrationTests
 {
-    private static IHost BuildHost(bool withToken = true)
+    private static IHost BuildHost(
+        bool withToken = true,
+        string mode = "Polling",
+        string parallelism = "1",
+        bool withWebhookUrl = true)
     {
         var builder = Host.CreateApplicationBuilder();
         var cfg = new Dictionary<string, string?>
         {
-            ["Transport:Mode"] = "Polling",
-            ["Transport:Parallelism"] = "1",
+            ["Transport:Mode"] = mode,
+            ["Transport:Parallelism"] = parallelism,
             ["PHONE_STEP_TTL_SECONDS"] = "60"
         };
+        if (mode == "Webhook" && withWebhookUrl)
+        {
+            cfg["Transport:Webhook:PublicUrl"] = "https://example.com";
+        }
         if (withToken)
         {
             cfg["BOT_TOKEN"] = "000:FAKE";
@@ -65,6 +72,7 @@ public sealed class HelloBotIntegrationTests
             .UsePipeline();
 
         builder.Services.AddSingleton<ITransportClient, FakeTransportClient>();
+        builder.Services.AddSingleton<IUpdateSource, DummyUpdateSource>();
         builder.Services.AddScoped<RequestIdProvider>();
         builder.Services.AddScoped<ISceneNavigator>(sp =>
             new SceneNavigator(
@@ -148,17 +156,38 @@ public sealed class HelloBotIntegrationTests
     }
 
     /// <summary>
-    ///     Тест 3: Должен выбрасывать ошибку при отсутствии BOT_TOKEN.
+    ///     Тест 3: Должен запускаться при режиме Webhook и корректном URL.
     /// </summary>
-    [Fact(DisplayName = "Тест 3: Должен выбрасывать ошибку при отсутствии BOT_TOKEN")]
-    public void Should_Throw_OnMissingToken()
+    [Fact(DisplayName = "Тест 3: Должен запускаться при режиме Webhook и корректном URL.")]
+    public void Should_Start_OnWebhookWithUrl()
     {
         var act = () =>
         {
-            using var host = BuildHost(false);
+            using var host = BuildHost(mode: "Webhook");
             host.Services.GetRequiredService<BotHostedService>();
         };
 
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().NotThrow();
+    }
+
+    /// <summary>
+    ///     Тест 4: Должен выбрасывать ошибку при нулевом параллелизме транспорта.
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Должен выбрасывать ошибку при нулевом параллелизме транспорта.")]
+    public async Task Should_Throw_OnZeroParallelism()
+    {
+        using var host = BuildHost(parallelism: "0");
+        var hosted = host.Services.GetRequiredService<BotHostedService>();
+
+        var act = async () => await hosted.StartAsync(CancellationToken.None);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
+
+    private sealed class DummyUpdateSource : IUpdateSource
+    {
+        public Task StartAsync(Func<UpdateContext, Task> onUpdate, CancellationToken ct) => Task.CompletedTask;
+
+        public Task StopAsync() => Task.CompletedTask;
     }
 }

@@ -123,6 +123,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Templates", "t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Abstractions.Tests", "tests\Stalinon.Bot.Abstractions.Tests\Stalinon.Bot.Abstractions.Tests.csproj", "{E5A743B4-BF5E-47D4-9724-02A4FC697BE5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Templates.Tests", "tests\Stalinon.Bot.Templates.Tests\Stalinon.Bot.Templates.Tests.csproj", "{EBB14BDB-23BB-4066-BAF8-666862D813D9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -264,6 +266,10 @@ Global
 		{E5A743B4-BF5E-47D4-9724-02A4FC697BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5A743B4-BF5E-47D4-9724-02A4FC697BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5A743B4-BF5E-47D4-9724-02A4FC697BE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{27C03CF3-E889-485F-8D18-DB5CB343E99B} = {8397F202-E819-4200-A2A5-8094C594C0D3}
@@ -302,5 +308,6 @@ Global
 		{F650CE9E-CDA3-4A68-B12E-9B0A06511733} = {DD8D543F-A3EF-409A-8BC1-27CDA8BA1A1E}
 		{0A812624-AAB8-4140-BF8E-C9A7C1F8FA24} = {AAD138A3-7157-4C11-9525-7A1677F4F5C5}
 		{E5A743B4-BF5E-47D4-9724-02A4FC697BE5} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
+		{EBB14BDB-23BB-4066-BAF8-666862D813D9} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
 	EndGlobalSection
 EndGlobal
