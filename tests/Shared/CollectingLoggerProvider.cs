@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 using Microsoft.Extensions.Logging;
 
-namespace Stalinon.Bot.Core.Tests;
+namespace Stalinon.Bot.Tests.Shared;
 
 /// <summary>
 ///     Провайдер логов для тестов.

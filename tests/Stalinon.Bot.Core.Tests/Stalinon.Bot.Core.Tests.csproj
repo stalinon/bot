@@ -29,4 +29,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\CollectingLoggerProvider.cs" Link="Shared/CollectingLoggerProvider.cs" />
+  </ItemGroup>
 </Project>

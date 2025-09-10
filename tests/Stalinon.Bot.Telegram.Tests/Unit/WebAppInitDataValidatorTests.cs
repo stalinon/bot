@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 using Stalinon.Bot.Hosting.Options;
+using Stalinon.Bot.Tests.Shared;
 
 using Xunit;
 

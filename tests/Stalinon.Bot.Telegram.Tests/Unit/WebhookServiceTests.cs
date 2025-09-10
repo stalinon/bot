@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Stalinon.Bot.Hosting.Options;
+using Stalinon.Bot.Tests.Shared;
 
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
