@@ -63,7 +63,7 @@ public sealed class FileStateStoreTests
         var ct = CancellationToken.None;
         await store.SetAsync("user", "ping:42", 1, null, ct);
         var expected = Path.Combine(temp, "tenant", "user", "ping", "42.json");
-        Assert.True(File.Exists(expected));
+        Assert.True(System.IO.File.Exists(expected));
         var value = await store.GetAsync<int>("user", "ping:42", ct);
         Assert.Equal(1, value);
     }
@@ -83,7 +83,7 @@ public sealed class FileStateStoreTests
 
         Assert.Null(await store.GetAsync<int?>("s", "k", CancellationToken.None));
         var file = Path.Combine(path, "s", "k.json");
-        Assert.False(File.Exists(file));
+        Assert.False(System.IO.File.Exists(file));
 
         Directory.Delete(path, true);
     }
