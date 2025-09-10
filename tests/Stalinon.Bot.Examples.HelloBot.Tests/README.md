@@ -7,6 +7,10 @@
 
 Тесты разделены по типам в каталоги `Unit` и `Integration`.
 
+### Интеграционные проверки
+В каталоге `Integration` разворачивается `HelloBot` в памяти с фейковым `BOT_TOKEN` и `FakeTransportClient`.
+Проверяются ответы на команды `/start`, `/ping` и сценарий `/phone`, а также исключение при отсутствии `BOT_TOKEN`.
+
 ## Запуск
 ```bash
 dotnet test
