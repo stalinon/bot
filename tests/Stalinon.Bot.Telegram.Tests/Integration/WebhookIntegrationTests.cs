@@ -19,7 +19,7 @@ using Telegram.Bot.Types.Enums;
 
 using Xunit;
 
-namespace Stalinon.Bot.Core.Tests;
+namespace Stalinon.Bot.Telegram.Tests;
 
 /// <summary>
 ///     Интеграционные тесты телеграм вебхука.

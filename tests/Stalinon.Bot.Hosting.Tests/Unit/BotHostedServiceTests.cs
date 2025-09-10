@@ -18,7 +18,7 @@ using Stalinon.Bot.Hosting.Options;
 
 using Xunit;
 
-namespace Stalinon.Bot.Core.Tests;
+namespace Stalinon.Bot.Hosting.Tests;
 
 /// <summary>
 ///     Тесты параллельной обработки в <see cref="BotHostedService" />.
