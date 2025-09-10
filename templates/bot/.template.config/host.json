@@ -1,10 +1,52 @@
 {
   "$schema": "http://json.schemastore.org/templatinghost.json",
   "symbolInfo": [
-    { "id": "transport", "name": { "ru": "Транспорт", "en": "Transport" }, "isRequired": true },
-    { "id": "public-url", "name": { "ru": "Public URL (вебхук)", "en": "Public URL (webhook)" } },
-    { "id": "store", "name": { "ru": "Хранилище", "en": "Store" }, "isRequired": true },
-    { "id": "admin", "name": { "ru": "Админ-эндпоинты", "en": "Admin endpoints" } },
-    { "id": "webapp", "name": { "ru": "Включить Web App", "en": "Enable Web App" } }
+    {
+      "id": "transport",
+      "name": { "ru": "Транспорт", "en": "Transport" },
+      "isRequired": true
+    },
+    {
+      "id": "public-url",
+      "name": { "ru": "Public URL (вебхук)", "en": "Public URL (webhook)" }
+    },
+    {
+      "id": "webhook-secret",
+      "name": { "ru": "Секрет вебхука", "en": "Webhook secret" }
+    },
+    {
+      "id": "store",
+      "name": { "ru": "Хранилище", "en": "Store" },
+      "isRequired": true
+    },
+    {
+      "id": "redis",
+      "name": { "ru": "Подключение Redis", "en": "Redis connection" }
+    },
+    {
+      "id": "ef-provider",
+      "name": { "ru": "Провайдер EF Core", "en": "EF Core provider" }
+    },
+    {
+      "id": "ef-conn",
+      "name": { "ru": "Строка подключения EF", "en": "EF connection string" }
+    },
+    {
+      "id": "admin",
+      "name": { "ru": "Админ-эндпоинты", "en": "Admin endpoints" }
+    },
+    {
+      "id": "webapp",
+      "name": { "ru": "Включить Web App", "en": "Enable Web App" }
+    },
+    {
+      "id": "lang",
+      "name": { "ru": "Язык исходников", "en": "Source language" }
+    },
+    {
+      "id": "bot-token",
+      "name": { "ru": "Токен бота", "en": "Bot token" },
+      "isRequired": true
+    }
   ]
 }

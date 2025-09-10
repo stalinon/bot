@@ -26,5 +26,5 @@ dotnet new bot --name MyBot [параметры]
 
 ## JetBrains Rider
 
-После установки шаблона командой `dotnet new install` он будет доступен в окне **New Solution** в Rider.
-Перезапустите IDE и выберите `bot` в списке шаблонов .NET.
+После установки шаблона командой `dotnet new install` он появится в окне **New Solution** в Rider в разделе **Console**.
+Перезапустите IDE и выберите `Bot`; шаблон отображается с собственной иконкой.

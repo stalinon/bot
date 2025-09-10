@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/ide.host.json",
+  "name": {
+    "ru": "Bot",
+    "en": "Bot"
+  },
+  "description": {
+    "ru": "Шаблон телеграм-бота",
+    "en": "Telegram bot template"
+  },
+  "classification": [
+    "Common",
+    "Console"
+  ],
+  "icon": "icon.svg"
+}
