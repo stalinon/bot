@@ -13,6 +13,7 @@ using Stalinon.Bot.Core.Options;
 using Stalinon.Bot.Core.Stats;
 using Stalinon.Bot.Hosting.Options;
 using Stalinon.Bot.Telegram;
+using Stalinon.Bot.Tests.Shared;
 
 using Telegram.Bot;
 

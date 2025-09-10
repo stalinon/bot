@@ -11,10 +11,15 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="6.12.0"/>
+    <PackageReference Include="Moq" Version="4.20.70"/>
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.0"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Stalinon.Bot.Telegram\Stalinon.Bot.Telegram.csproj"/>
     <ProjectReference Include="..\..\src\Stalinon.Bot.Hosting\Stalinon.Bot.Hosting.csproj"/>
     <ProjectReference Include="..\..\src\Stalinon.Bot.Outbox\Stalinon.Bot.Outbox.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\CollectingLoggerProvider.cs" Link="Shared/CollectingLoggerProvider.cs" />
   </ItemGroup>
 </Project>

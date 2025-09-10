@@ -5,6 +5,8 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
+using Stalinon.Bot.Tests.Shared;
+
 using Telegram.Bot;
 
 using Xunit;

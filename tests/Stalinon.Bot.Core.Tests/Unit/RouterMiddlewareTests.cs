@@ -12,6 +12,7 @@ using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Core.Middlewares;
 using Stalinon.Bot.Core.Routing;
 using Stalinon.Bot.Core.Stats;
+using Stalinon.Bot.Tests.Shared;
 
 using Xunit;
 
