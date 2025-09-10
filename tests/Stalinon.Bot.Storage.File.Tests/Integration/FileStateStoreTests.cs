@@ -51,4 +51,40 @@ public sealed class FileStateStoreTests
         var value = JsonSerializer.Deserialize<int>(content);
         Assert.Equal(999, value);
     }
+
+    /// <summary>
+    ///     Тест 3. Проверяем префикс и нормализацию
+    /// </summary>
+    [Fact(DisplayName = "Тест 3. Проверяем префикс и нормализацию")]
+    public async Task PrefixAndNormalization()
+    {
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var store = new FileStateStore(new FileStoreOptions { Path = temp, Prefix = "tenant" });
+        var ct = CancellationToken.None;
+        await store.SetAsync("user", "ping:42", 1, null, ct);
+        var expected = Path.Combine(temp, "tenant", "user", "ping", "42.json");
+        Assert.True(File.Exists(expected));
+        var value = await store.GetAsync<int>("user", "ping:42", ct);
+        Assert.Equal(1, value);
+    }
+
+    /// <summary>
+    ///     Тест 4. Удаление по TTL
+    /// </summary>
+    [Fact(DisplayName = "Тест 4. Удаление по TTL")]
+    public async Task Remove_after_ttl()
+    {
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var options = new FileStoreOptions { Path = path, CleanUpPeriod = TimeSpan.FromMilliseconds(50) };
+        await using var store = new FileStateStore(options);
+
+        await store.SetAsync<int?>("s", "k", 1, TimeSpan.FromMilliseconds(100), CancellationToken.None);
+        await Task.Delay(200);
+
+        Assert.Null(await store.GetAsync<int?>("s", "k", CancellationToken.None));
+        var file = Path.Combine(path, "s", "k.json");
+        Assert.False(File.Exists(file));
+
+        Directory.Delete(path, true);
+    }
 }

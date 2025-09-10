@@ -10,7 +10,7 @@ using Stalinon.Bot.Core.Stats;
 
 using Xunit;
 
-namespace Stalinon.Bot.Core.Tests;
+namespace Stalinon.Bot.Admin.MinimalApi.Tests;
 
 /// <summary>
 ///     Тесты авторизации административных эндпоинтов.
