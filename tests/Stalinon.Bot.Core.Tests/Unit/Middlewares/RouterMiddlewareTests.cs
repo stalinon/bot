@@ -24,6 +24,7 @@ namespace Stalinon.Bot.Core.Tests;
 /// <remarks>
 ///     <list type="number">
 ///         <item>Проверяется логирование имени обработчика</item>
+///         <item>Проверяется проброс исключений обработчика и учёт ошибок</item>
 ///     </list>
 /// </remarks>
 public sealed class RouterMiddlewareTests
@@ -70,12 +71,57 @@ public sealed class RouterMiddlewareTests
         provider.Logs.Should().Contain(e => e.Message.StartsWith("handler TestHandler finished"));
     }
 
+
+    /// <summary>
+    ///     Тест 2: Ошибка обработчика пробрасывается и учитывается
+    /// </summary>
+    [Fact(DisplayName = "Тест 2: Ошибка обработчика пробрасывается и учитывается")]
+    public async Task Should_PropagateException_AndMarkError_When_HandlerThrows()
+    {
+        var services = new ServiceCollection();
+        services.AddTransient<FailingHandler>();
+        var sp = services.BuildServiceProvider();
+        var registry = new HandlerRegistry();
+        registry.Register(typeof(FailingHandler));
+        var stats = new StatsCollector();
+        var router = new RouterMiddleware(sp, registry, stats);
+        var ctx = new UpdateContext(
+            "tg",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(2),
+            "hi",
+            "fail",
+            null,
+            null,
+            new Dictionary<string, object>(),
+            sp,
+            default);
+
+        var act = async () =>
+        {
+            await router.InvokeAsync(ctx, _ => ValueTask.CompletedTask).ConfigureAwait(false);
+        };
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        stats.GetSnapshot().Handlers[nameof(FailingHandler)].ErrorRate.Should().Be(1);
+    }
+
     [Command("test")]
     private sealed class TestHandler : IUpdateHandler
     {
         public Task HandleAsync(UpdateContext ctx)
         {
             return Task.CompletedTask;
+        }
+    }
+
+    [Command("fail")]
+    private sealed class FailingHandler : IUpdateHandler
+    {
+        public Task HandleAsync(UpdateContext ctx)
+        {
+            throw new InvalidOperationException("fail");
         }
     }
 }

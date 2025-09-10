@@ -23,6 +23,7 @@ namespace Stalinon.Bot.Core.Tests;
 ///         <item>Мягкий режим с предупреждением.</item>
 ///         <item>Учёт ограниченных обновлений в статистике.</item>
 ///         <item>Работа в нескольких инстансах при использовании хранилища.</item>
+///         <item>Проброс исключений из следующего обработчика.</item>
 ///     </list>
 /// </remarks>
 public class RateLimitMiddlewareTests
@@ -189,6 +190,42 @@ public class RateLimitMiddlewareTests
 
         calls.Should().Be(1);
         stats2.GetSnapshot().RateLimited.Should().Be(1);
+    }
+
+
+    /// <summary>
+    ///     Тест 5: Исключение следующего обработчика пробрасывается
+    /// </summary>
+    [Fact(DisplayName = "Тест 5: Исключение следующего обработчика пробрасывается")]
+    public async Task Should_PropagateException_FromNext()
+    {
+        var options = Microsoft.Extensions.Options.Options.Create(new RateLimitOptions
+        {
+            PerUserPerMinute = int.MaxValue,
+            PerChatPerMinute = int.MaxValue,
+            Mode = RateLimitMode.Hard
+        });
+        var tx = new DummyTransportClient();
+        var stats = new StatsCollector();
+        using var mw = new RateLimitMiddleware(options, tx, stats);
+        var ctx = new UpdateContext(
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
+        var act = async () =>
+        {
+            await mw.InvokeAsync(ctx, _ => throw new InvalidOperationException()).ConfigureAwait(false);
+        };
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     private sealed class DummyServiceProvider : IServiceProvider
