@@ -15,6 +15,9 @@ namespace Stalinon.Bot.Scheduler.Tests;
 ///     <list type="number">
 ///         <item>Проверяется запуск по интервалу</item>
 ///         <item>Проверяется лидер-лок</item>
+///         <item>Проверяется отмена выполнения</item>
+///         <item>Проверяется повторный запуск</item>
+///         <item>Проверяется освобождение лока при исключении</item>
 ///     </list>
 /// </remarks>
 public sealed class JobSchedulerTests
@@ -68,6 +71,73 @@ public sealed class JobSchedulerTests
         var t2 = scheduler2.RunAsync(CancellationToken.None);
         await Task.WhenAll(t1, t2);
 
+        job.Counter.Should().Be(1);
+    }
+
+    /// <summary>
+    ///     Тест 3: Должен прекращать выполнение при отмене.
+    /// </summary>
+    [Fact(DisplayName = "Тест 3: Должен прекращать выполнение при отмене")]
+    public async Task Should_StopExecution_WhenCancelled()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IntervalJob>();
+        var provider = services.BuildServiceProvider();
+        var jobs = new[] { new JobDescriptor(typeof(IntervalJob), null, TimeSpan.FromMilliseconds(50)) };
+        var scheduler = new FakeJobScheduler(provider, jobs, new FakeDistributedLock());
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await scheduler.Invoking(x => x.RunAsync(cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+
+        var job = provider.GetRequiredService<IntervalJob>();
+        job.Counter.Should().Be(0);
+    }
+
+    /// <summary>
+    ///     Тест 4: Должен перезапускать задачи после отмены.
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Должен перезапускать задачи после отмены")]
+    public async Task Should_RestartJobs_AfterCancellation()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IntervalJob>();
+        var provider = services.BuildServiceProvider();
+        var jobs = new[] { new JobDescriptor(typeof(IntervalJob), null, TimeSpan.FromMilliseconds(50)) };
+        var scheduler = new FakeJobScheduler(provider, jobs, new FakeDistributedLock());
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await scheduler.Invoking(x => x.RunAsync(cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
+
+        await scheduler.RunAsync(CancellationToken.None);
+
+        var job = provider.GetRequiredService<IntervalJob>();
+        job.Counter.Should().Be(1);
+    }
+
+    /// <summary>
+    ///     Тест 5: Должен освобождать лок при исключении.
+    /// </summary>
+    [Fact(DisplayName = "Тест 5: Должен освобождать лок при исключении")]
+    public async Task Should_ReleaseLock_OnException()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<FlakyJob>();
+        var provider = services.BuildServiceProvider();
+        var jobs = new[] { new JobDescriptor(typeof(FlakyJob), null, TimeSpan.FromMilliseconds(50)) };
+        var scheduler = new FakeJobScheduler(provider, jobs, new FakeDistributedLock());
+
+        await scheduler.Invoking(x => x.RunAsync(CancellationToken.None))
+            .Should().ThrowAsync<InvalidOperationException>();
+
+        await scheduler.RunAsync(CancellationToken.None);
+
+        var job = provider.GetRequiredService<FlakyJob>();
         job.Counter.Should().Be(1);
     }
 }
