@@ -26,6 +26,7 @@ namespace Stalinon.Bot.Core.Tests;
 ///         <item>Обработка уникальных обновлений.</item>
 ///         <item>Учёт потерянных обновлений в статистике.</item>
 ///         <item>Работа в нескольких инстансах при использовании хранилища.</item>
+///         <item>Проброс исключений из следующего обработчика.</item>
 ///     </list>
 /// </remarks>
 public class DedupMiddlewareTests
@@ -175,6 +176,39 @@ public class DedupMiddlewareTests
 
         calls.Should().Be(1);
         stats2.GetSnapshot().DroppedUpdates.Should().Be(1);
+    }
+
+
+    /// <summary>
+    ///     Тест 5: Исключение следующего обработчика пробрасывается
+    /// </summary>
+    [Fact(DisplayName = "Тест 5: Исключение следующего обработчика пробрасывается")]
+    public async Task Should_PropagateException_FromNext()
+    {
+        var loggerFactory = LoggerFactory.Create(b => { });
+        var stats = new StatsCollector();
+        using var mw = new DedupMiddleware(
+            loggerFactory.CreateLogger<DedupMiddleware>(),
+            Microsoft.Extensions.Options.Options.Create(new DeduplicationOptions { Window = TimeSpan.FromMinutes(1) }),
+            stats);
+        var ctx = new UpdateContext(
+            "test",
+            "1",
+            new ChatAddress(1),
+            new UserAddress(1),
+            null,
+            null,
+            null,
+            null,
+            new Dictionary<string, object>(),
+            new DummyServiceProvider(),
+            CancellationToken.None);
+        var act = async () =>
+        {
+            await mw.InvokeAsync(ctx, _ => throw new InvalidOperationException()).ConfigureAwait(false);
+        };
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     private sealed class DummyServiceProvider : IServiceProvider
