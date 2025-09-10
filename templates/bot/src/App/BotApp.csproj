@@ -5,8 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Stalinon.Bot.Hosting" Version="1.0.0" />
-    <PackageReference Include="Stalinon.Bot.Transport.Telegram" Version="1.0.0" />
+    <PackageReference Include="Stalinon.Bot.Telegram" Version="1.0.0" />
     <PackageReference Include="Stalinon.Bot.Storage.File" Version="1.0.0" />
+    <PackageReference Include="Stalinon.Bot.Storage.Redis" Version="1.0.0" />
+    <PackageReference Include="Stalinon.Bot.Storage.EFCore" Version="1.0.0" />
     <PackageReference Include="Stalinon.Bot.WebApp.MinimalApi" Version="1.0.0" />
     <PackageReference Include="Stalinon.Bot.Admin.MinimalApi" Version="1.0.0" />
   </ItemGroup>
