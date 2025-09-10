@@ -7,4 +7,7 @@
     <ProjectReference Include="..\Stalinon.Bot.Core\Stalinon.Bot.Core.csproj"/>
     <ProjectReference Include="..\Stalinon.Bot.Outbox\Stalinon.Bot.Outbox.csproj"/>
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Stalinon.Bot.Admin.MinimalApi.Tests"/>
+  </ItemGroup>
 </Project>

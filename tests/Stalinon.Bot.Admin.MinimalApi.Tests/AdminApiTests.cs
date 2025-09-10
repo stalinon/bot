@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -6,11 +7,15 @@ using FluentAssertions;
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Moq;
 
 using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Core.Stats;
+using Stalinon.Bot.Outbox;
 
 using Xunit;
 
@@ -43,6 +48,7 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
                 services.Configure<AdminOptions>(opts => opts.AdminToken = "secret");
                 services.AddSingleton<IStateStore, DummyStateStore>();
                 services.AddSingleton<ITransportClient, DummyTransportClient>();
+                services.AddSingleton<IOutbox, DummyOutbox>();
             });
         });
     }
@@ -225,6 +231,81 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         json["histograms"].GetProperty("bar").GetProperty("p95").GetDouble().Should().BeGreaterOrEqualTo(0);
     }
 
+    /// <summary>
+    ///     Тест 13: Пользовательские метрики без токена возвращают 401
+    /// </summary>
+    [Fact(DisplayName = "Тест 13: Пользовательские метрики без токена возвращают 401")]
+    public async Task Should_Return401_When_CustomStatsRequestedWithoutToken()
+    {
+        var client = _factory.CreateClient();
+        var resp = await client.GetAsync("/admin/stats/custom");
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    /// <summary>
+    ///     Тест 14: Аутбокс без токена возвращает 401
+    /// </summary>
+    [Fact(DisplayName = "Тест 14: Аутбокс без токена возвращает 401")]
+    public async Task Should_Return401_When_OutboxPendingWithoutToken()
+    {
+        var client = _factory.CreateClient();
+        var resp = await client.GetAsync("/admin/outbox/pending");
+        resp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    /// <summary>
+    ///     Тест 15: Аутбокс с токеном возвращает 200
+    /// </summary>
+    [Fact(DisplayName = "Тест 15: Аутбокс с токеном возвращает 200")]
+    public async Task Should_Return200_When_OutboxPendingWithToken()
+    {
+        var outbox = new Mock<IOutbox>();
+        outbox.Setup(x => x.GetPendingAsync(It.IsAny<CancellationToken>())).ReturnsAsync(5);
+
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton(outbox.Object);
+            });
+        });
+
+        var client = factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, "/admin/outbox/pending");
+        request.Headers.Add("X-Admin-Token", "secret");
+        var resp = await client.SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await resp.Content.ReadFromJsonAsync<Dictionary<string, int>>();
+        json.Should().ContainKey("pending");
+        json["pending"].Should().Be(5);
+        outbox.Verify(x => x.GetPendingAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Тест 16: При ошибке логирования рассылки записывается ошибка
+    /// </summary>
+    [Fact(DisplayName = "Тест 16: При ошибке логирования рассылки записывается ошибка")]
+    public async Task Should_LogError_When_BroadcastLoggerFails()
+    {
+        var logger = new ThrowingLogger<BroadcastRequest>();
+
+        var factory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<ILogger<BroadcastRequest>>(logger);
+            });
+        });
+
+        var client = factory.CreateClient();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/admin/broadcast");
+        request.Headers.Add("X-Admin-Token", "secret");
+        request.Content = JsonContent.Create(new { chatIds = new List<long> { 1 } });
+        var resp = await client.SendAsync(request);
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        logger.ErrorLogged.Should().BeTrue();
+    }
+
     private sealed class DummyStateStore : IStateStore
     {
         public Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct)
@@ -292,6 +373,20 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         }
     }
 
+    private sealed class DummyOutbox : IOutbox
+    {
+        public Task SendAsync(string id, string payload,
+            Func<string, string, CancellationToken, Task> transport, CancellationToken ct)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<long> GetPendingAsync(CancellationToken ct)
+        {
+            return Task.FromResult(0L);
+        }
+    }
+
     private sealed class FailingStateStore : IStateStore
     {
         public Task<T?> GetAsync<T>(string scope, string key, CancellationToken ct)
@@ -356,6 +451,44 @@ public class AdminApiTests : IClassFixture<AdminApiFactory>
         public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct)
         {
             return Task.FromException(new Exception("fail"));
+        }
+    }
+
+    private sealed class ThrowingLogger<T> : ILogger<T>
+    {
+        public bool ErrorLogged { get; private set; }
+
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        {
+            return NullScope.Instance;
+        }
+
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
+        }
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == LogLevel.Information)
+            {
+                throw new Exception("fail");
+            }
+
+            if (logLevel == LogLevel.Error)
+            {
+                ErrorLogged = true;
+            }
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static readonly NullScope Instance = new();
+
+            public void Dispose()
+            {
+            }
         }
     }
 }
