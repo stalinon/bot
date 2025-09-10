@@ -170,4 +170,13 @@ public sealed class HandlerRegistry
 
         return true;
     }
+
+    /// <summary>
+    ///     Удалить обработчик
+    /// </summary>
+    public void Remove(Type t)
+    {
+        _commands.RemoveAll(c => c.Handler == t);
+        _regexHandlers.RemoveAll(r => r.Type == t);
+    }
 }
