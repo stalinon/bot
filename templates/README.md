@@ -24,6 +24,14 @@ dotnet new bot --name MyBot [параметры]
 * `--lang ru|en` — язык исходников и комментариев;
 * `--bot-token <токен>` — токен бота (можно задать позже через `BOT_TOKEN`).
 
+## Настройки
+
+* `BOT_TOKEN` — токен бота, обязателен;
+* `Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
+* `Transport__Webhook__PublicUrl` — требуется в режиме `Webhook`;
+* `Admin__*` — параметры административного API при опции `--admin`;
+* `WebApp__PublicUrl`, `WebApp__Secret` — параметры Mini App при опции `--webapp`.
+
 ## JetBrains Rider
 
 После установки шаблона командой `dotnet new install` он появится в окне **New Solution** в Rider в разделе **Console**.

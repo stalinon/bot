@@ -22,6 +22,14 @@
 * `--lang ru|en` — язык исходников и комментариев;
 * `--bot-token <токен>` — токен бота (можно задать позже через `BOT_TOKEN`).
 
+## Настройки
+
+* `BOT_TOKEN` — токен бота, обязателен;
+* `Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
+* `Transport__Webhook__PublicUrl` — публичный URL при режиме `Webhook`;
+* `Admin__*` — параметры административного API при включённой опции `--admin`;
+* `WebApp__PublicUrl`, `WebApp__Secret` — параметры Mini App при включении `--webapp`.
+
 ## JetBrains Rider
 
 После установки шаблона через `dotnet new install` он появится в окне **New Solution**.
