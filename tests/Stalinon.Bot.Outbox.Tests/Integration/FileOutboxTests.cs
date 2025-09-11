@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.Metrics;
 using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,9 +18,11 @@ namespace Stalinon.Bot.Outbox.Tests;
 /// </summary>
 /// <remarks>
 ///     <list type="number">
-///         <item>Отправляет сообщение и подтверждает успешную отправку.</item>
+///         <item>Добавляет сообщение и учитывает его в ожидании.</item>
+///         <item>Подтверждает отправку и удаляет файл.</item>
 ///         <item>Повторяет отправку при ошибке и считает повторы.</item>
 ///         <item>Помещает сообщение в deadletter после превышения попыток.</item>
+///         <item>Пробрасывает исключения при ошибке записи и чтения файлов.</item>
 ///     </list>
 /// </remarks>
 public sealed class FileOutboxTests
@@ -98,6 +101,117 @@ public sealed class FileOutboxTests
         dead.Should().Be(1);
     }
 
+    /// <summary>
+    ///     Тест 4: Должен добавлять сообщение и учитывать его в ожидании
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Должен добавлять сообщение и учитывать его в ожидании")]
+    public async Task Should_AddMessage_When_TransportDelayed()
+    {
+        using var meter = new Meter("tgbot");
+        var factory = new TestMeterFactory(meter);
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var outbox = new FileOutbox(temp, meterFactory: factory);
+        var tcs = new TaskCompletionSource();
+        var sendTask = outbox.SendAsync("1", "payload", async (_, _, _) => await tcs.Task, CancellationToken.None);
+
+        await Task.Delay(100);
+        File.Exists(Path.Combine(temp, "1.json")).Should().BeTrue();
+        var pending = await outbox.GetPendingAsync(CancellationToken.None);
+        pending.Should().Be(1);
+
+        tcs.SetResult();
+        await sendTask;
+    }
+
+    /// <summary>
+    ///     Тест 5: Должен подтверждать сообщение и удалять файл после успешной отправки
+    /// </summary>
+    [Fact(DisplayName = "Тест 5: Должен подтверждать сообщение и удалять файл после успешной отправки")]
+    public async Task Should_AckMessage_When_TransportCompletes()
+    {
+        using var meter = new Meter("tgbot");
+        var factory = new TestMeterFactory(meter);
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var outbox = new FileOutbox(temp, meterFactory: factory);
+        var tcs = new TaskCompletionSource();
+        var sendTask = outbox.SendAsync("1", "payload", async (_, _, _) => await tcs.Task, CancellationToken.None);
+
+        await Task.Delay(100);
+        File.Exists(Path.Combine(temp, "1.json")).Should().BeTrue();
+        tcs.SetResult();
+        await sendTask;
+
+        File.Exists(Path.Combine(temp, "1.json")).Should().BeFalse();
+        var pending = await outbox.GetPendingAsync(CancellationToken.None);
+        pending.Should().Be(0);
+    }
+
+    /// <summary>
+    ///     Тест 6: Должен повторно обрабатывать сообщение после ошибки транспорта
+    /// </summary>
+    [Fact(DisplayName = "Тест 6: Должен повторно обрабатывать сообщение после ошибки транспорта")]
+    public async Task Should_ReprocessMessage_When_TransportFailsInitially()
+    {
+        using var meter = new Meter("tgbot");
+        var factory = new TestMeterFactory(meter);
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var outbox = new FileOutbox(temp, meterFactory: factory);
+        var tcs = new TaskCompletionSource();
+        var attempt = 0;
+        var sendTask = outbox.SendAsync("1", "payload", async (_, _, _) =>
+        {
+            attempt++;
+            if (attempt == 1)
+            {
+                throw new InvalidOperationException();
+            }
+
+            await tcs.Task;
+        }, CancellationToken.None);
+
+        await Task.Delay(100);
+        var file = Path.Combine(temp, "1.json");
+        File.Exists(file).Should().BeTrue();
+        var content = await File.ReadAllTextAsync(file);
+        var record = JsonSerializer.Deserialize<RecordDto>(content);
+        record!.Attempt.Should().Be(1);
+
+        tcs.SetResult();
+        await sendTask;
+
+        File.Exists(file).Should().BeFalse();
+    }
+
+    /// <summary>
+    ///     Тест 7: Должен выбрасывать исключение при ошибке записи файла
+    /// </summary>
+    [Fact(DisplayName = "Тест 7: Должен выбрасывать исключение при ошибке записи файла")]
+    public async Task Should_Throw_OnWriteError()
+    {
+        using var meter = new Meter("tgbot");
+        var factory = new TestMeterFactory(meter);
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var outbox = new FileOutbox(temp, meterFactory: factory);
+        var id = new string('a', 300);
+        var act = () => outbox.SendAsync(id, "payload", (_, _, _) => Task.CompletedTask, CancellationToken.None);
+        await act.Should().ThrowAsync<PathTooLongException>();
+    }
+
+    /// <summary>
+    ///     Тест 8: Должен выбрасывать исключение при ошибке чтения файла
+    /// </summary>
+    [Fact(DisplayName = "Тест 8: Должен выбрасывать исключение при ошибке чтения файла")]
+    public async Task Should_Throw_OnReadError()
+    {
+        using var meter = new Meter("tgbot");
+        var factory = new TestMeterFactory(meter);
+        var temp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var outbox = new FileOutbox(temp, meterFactory: factory);
+        Directory.Delete(temp, true);
+        var act = async () => await outbox.GetPendingAsync(CancellationToken.None);
+        await act.Should().ThrowAsync<DirectoryNotFoundException>();
+    }
+
     private static MeterListener CreateListener(string name, Action<long> callback)
     {
         var listener = new MeterListener();
@@ -142,4 +256,6 @@ public sealed class FileOutboxTests
             return _meter;
         }
     }
+
+    private sealed record RecordDto(string Id, string Payload, int Attempt);
 }
