@@ -1,6 +1,8 @@
+using System.IO;
 using System.Threading.Tasks;
 
 using Stalinon.Bot.Abstractions;
+using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 
 namespace Stalinon.Bot.Hosting.Tests;
@@ -128,4 +130,22 @@ internal sealed class DummyPipeline : IUpdatePipeline
     {
         return terminal;
     }
+}
+
+/// <summary>
+///     Заглушка транспортного клиента.
+/// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Не выполняет реальные отправки.</item>
+///     </list>
+/// </remarks>
+internal sealed class DummyTransportClient : ITransportClient
+{
+    public Task SendTextAsync(ChatAddress chat, string text, CancellationToken ct) => Task.CompletedTask;
+    public Task SendPhotoAsync(ChatAddress chat, Stream photo, string? caption, CancellationToken ct) => Task.CompletedTask;
+    public Task EditMessageTextAsync(ChatAddress chat, long messageId, string text, CancellationToken ct) => Task.CompletedTask;
+    public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.CompletedTask;
+    public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
+    public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
 }
