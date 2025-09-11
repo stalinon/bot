@@ -125,6 +125,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Abstractions.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Templates.Tests", "tests\Stalinon.Bot.Templates.Tests\Stalinon.Bot.Templates.Tests.csproj", "{EBB14BDB-23BB-4066-BAF8-666862D813D9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Examples.WebAppDemo.Tests", "tests\Stalinon.Bot.Examples.WebAppDemo.Tests\Stalinon.Bot.Examples.WebAppDemo.Tests.csproj", "{A6431846-C4A7-441B-A5B4-337C5F9565D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stalinon.Bot.Examples.WebhookBot.Tests", "tests\Stalinon.Bot.Examples.WebhookBot.Tests\Stalinon.Bot.Examples.WebhookBot.Tests.csproj", "{05394D90-D1FF-4CDD-8279-C35CAD57C5A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -270,6 +274,14 @@ Global
 		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBB14BDB-23BB-4066-BAF8-666862D813D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6431846-C4A7-441B-A5B4-337C5F9565D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6431846-C4A7-441B-A5B4-337C5F9565D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6431846-C4A7-441B-A5B4-337C5F9565D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6431846-C4A7-441B-A5B4-337C5F9565D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05394D90-D1FF-4CDD-8279-C35CAD57C5A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05394D90-D1FF-4CDD-8279-C35CAD57C5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05394D90-D1FF-4CDD-8279-C35CAD57C5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05394D90-D1FF-4CDD-8279-C35CAD57C5A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{27C03CF3-E889-485F-8D18-DB5CB343E99B} = {8397F202-E819-4200-A2A5-8094C594C0D3}
@@ -309,5 +321,7 @@ Global
 		{0A812624-AAB8-4140-BF8E-C9A7C1F8FA24} = {AAD138A3-7157-4C11-9525-7A1677F4F5C5}
 		{E5A743B4-BF5E-47D4-9724-02A4FC697BE5} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
 		{EBB14BDB-23BB-4066-BAF8-666862D813D9} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
+		{A6431846-C4A7-441B-A5B4-337C5F9565D6} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
+		{05394D90-D1FF-4CDD-8279-C35CAD57C5A9} = {BE4D6C6D-FAB8-4E73-8EDB-4FB292557457}
 	EndGlobalSection
 EndGlobal

@@ -27,3 +27,9 @@
    ```
 
 Бот слушает локальный порт 5000, а `Transport__Webhook__PublicUrl` должен указывать на этот адрес.
+
+## Тесты
+
+Интеграционные тесты `Stalinon.Bot.Examples.WebhookBot.Tests` разворачивают приложение в памяти
+с фейковым `BOT_TOKEN` и `FakeTransportClient`.
+Через `POST /tg/secret` отправляются обновления и проверяются ответы на команды `/start` и `/ping`.

@@ -31,3 +31,9 @@ ngrok http https://localhost:5001
 2. Откройте Web App из чата с ботом.
 3. Введите текст в форму и нажмите «Отправить».
 4. Бот получит сообщение `web_app_data` с переданным текстом.
+
+## Тесты
+
+Интеграционные тесты `Stalinon.Bot.Examples.WebAppDemo.Tests` разворачивают приложение в памяти
+с фейковым `Bot__Token` и заглушкой `IWebAppInitDataValidator`.
+Проверяется отдача статической страницы и получение JWT через `POST /webapp/auth`.
