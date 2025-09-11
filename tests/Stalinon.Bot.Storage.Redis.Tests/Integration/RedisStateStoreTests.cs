@@ -14,6 +14,8 @@ namespace Stalinon.Bot.Storage.Redis.Tests;
 ///         <item>Проверяется запись и чтение значения</item>
 ///         <item>Проверяется корректность атомарного инкремента при параллельных обновлениях</item>
 ///         <item>Проверяется удаление значения</item>
+///         <item>Проверяется истечение TTL</item>
+///         <item>Проверяется работа со списками</item>
 ///     </list>
 /// </remarks>
 public sealed class RedisStateStoreTests
@@ -97,6 +99,56 @@ public sealed class RedisStateStoreTests
         // Assert
         removed.Should().BeTrue();
         fetched.Should().BeNull();
+    }
+
+    /// <summary>
+    ///     Тест 4: Должен удалять значение после истечения TTL.
+    /// </summary>
+    [Fact(DisplayName = "Тест 4: Должен удалять значение после истечения TTL.")]
+    public async Task Should_Remove_When_TtlExpired()
+    {
+        // Arrange
+        var mux = await ConnectionMultiplexer.ConnectAsync("localhost");
+        var options = new RedisOptions { Connection = mux, Database = 0, Prefix = "state" };
+        var sut = new RedisStateStore(options);
+        const string scope = "ttl";
+        const string key = "temp";
+        var db = mux.GetDatabase();
+        await db.KeyDeleteAsync("state:ttl:temp");
+        await sut.SetAsync(scope, key, new Player("Temp"), TimeSpan.FromMilliseconds(100), CancellationToken.None);
+
+        // Act
+        await Task.Delay(200);
+        var fetched = await sut.GetAsync<Player>(scope, key, CancellationToken.None);
+        mux.Dispose();
+
+        // Assert
+        fetched.Should().BeNull();
+    }
+
+    /// <summary>
+    ///     Тест 5: Должен сериализовывать и десериализовывать список.
+    /// </summary>
+    [Fact(DisplayName = "Тест 5: Должен сериализовывать и десериализовывать список.")]
+    public async Task Should_HandleLists()
+    {
+        // Arrange
+        var mux = await ConnectionMultiplexer.ConnectAsync("localhost");
+        var options = new RedisOptions { Connection = mux, Database = 0, Prefix = "state" };
+        var sut = new RedisStateStore(options);
+        const string scope = "list";
+        const string key = "players";
+        var db = mux.GetDatabase();
+        await db.KeyDeleteAsync("state:list:players");
+        var players = new List<Player> { new("Ann"), new("Bob") };
+
+        // Act
+        await sut.SetAsync(scope, key, players, null, CancellationToken.None);
+        var fetched = await sut.GetAsync<List<Player>>(scope, key, CancellationToken.None);
+        mux.Dispose();
+
+        // Assert
+        fetched.Should().BeEquivalentTo(players, o => o.WithStrictOrdering());
     }
 }
 
