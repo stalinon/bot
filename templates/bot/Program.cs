@@ -17,28 +17,28 @@ builder.Services
         cfg.GetSection("Transport").Bind(o.Transport);
     })
     .AddTelegramTransport()
-    {{if webapp}}
+    #if (webapp)
     .AddWebApp(cfg)
-    {{endif}}
-    {{if admin}}
+    #endif
+    #if (admin)
     .AddAdminApi(cfg)
-    {{endif}}
+    #endif
     .AddHandlersFromAssembly(typeof(Program).Assembly)
     .UsePipeline()
     .UseConfiguredStateStorage(cfg);
 
 var app = builder.Build();
 
-{{if transport == "webhook"}}
+#if (transport == "webhook")
 app.MapTelegramWebhook();
-{{endif}}
-{{if webapp}}
+#endif
+#if (webapp)
 app.MapWebAppAuth();
 app.MapWebAppMe();
-{{endif}}
-{{if admin}}
+#endif
+#if (admin)
 app.MapHealth();
 app.MapAdminStats();
-{{endif}}
+#endif
 
 app.Run();
