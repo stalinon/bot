@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Stalinon.Bot.Admin.MinimalApi;
 using Stalinon.Bot.Hosting;
 using Stalinon.Bot.Telegram;

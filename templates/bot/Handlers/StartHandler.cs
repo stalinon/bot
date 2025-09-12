@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Attributes;
 using Stalinon.Bot.Abstractions.Contracts;
