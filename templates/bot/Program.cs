@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Stalinon.Bot.Admin.MinimalApi;
@@ -15,8 +16,8 @@ var cfg = builder.Configuration;
 builder.Services
     .AddBot(o =>
     {
-        o.Token = cfg["BOT_TOKEN"] ?? "token";
-        cfg.GetSection("Transport").Bind(o.Transport);
+        o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
+        cfg.GetSection("Bot:Transport").Bind(o.Transport);
     })
     .AddTelegramTransport()
     #if (webapp)

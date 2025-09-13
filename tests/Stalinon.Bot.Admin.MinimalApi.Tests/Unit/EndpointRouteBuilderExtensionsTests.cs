@@ -10,8 +10,12 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using Moq;
+
 using Stalinon.Bot.Admin.MinimalApi;
+using Stalinon.Bot.Hosting;
 using Stalinon.Bot.Outbox;
+using Stalinon.Bot.Telegram;
 
 using Xunit;
 
@@ -40,7 +44,7 @@ public sealed class EndpointRouteBuilderExtensionsTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        builder.Services.AddAdminApi(new ConfigurationBuilder().Build());
+        builder.Services.AddTelegramTransport().UseConfiguredStateStorage(Mock.Of<IConfiguration>()).AddAdminApi(new ConfigurationBuilder().Build());
         builder.Services.AddSingleton<IOutbox, DummyOutbox>();
         var app = builder.Build();
 

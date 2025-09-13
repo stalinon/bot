@@ -21,7 +21,7 @@ Set-Location $project
 
 # Запуск бота
 $env:BOT_TOKEN = '1:1'
-$env:Transport__Webhook__PublicUrl = ''
+$env:Bot__Transport__Webhook__PublicUrl = ''
 $proc = Start-Process dotnet -ArgumentList 'run' -PassThru -RedirectStandardOutput run.log -RedirectStandardError err.log
 Start-Sleep -Seconds 10
 
