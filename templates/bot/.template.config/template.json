@@ -19,15 +19,19 @@
         { "choice": "polling" },
         { "choice": "webhook" }
       ],
-      "defaultValue": "polling"
+      "defaultValue": "polling",
+      "replaces": "{{transport}}"
     },
     "public-url": {
       "type": "parameter",
-      "datatype": "text"
+      "datatype": "text",
+      "defaultValue": "",
+      "replaces": "{{public-url}}"
     },
     "webhook-secret": {
       "type": "generated",
-      "generator": "guid"
+      "generator": "guid",
+      "replaces": "{{webhook-secret}}"
     },
     "store": {
       "type": "parameter",
@@ -37,11 +41,14 @@
         { "choice": "redis" },
         { "choice": "ef" }
       ],
-      "defaultValue": "file"
+      "defaultValue": "file",
+      "replaces": "{{store}}"
     },
     "redis": {
       "type": "parameter",
-      "datatype": "text"
+      "datatype": "text",
+      "defaultValue": "",
+      "replaces": "{{redis}}"
     },
     "ef-provider": {
       "type": "parameter",
@@ -49,11 +56,15 @@
       "choices": [
         { "choice": "postgres" },
         { "choice": "sqlite" }
-      ]
+      ],
+      "defaultValue": "",
+      "replaces": "{{ef-provider}}"
     },
     "ef-conn": {
       "type": "parameter",
-      "datatype": "text"
+      "datatype": "text",
+      "defaultValue": "",
+      "replaces": "{{ef-conn}}"
     },
     "admin": {
       "type": "parameter",
@@ -76,13 +87,15 @@
     },
     "bot-token": {
       "type": "parameter",
-      "datatype": "text"
+      "datatype": "text",
+      "defaultValue": "",
+      "replaces": "{{bot-token}}"
     },
     "package-version": {
       "type": "bind",
       "binding": "PackageVersion",
-      "defaultValue": "0.0.0",
-      "replaces": "0.0.0"
+      "replaces": "0.0.0",
+      "defaultValue": "0.0.0"
     }
   },
   "primaryOutputs": [
