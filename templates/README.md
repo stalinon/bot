@@ -3,6 +3,9 @@
 Единый шаблон `bot` позволяет сконфигурировать способ получения обновлений,
 хранилище и дополнительные функции.
 
+Версии всех пакетов в создаваемом проекте совпадают с версией `Stalinon.Bot.Templates`,
+поэтому обновление шаблона автоматически подтягивает актуальные зависимости.
+
 ## Использование
 
 ```bash
@@ -27,8 +30,8 @@ dotnet new bot --name MyBot [параметры]
 ## Настройки
 
 * `BOT_TOKEN` — токен бота, обязателен;
-* `Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
-* `Transport__Webhook__PublicUrl` — требуется в режиме `Webhook`;
+* `Bot__Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
+* `Bot__Transport__Webhook__PublicUrl` — требуется в режиме `Webhook`;
 * `Admin__*` — параметры административного API при опции `--admin`;
 * `WebApp__PublicUrl`, `WebApp__Secret` — параметры Mini App при опции `--webapp`.
 

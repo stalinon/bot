@@ -20,7 +20,7 @@ sed -i 's/{{store}}/ef/' appsettings.json
 sed -i '/UsePipeline(p => p/,+3 c\    .UsePipeline(_ => { })' Program.cs
 
 # Запуск бота в фоне
-BOT_TOKEN="1:1" Transport__Webhook__PublicUrl="" dotnet run >/tmp/qs.log 2>&1 &
+BOT_TOKEN="1:1" Bot__Transport__Webhook__PublicUrl="" dotnet run >/tmp/qs.log 2>&1 &
 PID=$!
 # Ожидание старта
 sleep 10
@@ -35,7 +35,7 @@ STATUS_START=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
 NOW=$(date +%s)
 DATA_CHECK="auth_date=$NOW\nquery_id=1\nuser={\"id\":1}"
 SECRET=$(printf 'WebAppData' | openssl dgst -sha256 -hmac "$BOT_TOKEN" -binary | xxd -p -c 256)
-HASH=$(printf "$DATA_CHECK" | openssl dgst -sha256 -mac HMAC -macopt hexkey:$SECRET | awk '{print $2}')
+HASH=$(printf '%s' "$DATA_CHECK" | openssl dgst -sha256 -mac HMAC -macopt hexkey:"$SECRET" | awk '{print $2}')
 INIT_DATA="auth_date=$NOW&query_id=1&user=%7B%22id%22%3A1%7D&hash=$HASH"
 
 # Получение JWT
