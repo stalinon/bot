@@ -77,6 +77,12 @@
     "bot-token": {
       "type": "parameter",
       "datatype": "text"
+    },
+    "package-version": {
+      "type": "bind",
+      "binding": "PackageVersion",
+      "defaultValue": "0.0.0",
+      "replaces": "0.0.0"
     }
   },
   "primaryOutputs": [
