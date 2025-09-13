@@ -1,10 +1,14 @@
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+#if (admin)
 using Stalinon.Bot.Admin.MinimalApi;
+#endif
 using Stalinon.Bot.Hosting;
 using Stalinon.Bot.Telegram;
+#if (webapp)
 using Stalinon.Bot.WebApp.MinimalApi;
+#endif
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration

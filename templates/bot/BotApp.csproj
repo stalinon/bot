@@ -6,10 +6,20 @@
   <ItemGroup>
     <PackageReference Include="Stalinon.Bot.Hosting" Version="0.0.0" />
     <PackageReference Include="Stalinon.Bot.Telegram" Version="0.0.0" />
+    <!--#if (store == "file")-->
     <PackageReference Include="Stalinon.Bot.Storage.File" Version="0.0.0" />
+    <!--#endif-->
+    <!--#if (store == "redis")-->
     <PackageReference Include="Stalinon.Bot.Storage.Redis" Version="0.0.0" />
+    <!--#endif-->
+    <!--#if (store == "ef")-->
     <PackageReference Include="Stalinon.Bot.Storage.EFCore" Version="0.0.0" />
+    <!--#endif-->
+    <!--#if (webapp)-->
     <PackageReference Include="Stalinon.Bot.WebApp.MinimalApi" Version="0.0.0" />
+    <!--#endif-->
+    <!--#if (admin)-->
     <PackageReference Include="Stalinon.Bot.Admin.MinimalApi" Version="0.0.0" />
+    <!--#endif-->
   </ItemGroup>
 </Project>
