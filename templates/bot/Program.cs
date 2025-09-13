@@ -1,9 +1,13 @@
 using System;
+using BotApp.Scenes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 #if (admin)
 using Stalinon.Bot.Admin.MinimalApi;
 #endif
+using Stalinon.Bot.Abstractions.Contracts;
+using Stalinon.Bot.Core.Scenes;
 using Stalinon.Bot.Hosting;
 using Stalinon.Bot.Telegram;
 #if (webapp)
@@ -32,7 +36,9 @@ builder.Services
     #endif
     .AddHandlersFromAssembly(typeof(Program).Assembly)
     .UsePipeline()
-    .UseConfiguredStateStorage(cfg);
+    .UseConfiguredStateStorage(cfg)
+    .AddSingleton<ISceneNavigator>(sp => new SceneNavigator(sp.GetRequiredService<IStateStore>()))
+    .AddScoped<GuessNumberScene>();
 
 var app = builder.Build();
 
