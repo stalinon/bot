@@ -20,7 +20,7 @@ var cfg = builder.Configuration;
 builder.Services
     .AddBot(o =>
     {
-        o.Token = cfg["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
+        o.Token = cfg["Bot:Token"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
         cfg.GetSection("Bot:Transport").Bind(o.Transport);
     })
     .AddTelegramTransport()
