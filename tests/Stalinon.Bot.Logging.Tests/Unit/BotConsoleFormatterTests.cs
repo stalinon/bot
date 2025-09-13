@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 
 using FluentAssertions;
 
@@ -44,8 +43,7 @@ public sealed class BotConsoleFormatterTests
             (s, e) => "msg");
         using var sw = new StringWriter();
         formatter.Write(entry, null, sw);
-        var json = JsonDocument.Parse(sw.ToString());
-        json.RootElement.GetProperty("State").GetProperty("Text").GetString().Should().Be("12345");
+        sw.ToString().Should().Contain("Text=12345");
     }
 
     /// <summary>
@@ -68,10 +66,9 @@ public sealed class BotConsoleFormatterTests
             (s, e) => "msg");
         using var sw = new StringWriter();
         formatter.Write(entry, null, sw);
-        var json = JsonDocument.Parse(sw.ToString());
-        var obj = json.RootElement.GetProperty("State");
-        obj.GetProperty("BOT_TOKEN").GetString().Should().Be("***");
-        obj.GetProperty("jwt").GetString().Should().Be("***");
+        var output = sw.ToString();
+        output.Should().Contain("BOT_TOKEN=***");
+        output.Should().Contain("jwt=***");
     }
 
     /// <summary>

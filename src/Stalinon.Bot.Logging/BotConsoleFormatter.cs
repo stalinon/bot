@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -40,52 +39,51 @@ public sealed class BotConsoleFormatter(IOptionsMonitor<BotLoggerOptions> option
             return;
         }
 
-        using var ms = new MemoryStream();
-        using var writer = new Utf8JsonWriter(ms);
-        writer.WriteStartObject();
-        writer.WriteString("Level", logEntry.LogLevel.ToString());
-        writer.WriteString("Message", Limit(Mask("Message", message), opts.MaxFieldLength));
+        var builder = new StringBuilder();
+        builder.Append('[').Append(logEntry.LogLevel).Append("] ");
+        builder.Append(Limit(Mask("Message", message), opts.MaxFieldLength));
 
         if (logEntry.State is IEnumerable<KeyValuePair<string, object?>> state)
         {
-            writer.WriteStartObject("State");
+            builder.Append(' ');
             foreach (var (key, value) in state)
             {
-                if (value is null)
+                if (value is null || key == "{OriginalFormat}")
                 {
                     continue;
                 }
 
-                writer.WriteString(key, Limit(Mask(key, value.ToString()), opts.MaxFieldLength));
+                builder.Append(key)
+                    .Append('=')
+                    .Append(Limit(Mask(key, value.ToString()), opts.MaxFieldLength))
+                    .Append(' ');
             }
-
-            writer.WriteEndObject();
         }
 
         if (scopeProvider is not null)
         {
-            writer.WriteStartObject("Scope");
-            scopeProvider.ForEachScope((scope, json) =>
+            scopeProvider.ForEachScope((scope, sb) =>
             {
                 if (scope is IEnumerable<KeyValuePair<string, object?>> kvps)
                 {
+                    sb.Append(' ');
                     foreach (var (key, value) in kvps)
                     {
-                        if (value is null)
+                        if (value is null || key == "{OriginalFormat}")
                         {
                             continue;
                         }
 
-                        json.WriteString(key, Limit(Mask(key, value.ToString()), opts.MaxFieldLength));
+                        sb.Append(key)
+                            .Append('=')
+                            .Append(Limit(Mask(key, value.ToString()), opts.MaxFieldLength))
+                            .Append(' ');
                     }
                 }
-            }, writer);
-            writer.WriteEndObject();
+            }, builder);
         }
 
-        writer.WriteEndObject();
-        writer.Flush();
-        textWriter.WriteLine(Encoding.UTF8.GetString(ms.ToArray()));
+        textWriter.WriteLine(builder.ToString().TrimEnd());
     }
 
     private static string Limit(string? value, int max)
