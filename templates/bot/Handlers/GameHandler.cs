@@ -1,6 +1,8 @@
+using System;
 using System.Threading.Tasks;
 
 using BotApp.Scenes;
+
 using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Attributes;
 using Stalinon.Bot.Abstractions.Contracts;
@@ -16,12 +18,27 @@ namespace BotApp.Handlers;
 ///	</list>
 /// </remarks>
 [Command("/game")]
-public sealed class GameHandler(ISceneNavigator navigator, GuessNumberScene scene) : IUpdateHandler
+[TextMatch("^[1-3]$")]
+public sealed class GameHandler(ISceneNavigator navigator, GuessNumberScene scene, IFallbackHandler fallback)
+    : IUpdateHandler
 {
     /// <inheritdoc />
-    public Task HandleAsync(UpdateContext ctx)
+    public async Task HandleAsync(UpdateContext ctx)
     {
-        return navigator.EnterAsync(ctx, scene);
+        if (string.Equals(ctx.Command, "game", StringComparison.OrdinalIgnoreCase))
+        {
+            await navigator.EnterAsync(ctx, scene).ConfigureAwait(false);
+            return;
+        }
+
+        var state = await navigator.GetStateAsync(ctx).ConfigureAwait(false);
+        if (state?.Scene == scene.Name)
+        {
+            await scene.OnUpdate(ctx).ConfigureAwait(false);
+            return;
+        }
+
+        await fallback.HandleAsync(ctx).ConfigureAwait(false);
     }
 }
 
