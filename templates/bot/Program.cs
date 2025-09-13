@@ -17,6 +17,7 @@ using Stalinon.Bot.WebApp.MinimalApi;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile("Configuration/appsettings.json", false)
+    .AddJsonFile("Configuration/appsettings.Development.json", false)
     .AddEnvironmentVariables();
 
 var cfg = builder.Configuration;
