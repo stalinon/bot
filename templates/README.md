@@ -27,8 +27,8 @@ dotnet new bot --name MyBot [параметры]
 ## Настройки
 
 * `BOT_TOKEN` — токен бота, обязателен;
-* `Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
-* `Transport__Webhook__PublicUrl` — требуется в режиме `Webhook`;
+* `Bot__Transport__Mode` — `Polling` или `Webhook` (по умолчанию `Polling`);
+* `Bot__Transport__Webhook__PublicUrl` — требуется в режиме `Webhook`;
 * `Admin__*` — параметры административного API при опции `--admin`;
 * `WebApp__PublicUrl`, `WebApp__Secret` — параметры Mini App при опции `--webapp`.
 

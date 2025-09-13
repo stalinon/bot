@@ -4,12 +4,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Abstractions;
+using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Admin.MinimalApi;
-using Stalinon.Bot.WebApp.MinimalApi;
 using Stalinon.Bot.Hosting;
 using Stalinon.Bot.TestKit;
+using Stalinon.Bot.WebApp.MinimalApi;
+
 using Telegram.Bot;
 
 using Xunit;
@@ -38,12 +39,12 @@ public sealed class TemplateIntegrationTests
         var builder = WebApplication.CreateBuilder();
         var cfg = new Dictionary<string, string?>
         {
-            ["Transport:Mode"] = mode,
-            ["Transport:Parallelism"] = "1"
+            ["Bot:Transport:Mode"] = mode,
+            ["Bot:Transport:Parallelism"] = "1"
         };
         if (mode == "Webhook" && withWebhookUrl)
         {
-            cfg["Transport:Webhook:PublicUrl"] = "https://example.com";
+            cfg["Bot:Transport:Webhook:PublicUrl"] = "https://example.com";
         }
         if (withToken)
         {
@@ -56,7 +57,7 @@ public sealed class TemplateIntegrationTests
             .AddBot(o =>
             {
                 o.Token = builder.Configuration["BOT_TOKEN"] ?? throw new InvalidOperationException("BOT_TOKEN is required");
-                builder.Configuration.GetSection("Transport").Bind(o.Transport);
+                builder.Configuration.GetSection("Bot:Transport").Bind(o.Transport);
             })
             .UsePipeline()
             .UseStateStorage(new InMemoryStateStore());
