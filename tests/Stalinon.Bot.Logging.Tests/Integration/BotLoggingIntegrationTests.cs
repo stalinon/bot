@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 using FluentAssertions;
 
@@ -56,9 +55,7 @@ public sealed class BotLoggingIntegrationTests
         }
 
         var line = sw.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).First();
-        var json = JsonDocument.Parse(line);
-        json.RootElement.GetProperty("Level").GetString().Should().Be("Information");
-        json.RootElement.GetProperty("Message").GetString().Should().Be("hello");
+        line.Should().Be("[Information] hello");
     }
 
     /// <summary>
@@ -118,8 +115,7 @@ public sealed class BotLoggingIntegrationTests
         }
 
         var line = sw.ToString().Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).First();
-        var json = JsonDocument.Parse(line);
-        json.RootElement.GetProperty("Message").GetString().Should().Be("123");
+        line.Should().Be("[Information] 123");
     }
 }
 
