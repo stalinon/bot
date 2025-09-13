@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.EntityFrameworkCore;
@@ -157,11 +158,11 @@ public static class ServiceCollectionExtensions
     ///     Использовать хранилище состояний из конфигурации.
     /// </summary>
     /// <param name="configuration">Конфигурация приложения.</param>
-    public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services,
-        IConfiguration configuration)
+    [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract")]
+    public static IServiceCollection UseConfiguredStateStorage(this IServiceCollection services, IConfiguration configuration)
     {
         var section = configuration.GetSection("Storage");
-        var provider = (section["Provider"] ?? "file").ToLowerInvariant();
+        var provider = section == null ? "file" : (section["Provider"] ?? "file").ToLowerInvariant();
         switch (provider)
         {
             case "redis":
@@ -198,6 +199,12 @@ public static class ServiceCollectionExtensions
                 services.AddScoped<IStateStorage>(sp => sp.GetRequiredService<IStateStore>());
                 break;
             default:
+                if (section == null)
+                {
+                    services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = "data" }));
+                    return services;
+                }
+
                 var file = section.GetSection("File");
                 var path = file["Path"] ?? "data";
                 services.UseStateStorage(new FileStateStore(new FileStoreOptions { Path = path }));

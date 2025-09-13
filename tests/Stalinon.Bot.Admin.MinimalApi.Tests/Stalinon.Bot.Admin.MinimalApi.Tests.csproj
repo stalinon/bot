@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Stalinon.Bot.Admin.MinimalApi\Stalinon.Bot.Admin.MinimalApi.csproj"/>
+    <ProjectReference Include="..\..\src\Stalinon.Bot.Telegram\Stalinon.Bot.Telegram.csproj" />
   </ItemGroup>
 </Project>
