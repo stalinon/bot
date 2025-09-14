@@ -116,6 +116,14 @@ internal sealed class DummyPipeline : IUpdatePipeline
     }
 
     /// <summary>
+    ///     Заглушка добавления промежуточного слоя.
+    /// </summary>
+    public IUpdatePipeline Use<T>(T middleware) where T : IUpdateMiddleware
+    {
+        return this;
+    }
+
+    /// <summary>
     ///     Заглушка добавления компонента.
     /// </summary>
     public IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component)

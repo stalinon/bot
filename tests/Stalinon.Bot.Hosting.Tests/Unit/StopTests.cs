@@ -141,6 +141,11 @@ public sealed class StopTests
             return this;
         }
 
+        public IUpdatePipeline Use<T>(T middleware) where T : IUpdateMiddleware
+        {
+            return this;
+        }
+
         public IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component)
         {
             _components.Add(component);

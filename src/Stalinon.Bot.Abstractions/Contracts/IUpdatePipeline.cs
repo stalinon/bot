@@ -11,6 +11,11 @@ public interface IUpdatePipeline
     IUpdatePipeline Use<T>() where T : IUpdateMiddleware;
 
     /// <summary>
+    ///     Использовать мидлварь
+    /// </summary>
+    IUpdatePipeline Use<T>(T middleware) where T : IUpdateMiddleware;
+
+    /// <summary>
     ///     Использовать преобразование
     /// </summary>
     IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component);

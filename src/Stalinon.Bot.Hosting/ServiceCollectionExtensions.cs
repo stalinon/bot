@@ -123,13 +123,13 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(registryConfigured);
 
-        services.AddScoped<ExceptionHandlingMiddleware>()
-            .AddScoped<MetricsMiddleware>()
-            .AddScoped<LoggingMiddleware>()
-            .AddScoped<DedupMiddleware>()
-            .AddScoped<RateLimitMiddleware>()
-            .AddScoped<CommandParsingMiddleware>()
-            .AddScoped<RouterMiddleware>();
+        services.AddScoped<IUpdateMiddleware, ExceptionHandlingMiddleware>()
+            .AddScoped<IUpdateMiddleware, MetricsMiddleware>()
+            .AddScoped<IUpdateMiddleware, LoggingMiddleware>()
+            .AddScoped<IUpdateMiddleware, DedupMiddleware>()
+            .AddScoped<IUpdateMiddleware, RateLimitMiddleware>()
+            .AddScoped<IUpdateMiddleware, CommandParsingMiddleware>()
+            .AddScoped<IUpdateMiddleware, RouterMiddleware>();
 
         return services;
     }

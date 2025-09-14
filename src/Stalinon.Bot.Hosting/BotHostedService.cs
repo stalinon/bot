@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,7 +7,6 @@ using Microsoft.Extensions.Options;
 
 using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Contracts;
-using Stalinon.Bot.Core.Middlewares;
 using Stalinon.Bot.Core.Stats;
 using Stalinon.Bot.Hosting.Options;
 using Stalinon.Bot.Observability;
@@ -21,7 +19,7 @@ namespace Stalinon.Bot.Hosting;
 public sealed class BotHostedService(
     IUpdateSource source,
     IUpdatePipeline pipeline,
-    IEnumerable<Action<IUpdatePipeline>> configurePipeline,
+    IEnumerable<IUpdateMiddleware> middlewares,
     StatsCollector stats,
     ILogger<BotHostedService> logger,
     IOptions<BotOptions> options,
@@ -30,7 +28,6 @@ public sealed class BotHostedService(
 {
     private readonly BotOptions _options = options.Value;
     private readonly StopOptions _stop = stopOptions.Value;
-    private readonly IUpdateSource _source = source;
     private UpdateDelegate? _app;
     private Channel<UpdateContext>? _channel;
     private CancellationTokenSource? _cts;
@@ -40,19 +37,10 @@ public sealed class BotHostedService(
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        foreach (var cfg in configurePipeline)
+        foreach (var middleware in middlewares)
         {
-            cfg(pipeline);
+            pipeline.Use(middleware);
         }
-
-        pipeline
-            .Use<ExceptionHandlingMiddleware>()
-            .Use<MetricsMiddleware>()
-            .Use<LoggingMiddleware>()
-            .Use<DedupMiddleware>()
-            .Use<RateLimitMiddleware>()
-            .Use<CommandParsingMiddleware>()
-            .Use<RouterMiddleware>();
 
         _app = pipeline.Build(_ => ValueTask.CompletedTask);
 
@@ -91,7 +79,7 @@ public sealed class BotHostedService(
                 stats.SetQueueDepth(_channel.Reader.Count);
             });
 
-        _writing = _source.StartAsync(
+        _writing = source.StartAsync(
             async ctx =>
             {
                 using var activity = Telemetry.ActivitySource.StartActivity("Update/Receive");
@@ -115,7 +103,7 @@ public sealed class BotHostedService(
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         logger.LogInformation("bot hosted service drain phase");
-        await _source.StopAsync().ConfigureAwait(false);
+        await source.StopAsync().ConfigureAwait(false);
         _channel?.Writer.TryComplete();
 
         var tasks = new List<Task>();

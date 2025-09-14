@@ -36,6 +36,22 @@ public sealed class PipelineBuilder(IServiceScopeFactory sp) : IUpdatePipeline
     }
 
     /// <inheritdoc />
+    public IUpdatePipeline Use<T>(T middleware) where T : IUpdateMiddleware
+    {
+        lock (_lock)
+        {
+            EnsureNotBuilt();
+            _components.Add(next => async ctx =>
+            {
+                ctx.CancellationToken.ThrowIfCancellationRequested();
+                await middleware.InvokeAsync(ctx, next).ConfigureAwait(false);
+            });
+
+            return this;
+        }
+    }
+
+    /// <inheritdoc />
     public IUpdatePipeline Use(Func<UpdateDelegate, UpdateDelegate> component)
     {
         lock (_lock)
