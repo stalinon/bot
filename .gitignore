@@ -4,3 +4,14 @@ obj/
 riderModule.iml
 /_ReSharper.Caches
 *.DotSettings.user
+.idea/
+.vscode/
+.env
+*.env
+auth.json
+node_modules/
+*.user
+*.suo
+*.swp
+*.tmp
+.DS_Store
