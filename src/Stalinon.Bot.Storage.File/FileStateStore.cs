@@ -265,6 +265,11 @@ public sealed class FileStateStore : IStateStore, IAsyncDisposable
     /// </summary>
     private void CleanUpExpired()
     {
+        if (!Directory.Exists(_basePath))
+        {
+            return;
+        }
+
         foreach (var dir in Directory.EnumerateDirectories(_basePath))
         {
             foreach (var meta in Directory.EnumerateFiles(dir, "*.meta"))

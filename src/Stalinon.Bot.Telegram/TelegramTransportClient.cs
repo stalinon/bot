@@ -1,9 +1,12 @@
+using System.Linq;
+
 using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Reactions;
 
 namespace Stalinon.Bot.Telegram;
 
@@ -52,6 +55,28 @@ public sealed class TelegramTransportClient(ITelegramBotClient client) : ITransp
     {
         ct.ThrowIfCancellationRequested();
         return client.DeleteMessage(chat.Id, (int)messageId, ct);
+    }
+
+    /// <inheritdoc />
+    public Task SendPollAsync(ChatAddress chat, string question, IEnumerable<string> options, bool allowsMultipleAnswers, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return client.SendPoll(chat.Id, question, options, allowsMultipleAnswers: allowsMultipleAnswers, cancellationToken: ct);
+    }
+
+    /// <inheritdoc />
+    public Task SetMessageReactionAsync(ChatAddress chat, long messageId, IEnumerable<string> reactions, bool isBig, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var mapped = reactions.Select(r => new ReactionTypeEmoji(r)).ToArray<ReactionType>();
+        return client.SetMessageReaction(chat.Id, (int)messageId, mapped, isBig, cancellationToken: ct);
+    }
+
+    /// <inheritdoc />
+    public Task CallNativeClientAsync(Func<ITelegramBotClient, CancellationToken, Task> action, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        return action(client, ct);
     }
 
     private static global::Telegram.Bot.Types.Enums.ChatAction Map(ChatAction action)

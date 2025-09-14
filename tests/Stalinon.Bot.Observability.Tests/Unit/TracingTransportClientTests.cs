@@ -10,6 +10,8 @@ using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Observability;
 
+using Telegram.Bot;
+
 using Xunit;
 
 namespace Stalinon.Bot.Observability.Tests;
@@ -25,6 +27,7 @@ namespace Stalinon.Bot.Observability.Tests;
 ///         <item>Проверяет редактирование подписи сообщения.</item>
 ///         <item>Проверяет отправку действия в чат.</item>
 ///         <item>Проверяет удаление сообщения.</item>
+///         <item>Проверяет вызов нативного клиента.</item>
 ///     </list>
 /// </remarks>
 public sealed class TracingTransportClientTests
@@ -219,5 +222,35 @@ public sealed class TracingTransportClientTests
         captured!.OperationName.Should().Be("Transport/Send");
         Activity.Current.Should().BeNull();
         inner.Verify(x => x.DeleteMessageAsync(chat, 1, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     Тест 7: Должен создавать Activity и вызывать внутренний клиент при вызове нативного клиента.
+    /// </summary>
+    [Fact(DisplayName = "Тест 7: Должен создавать Activity и вызывать внутренний клиент при вызове нативного клиента.")]
+    public async Task Should_CreateActivityAndCallInner_When_CallNativeClientAsync()
+    {
+        // Arrange
+        using var listener = new ActivityListener
+        {
+            ShouldListenTo = source => source.Name == Telemetry.ActivitySourceName,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
+        };
+        ActivitySource.AddActivityListener(listener);
+        var inner = new Mock<ITransportClient>();
+        Activity? captured = null;
+        inner.Setup(x => x.CallNativeClientAsync(It.IsAny<Func<ITelegramBotClient, CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Callback(() => captured = Activity.Current)
+            .Returns(Task.CompletedTask);
+        var sut = new TracingTransportClient(inner.Object);
+
+        // Act
+        await sut.CallNativeClientAsync((_, _) => Task.CompletedTask, CancellationToken.None);
+
+        // Assert
+        captured.Should().NotBeNull();
+        captured!.OperationName.Should().Be("Transport/Send");
+        Activity.Current.Should().BeNull();
+        inner.Verify(x => x.CallNativeClientAsync(It.IsAny<Func<ITelegramBotClient, CancellationToken, Task>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

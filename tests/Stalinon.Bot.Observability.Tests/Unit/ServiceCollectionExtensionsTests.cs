@@ -13,6 +13,8 @@ using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 using Stalinon.Bot.Observability;
 
+using Telegram.Bot;
+
 namespace Stalinon.Bot.Observability.Tests;
 
 /// <summary>
@@ -139,5 +141,11 @@ public sealed class ServiceCollectionExtensionsTests
         public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
 
         public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
+
+        public Task SendPollAsync(ChatAddress chat, string question, IEnumerable<string> options, bool allowsMultipleAnswers, CancellationToken ct) => Task.CompletedTask;
+
+        public Task SetMessageReactionAsync(ChatAddress chat, long messageId, IEnumerable<string> reactions, bool isBig, CancellationToken ct) => Task.CompletedTask;
+
+        public Task CallNativeClientAsync(Func<ITelegramBotClient, CancellationToken, Task> action, CancellationToken ct) => Task.CompletedTask;
     }
 }

@@ -2,6 +2,8 @@ using Stalinon.Bot.Abstractions;
 using Stalinon.Bot.Abstractions.Addresses;
 using Stalinon.Bot.Abstractions.Contracts;
 
+using Telegram.Bot;
+
 namespace Stalinon.Bot.TestKit;
 
 /// <summary>
@@ -49,6 +51,24 @@ public sealed class FakeTransportClient : ITransportClient
 
     /// <inheritdoc />
     public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task SendPollAsync(ChatAddress chat, string question, IEnumerable<string> options, bool allowsMultipleAnswers, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task SetMessageReactionAsync(ChatAddress chat, long messageId, IEnumerable<string> reactions, bool isBig, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task CallNativeClientAsync(Func<ITelegramBotClient, CancellationToken, Task> action, CancellationToken ct)
     {
         return Task.CompletedTask;
     }

@@ -1,10 +1,18 @@
 using Stalinon.Bot.Abstractions.Addresses;
 
+using Telegram.Bot;
+
 namespace Stalinon.Bot.Abstractions.Contracts;
 
 /// <summary>
 ///     Клиент рассылок
 /// </summary>
+/// <remarks>
+///     <list type="number">
+///         <item>Отправляет сообщения и действия пользователям.</item>
+///         <item>Позволяет вызывать нативный <see cref="ITelegramBotClient"/>.</item>
+///     </list>
+/// </remarks>
 public interface ITransportClient
 {
     /// <summary>
@@ -36,4 +44,19 @@ public interface ITransportClient
     ///     Удалить сообщение
     /// </summary>
     Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct);
+
+    /// <summary>
+    ///     Отправить опрос
+    /// </summary>
+    Task SendPollAsync(ChatAddress chat, string question, IEnumerable<string> options, bool allowsMultipleAnswers, CancellationToken ct);
+
+    /// <summary>
+    ///     Поставить реакцию на сообщение
+    /// </summary>
+    Task SetMessageReactionAsync(ChatAddress chat, long messageId, IEnumerable<string> reactions, bool isBig, CancellationToken ct);
+
+    /// <summary>
+    ///     Выполнить произвольное действие с нативным клиентом
+    /// </summary>
+    Task CallNativeClientAsync(Func<ITelegramBotClient, CancellationToken, Task> action, CancellationToken ct);
 }

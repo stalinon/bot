@@ -19,6 +19,8 @@ using Stalinon.Bot.Core.Utils;
 using Stalinon.Bot.Hosting;
 using Stalinon.Bot.Hosting.Options;
 
+using Telegram.Bot;
+
 using Xunit;
 
 namespace Stalinon.Bot.Hosting.Tests;
@@ -156,6 +158,9 @@ public sealed class BotHostedServiceTransportTests
         public Task EditMessageCaptionAsync(ChatAddress chat, long messageId, string? caption, CancellationToken ct) => Task.CompletedTask;
         public Task SendChatActionAsync(ChatAddress chat, ChatAction action, CancellationToken ct) => Task.CompletedTask;
         public Task DeleteMessageAsync(ChatAddress chat, long messageId, CancellationToken ct) => Task.CompletedTask;
+        public Task SendPollAsync(ChatAddress chat, string question, IEnumerable<string> options, bool allowsMultipleAnswers, CancellationToken ct) => Task.CompletedTask;
+        public Task SetMessageReactionAsync(ChatAddress chat, long messageId, IEnumerable<string> reactions, bool isBig, CancellationToken ct) => Task.CompletedTask;
+        public Task CallNativeClientAsync(Func<ITelegramBotClient, CancellationToken, Task> action, CancellationToken ct) => Task.CompletedTask;
     }
 
     [SuppressMessage("Performance", "CA1822:MarkMembersAsStatic")]
